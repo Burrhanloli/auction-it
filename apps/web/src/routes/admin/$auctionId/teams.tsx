@@ -588,33 +588,35 @@ Best of luck with building your team! 🏆`;
 
                     {/* Action Buttons */}
                     <div className="mt-2 flex w-full space-x-2">
-                      <button
-                        onClick={() => {
-                          setEditingTeam(team);
-                          const fullSlug = team.slug || "";
-                          let slugPrefix = fullSlug;
-                          let slugSuffix = "";
-                          const parts = fullSlug.split("-");
-                          if (parts.length > 1) {
-                            slugSuffix = parts[parts.length - 1];
-                            slugPrefix = parts.slice(0, -1).join("-");
-                          }
-                          editTeamForm.reset({
-                            name: team.name,
-                            slug: slugPrefix,
-                            suffix: slugSuffix,
-                            logoUrl: team.logoUrl || "",
-                            ownerName: team.ownerName,
-                            ownerImageUrl: team.ownerImageUrl || "",
-                            totalBudget: team.totalBudget,
-                            passcode: team.passcode,
-                          });
-                        }}
-                        className="flex h-[36px] flex-1 items-center justify-center border border-white bg-transparent text-[12px] font-bold tracking-[1px] text-white uppercase transition-colors hover:bg-white hover:text-black"
-                        title="Edit Details"
-                      >
-                        Edit
-                      </button>
+                      {auction?.status === "draft" && (
+                        <button
+                          onClick={() => {
+                            setEditingTeam(team);
+                            const fullSlug = team.slug || "";
+                            let slugPrefix = fullSlug;
+                            let slugSuffix = "";
+                            const parts = fullSlug.split("-");
+                            if (parts.length > 1) {
+                              slugSuffix = parts[parts.length - 1];
+                              slugPrefix = parts.slice(0, -1).join("-");
+                            }
+                            editTeamForm.reset({
+                              name: team.name,
+                              slug: slugPrefix,
+                              suffix: slugSuffix,
+                              logoUrl: team.logoUrl || "",
+                              ownerName: team.ownerName,
+                              ownerImageUrl: team.ownerImageUrl || "",
+                              totalBudget: team.totalBudget,
+                              passcode: team.passcode,
+                            });
+                          }}
+                          className="flex h-[36px] flex-1 items-center justify-center border border-white bg-transparent text-[12px] font-bold tracking-[1px] text-white uppercase transition-colors hover:bg-white hover:text-black"
+                          title="Edit Details"
+                        >
+                          Edit
+                        </button>
+                      )}
 
                       <button
                         onClick={() => copyToClipboard(team.id, team.passcode, team.name)}

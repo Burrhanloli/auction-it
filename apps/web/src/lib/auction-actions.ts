@@ -308,8 +308,12 @@ export const $updateTeam = createServerFn({ method: "POST" })
         where: {
           id: resolvedTeamId,
         },
+        with: { auction: true },
       });
       if (!existing) throw new Error("Team not found");
+      if (existing.auction?.status !== "draft") {
+        throw new Error("Cannot edit team when auction is not in draft mode");
+      }
 
       const parts = (existing.slug || "").split("-");
       const suffix = parts.length > 1 ? parts[parts.length - 1] : generateRandomSuffix();
@@ -372,6 +376,47 @@ export const $addPlayer = createServerFn({ method: "POST" })
       .returning();
 
     return { playerId: player[0].id };
+  });
+
+// Mutation: Player Directory - Update an existing player's details
+export const $updatePlayer = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .inputValidator(
+    (data: {
+      playerId: string;
+      categoryId: string;
+      name: string;
+      skills: string;
+      imageUrl: string | null;
+    }) => data,
+  )
+  .handler(async ({ data }) => {
+    const existing = await db.query.players.findFirst({
+      where: { id: data.playerId },
+      with: { auction: true },
+    });
+    if (!existing) throw new Error("Player not found");
+    if (existing.auction?.status !== "draft") {
+      throw new Error("Cannot edit player when auction is not in draft mode");
+    }
+
+    await db
+      .update(schema.players)
+      .set({
+        categoryId: data.categoryId,
+        name: data.name,
+        skills: data.skills,
+        imageUrl: data.imageUrl,
+      })
+      .where(eq(schema.players.id, data.playerId));
+
+    await db.insert(schema.auctionLogs).values({
+      auctionId: existing.auctionId,
+      message: `Player "${data.name}" details updated.`,
+    });
+
+    publishAuctionUpdate(existing.auctionId, "state", {});
+    return { success: true };
   });
 
 // Mutation: Auctioneer Panel - Draw a random player from category and put up for bid

@@ -22,11 +22,14 @@ import {
   GavelIcon,
   UsersIcon,
   CoinsIcon,
+  MenuIcon,
+  XIcon,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { ImageViewer } from "#/components/image-viewer";
+import { useScrollDirection } from "#/hooks/use-scroll-direction";
 import { $getAuctionsByUser, $createAuction, $updateAuctionStatus } from "#/lib/auction-actions";
 
 export const Route = createFileRoute("/admin/")({
@@ -47,8 +50,10 @@ function AdminDashboardPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = Route.useRouteContext();
+  const { scrollDirection } = useScrollDirection();
 
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const { data: auctions, isLoading } = useQuery({
     queryKey: ["my-auctions"],
@@ -111,7 +116,11 @@ function AdminDashboardPage() {
   return (
     <div className="relative min-h-screen overflow-hidden bg-black font-sans text-white">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-[#3c3c3c] bg-black px-8 py-5">
+      <header
+        className={`sticky top-0 z-50 border-b border-[#3c3c3c] bg-black px-4 py-4 transition-transform duration-300 ease-in-out md:px-8 md:py-5 ${
+          scrollDirection === "down" ? "-translate-y-full" : "translate-y-0"
+        }`}
+      >
         <div className="mx-auto flex max-w-7xl items-center justify-between">
           <div className="flex items-center space-x-4">
             <Link to="/">
@@ -131,7 +140,7 @@ function AdminDashboardPage() {
             </Link>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="hidden items-center space-x-4 md:flex">
             <div className="flex items-center space-x-2 rounded-none border border-[#3c3c3c] bg-black px-4 py-2">
               <div className="flex h-7 w-7 items-center justify-center rounded-none bg-white text-xs font-bold tracking-[1.5px] text-black uppercase">
                 {user?.name?.slice(0, 1)}
@@ -155,11 +164,64 @@ function AdminDashboardPage() {
               <span>Sign Out</span>
             </button>
           </div>
+
+          <div className="md:hidden">
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="flex items-center justify-center p-2 text-white"
+            >
+              <MenuIcon className="h-6 w-6" />
+            </button>
+          </div>
         </div>
       </header>
 
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-[60] flex flex-col bg-black">
+          <div className="h-1 w-full bg-gradient-to-r from-[#0066b1] via-[#1c69d4] to-[#e22718]" />
+          <div className="flex items-center justify-between border-b border-[#3c3c3c] p-4">
+            <div className="flex items-center space-x-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a]">
+                <TrophyIcon className="h-5 w-5 text-white" />
+              </div>
+              <span className="text-xl font-bold tracking-[1.5px] text-white uppercase">Admin</span>
+            </div>
+            <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-white">
+              <XIcon className="h-6 w-6" />
+            </button>
+          </div>
+          <div className="flex flex-1 flex-col space-y-6 p-6">
+            <div className="flex items-center space-x-3 rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-none bg-white text-base font-bold tracking-[1.5px] text-black uppercase">
+                {user?.name?.slice(0, 1)}
+              </div>
+              <span className="text-base font-medium text-white">{user?.name}</span>
+            </div>
+            <Link to="/" onClick={() => setIsMobileMenuOpen(false)}>
+              <Button
+                variant="outline"
+                className="w-full rounded-none border border-[#3c3c3c] bg-transparent py-6 tracking-[1.5px] text-white uppercase hover:bg-white hover:text-black"
+              >
+                Public Site
+              </Button>
+            </Link>
+            <Button
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                handleLogout();
+              }}
+              className="w-full rounded-none border border-transparent bg-white py-6 font-bold tracking-[1.5px] text-black uppercase hover:border-white hover:bg-black hover:text-white"
+            >
+              <LogOutIcon className="mr-2 h-5 w-5" />
+              Sign Out
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Page Content */}
-      <main className="relative z-10 mx-auto max-w-7xl px-8 py-12">
+      <main className="relative z-10 mx-auto max-w-7xl px-4 py-8 md:px-8 md:py-12">
         {/* Welcome Banner */}
         <div className="mb-12">
           <div className="mb-3 inline-flex items-center space-x-2 rounded-none border border-[#3c3c3c] bg-black px-3 py-1">

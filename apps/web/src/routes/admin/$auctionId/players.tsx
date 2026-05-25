@@ -4,12 +4,12 @@ import { Label } from "@repo/ui/components/label";
 import { useForm } from "@tanstack/react-form";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { UserPlusIcon, SearchIcon, Loader2Icon, PlusIcon } from "lucide-react";
+import { UserPlusIcon, SearchIcon, Loader2Icon, PlusIcon, PencilIcon, XIcon } from "lucide-react";
 import Papa from "papaparse";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { $getAuction, $addPlayer, $addPlayersBulk } from "#/lib/auction-actions";
+import { $getAuction, $addPlayer, $addPlayersBulk, $updatePlayer } from "#/lib/auction-actions";
 
 export const Route = createFileRoute("/admin/$auctionId/players")({
   component: PlayerDirectoryPage,
@@ -26,6 +26,9 @@ function PlayerDirectoryPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFilterCategory, setSelectedFilterCategory] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all"); // all, sold, unsold
+
+  // Edit Player state
+  const [editingPlayer, setEditingPlayer] = useState<any>(null);
 
   // Queries
   const { data: auction, isLoading } = useQuery({
@@ -66,6 +69,39 @@ function PlayerDirectoryPage() {
     },
   });
 
+  const editPlayerForm = useForm({
+    defaultValues: {
+      name: "",
+      skills: "",
+      categoryId: "",
+      imageUrl: "",
+    },
+    onSubmit: async ({ value }) => {
+      if (!editingPlayer) return;
+      if (!value.name.trim()) {
+        toast.error("Player Name is required");
+        return;
+      }
+      if (!value.skills.trim()) {
+        toast.error("Player Skills are required");
+        return;
+      }
+      const categoryId = value.categoryId || auction?.categories?.[0]?.id;
+      if (!categoryId) {
+        toast.error("Please select a category for the player");
+        return;
+      }
+
+      updatePlayerMutation.mutate({
+        playerId: editingPlayer.id,
+        categoryId,
+        name: value.name.trim(),
+        skills: value.skills.trim(),
+        imageUrl: value.imageUrl.trim() || null,
+      });
+    },
+  });
+
   // Mutation
   const addPlayerMutation = useMutation({
     mutationFn: (vars: any) => $addPlayer({ data: vars }),
@@ -84,6 +120,18 @@ function PlayerDirectoryPage() {
     },
     onError: (err: any) => {
       toast.error(err.message || "Failed to add player");
+    },
+  });
+
+  const updatePlayerMutation = useMutation({
+    mutationFn: (vars: any) => $updatePlayer({ data: vars }),
+    onSuccess: () => {
+      toast.success("Player updated successfully!");
+      setEditingPlayer(null);
+      queryClient.invalidateQueries({ queryKey: ["auction", auctionId] });
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to update player");
     },
   });
 
@@ -544,6 +592,25 @@ function PlayerDirectoryPage() {
                       </div>
 
                       <div className="mt-auto flex flex-col gap-2">
+                        {auction?.status === "draft" && (
+                          <div className="border-t border-[#3c3c3c] pt-2">
+                            <button
+                              onClick={() => {
+                                setEditingPlayer(player);
+                                editPlayerForm.reset({
+                                  name: player.name,
+                                  skills: player.skills,
+                                  categoryId: player.categoryId,
+                                  imageUrl: player.imageUrl || "",
+                                });
+                              }}
+                              className="flex h-[28px] w-full items-center justify-center border border-white bg-transparent text-[10px] font-bold tracking-[1px] text-white uppercase transition-colors hover:bg-white hover:text-black"
+                              title="Edit Details"
+                            >
+                              Edit Player
+                            </button>
+                          </div>
+                        )}
                         {/* Skills */}
                         <div className="flex items-start justify-between border-t border-[#3c3c3c] pt-2">
                           <span className="text-[12px] font-bold tracking-[1.5px] text-[#7e7e7e] uppercase">
@@ -593,6 +660,141 @@ function PlayerDirectoryPage() {
           </div>
         </div>
       </div>
+
+      {/* Edit Player Dialog Overlay */}
+      {editingPlayer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4">
+          <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-6">
+            <div className="mb-6 flex items-center justify-between">
+              <h2 className="flex items-center text-xl font-bold tracking-[1.5px] text-white uppercase">
+                <PencilIcon className="mr-2 h-5 w-5 text-white" />
+                Edit Player: {editingPlayer.name}
+              </h2>
+              <button
+                type="button"
+                onClick={() => setEditingPlayer(null)}
+                className="cursor-pointer text-[#bbbbbb] hover:text-white"
+              >
+                <XIcon className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                editPlayerForm.handleSubmit();
+              }}
+              className="space-y-4"
+            >
+              <editPlayerForm.Field
+                name="name"
+                children={(field) => (
+                  <div className="space-y-1.5">
+                    <Label htmlFor={`edit-${field.name}`} className="text-xs text-[#bbbbbb]">
+                      Player Name *
+                    </Label>
+                    <Input
+                      id={`edit-${field.name}`}
+                      placeholder="e.g. Virat Kohli"
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      className="rounded-none border border-[#3c3c3c] bg-black text-xs text-white"
+                      required
+                    />
+                  </div>
+                )}
+              />
+
+              <editPlayerForm.Field
+                name="skills"
+                children={(field) => (
+                  <div className="space-y-1.5">
+                    <Label htmlFor={`edit-${field.name}`} className="text-xs text-[#bbbbbb]">
+                      Primary Skills *
+                    </Label>
+                    <Input
+                      id={`edit-${field.name}`}
+                      placeholder="e.g. Right-hand Batsman, Medium Pacer"
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      className="rounded-none border border-[#3c3c3c] bg-black text-xs text-white"
+                      required
+                    />
+                  </div>
+                )}
+              />
+
+              <editPlayerForm.Field
+                name="categoryId"
+                children={(field) => (
+                  <div className="space-y-1.5">
+                    <Label htmlFor={`edit-${field.name}`} className="text-xs text-[#bbbbbb]">
+                      Auction Category Deck *
+                    </Label>
+                    <select
+                      id={`edit-${field.name}`}
+                      value={field.state.value || categories[0]?.id || ""}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      className="w-full rounded-none border border-[#3c3c3c] bg-black p-2.5 text-xs text-white outline-none focus:border-white"
+                      required
+                    >
+                      {categories.map((cat: any) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name} (Base: {cat.basePoints} pts)
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              />
+
+              <editPlayerForm.Field
+                name="imageUrl"
+                children={(field) => (
+                  <div className="space-y-1.5">
+                    <Label htmlFor={`edit-${field.name}`} className="text-xs text-[#bbbbbb]">
+                      Player Photo Image URL
+                    </Label>
+                    <Input
+                      id={`edit-${field.name}`}
+                      placeholder="https://example.com/photo.png"
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      className="rounded-none border border-[#3c3c3c] bg-black text-xs text-white"
+                    />
+                  </div>
+                )}
+              />
+
+              <div className="flex space-x-3 pt-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setEditingPlayer(null)}
+                  className="flex-1 cursor-pointer rounded-none border border-[#3c3c3c] bg-black py-3 font-bold tracking-[1.5px] text-[#bbbbbb] uppercase hover:bg-white hover:text-black"
+                >
+                  Cancel
+                </Button>
+                <editPlayerForm.Subscribe
+                  selector={(state) => state.isSubmitting}
+                  children={(isSubmitting) => (
+                    <Button
+                      type="submit"
+                      disabled={isSubmitting || updatePlayerMutation.isPending}
+                      className="flex-1 cursor-pointer rounded-none border border-white bg-white py-3 font-bold tracking-[1.5px] text-black uppercase hover:bg-black hover:text-white"
+                    >
+                      {isSubmitting || updatePlayerMutation.isPending
+                        ? "Saving..."
+                        : "Save Changes"}
+                    </Button>
+                  )}
+                />
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

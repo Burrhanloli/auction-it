@@ -14,6 +14,7 @@ import { motion } from "motion/react";
 import { ImageViewer } from "#/components/image-viewer";
 import { PublicAuctionGuard } from "#/components/public-auction-guard";
 import { useAuctionSubscription } from "#/hooks/use-auction-subscription";
+import { useScrollDirection } from "#/hooks/use-scroll-direction";
 import { $getAuction } from "#/lib/auction-actions";
 
 export const Route = createFileRoute("/auction/$auctionId/leaderboard")({
@@ -23,6 +24,7 @@ export const Route = createFileRoute("/auction/$auctionId/leaderboard")({
 function LeaderboardPage() {
   const { auctionId } = Route.useParams();
   const queryClient = useQueryClient();
+  const { scrollDirection } = useScrollDirection();
 
   // Queries
   const { data: auction, isLoading } = useQuery({
@@ -72,7 +74,11 @@ function LeaderboardPage() {
     <PublicAuctionGuard auction={auction}>
       <div className="relative flex min-h-screen flex-col overflow-hidden bg-black font-sans text-white">
         {/* Header */}
-        <header className="sticky top-0 z-40 flex items-center justify-between border-b border-[#3c3c3c] bg-black px-6 py-4">
+        <header
+          className={`sticky top-0 z-40 flex flex-col justify-between gap-4 border-b border-[#3c3c3c] bg-black px-4 py-4 transition-transform duration-300 ease-in-out md:flex-row md:items-center md:gap-0 md:px-6 ${
+            scrollDirection === "down" ? "-translate-y-full" : "translate-y-0"
+          }`}
+        >
           <div className="flex items-center space-x-4">
             <Link to="/auction/$auctionId/live" params={{ auctionId }}>
               <button className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] text-[#bbbbbb] hover:bg-white hover:text-black">
@@ -110,7 +116,7 @@ function LeaderboardPage() {
         </header>
 
         {/* Main Container */}
-        <main className="relative z-10 mx-auto w-full max-w-7xl flex-1 space-y-12 px-6 py-10">
+        <main className="relative z-10 mx-auto w-full max-w-7xl flex-1 space-y-12 px-4 py-8 md:px-6 md:py-10">
           {/* SECTION 1: HIGHEST VALUED PLAYERS (TOP RANKINGS) */}
           <div>
             <div className="mb-6 flex flex-col">

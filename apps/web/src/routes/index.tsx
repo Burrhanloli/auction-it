@@ -16,10 +16,13 @@ import {
   ChevronRightIcon,
   DollarSignIcon,
   ActivityIcon,
+  MenuIcon,
+  XIcon,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { useScrollDirection } from "#/hooks/use-scroll-direction";
 import { $getAllAuctions, $createAuction } from "#/lib/auction-actions";
 
 export const Route = createFileRoute("/")({
@@ -29,6 +32,7 @@ export const Route = createFileRoute("/")({
 function HomePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { scrollDirection } = useScrollDirection();
 
   // Queries
   const { data: user } = useQuery(authQueryOptions());
@@ -39,6 +43,7 @@ function HomePage() {
 
   // State for creating a new auction
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const form = useForm({
     defaultValues: {
@@ -88,7 +93,11 @@ function HomePage() {
   return (
     <div className="relative min-h-screen overflow-hidden bg-black font-sans text-white">
       {/* Top Header Navbar */}
-      <header className="sticky top-0 z-50 border-b border-[#3c3c3c] bg-black px-8 py-5">
+      <header
+        className={`sticky top-0 z-50 border-b border-[#3c3c3c] bg-black px-4 py-4 transition-transform duration-300 ease-in-out md:px-8 md:py-5 ${
+          scrollDirection === "down" ? "-translate-y-full" : "translate-y-0"
+        }`}
+      >
         <div className="mx-auto flex max-w-7xl items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-0.5">
@@ -104,7 +113,7 @@ function HomePage() {
             </div>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="hidden items-center space-x-4 md:flex">
             {user ? (
               <div className="flex items-center space-x-3">
                 <div className="flex items-center space-x-2 rounded-none border border-[#3c3c3c] bg-[#1a1a1a] px-3 py-1.5">
@@ -143,11 +152,71 @@ function HomePage() {
               </div>
             )}
           </div>
+
+          <div className="md:hidden">
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="flex items-center justify-center p-2 text-white"
+            >
+              <MenuIcon className="h-6 w-6" />
+            </button>
+          </div>
         </div>
       </header>
 
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-[60] flex flex-col bg-black">
+          <div className="h-1 w-full bg-gradient-to-r from-[#0066b1] via-[#1c69d4] to-[#e22718]" />
+          <div className="flex items-center justify-between border-b border-[#3c3c3c] p-4">
+            <div className="flex items-center space-x-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-0.5">
+                <TrophyIcon className="h-5 w-5 text-white" />
+              </div>
+              <span className="text-xl font-bold tracking-[1.5px] text-white uppercase">
+                AUCTION-IT
+              </span>
+            </div>
+            <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 text-white">
+              <XIcon className="h-6 w-6" />
+            </button>
+          </div>
+          <div className="flex flex-1 flex-col p-6">
+            {user ? (
+              <div className="flex flex-col space-y-6">
+                <div className="flex items-center space-x-3 rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-4">
+                  <UserIcon className="h-5 w-5 text-white" />
+                  <span className="text-base font-medium text-white">{user.name}</span>
+                </div>
+                <Link to="/admin" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Button className="w-full rounded-none border border-[#3c3c3c] bg-[#1a1a1a] py-6 tracking-[1.5px] text-white uppercase hover:bg-white hover:text-black">
+                    Dashboard
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="flex flex-col space-y-6">
+                <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Button
+                    variant="outline"
+                    className="w-full rounded-none border border-white bg-transparent py-6 tracking-[1.5px] text-white uppercase hover:bg-white hover:text-black"
+                  >
+                    Sign In
+                  </Button>
+                </Link>
+                <Link to="/signup" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Button className="w-full rounded-none border border-transparent bg-white py-6 font-bold tracking-[1.5px] text-black uppercase hover:border-white hover:bg-black hover:text-white">
+                    Register Admin
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Hero Presentation Banner */}
-      <section className="relative z-10 mx-auto max-w-7xl px-8 pt-20 pb-16 text-center">
+      <section className="relative z-10 mx-auto max-w-7xl px-4 pt-16 pb-12 text-center md:px-8 md:pt-20 md:pb-16">
         <div className="mb-6 inline-flex items-center space-x-2 rounded-none border border-[#3c3c3c] bg-[#1a1a1a] px-3 py-1">
           <ActivityIcon className="h-4 w-4 text-white" />
           <span className="text-xs font-bold tracking-[1.5px] text-white uppercase">
@@ -390,7 +459,7 @@ function HomePage() {
       {/* Main Sections: Auction Directory Grid */}
       <main
         id="active-auctions"
-        className="relative z-10 mx-auto max-w-7xl border-t border-[#3c3c3c] px-8 py-20"
+        className="relative z-10 mx-auto max-w-7xl border-t border-[#3c3c3c] px-4 py-16 md:px-8 md:py-20"
       >
         <div className="mb-10 flex flex-col justify-between md:flex-row md:items-center">
           <div>

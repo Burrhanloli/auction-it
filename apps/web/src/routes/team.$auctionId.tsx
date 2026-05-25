@@ -36,6 +36,8 @@ const teamSearchSchema = z.object({
   teamId: z.string().optional(),
 });
 
+import { useScrollDirection } from "#/hooks/use-scroll-direction";
+
 export const Route = createFileRoute("/team/$auctionId")({
   validateSearch: teamSearchSchema,
   component: TeamStrategyDeckPage,
@@ -45,6 +47,7 @@ function TeamStrategyDeckPage() {
   const { auctionId } = Route.useParams();
   const { teamId } = Route.useSearch();
   const queryClient = useQueryClient();
+  const { scrollDirection } = useScrollDirection();
 
   // Queries
   const { data: auction, isLoading: isAuctionLoading } = useQuery({
@@ -389,7 +392,11 @@ function TeamStrategyDeckPage() {
   return (
     <div className="flex min-h-screen flex-col bg-black pb-12 font-sans text-white">
       {/* Header bar */}
-      <header className="z-10 flex items-center justify-between border-b border-[#3c3c3c] bg-black px-8 py-5">
+      <header
+        className={`sticky top-0 z-50 flex flex-col justify-between gap-4 border-b border-[#3c3c3c] bg-black px-4 py-4 transition-transform duration-300 ease-in-out md:flex-row md:items-center md:gap-0 md:px-8 md:py-5 ${
+          scrollDirection === "down" ? "-translate-y-full" : "translate-y-0"
+        }`}
+      >
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-3">
             {team.logoUrl ? (
@@ -431,7 +438,7 @@ function TeamStrategyDeckPage() {
 
         <div className="group flex items-center space-x-3">
           <Link to="/auction/$auctionId/live" params={{ auctionId }}>
-            <button className="flex cursor-pointer items-center space-x-1.5 rounded-none border border-white bg-white px-4 py-2 text-xs font-bold tracking-[1.5px] text-black uppercase hover:bg-black hover:text-white">
+            <button className="flex flex-1 cursor-pointer items-center justify-center space-x-1.5 rounded-none border border-white bg-white px-4 py-2 text-xs font-bold tracking-[1.5px] text-black uppercase hover:bg-black hover:text-white md:flex-none">
               <TvIcon className="h-4 w-4" />
               <span>Public Live Arena</span>
             </button>
@@ -447,7 +454,7 @@ function TeamStrategyDeckPage() {
       </header>
 
       {/* Main Grid */}
-      <div className="relative z-10 mx-auto mt-10 grid w-full max-w-7xl grid-cols-1 gap-10 px-8 lg:grid-cols-3">
+      <div className="relative z-10 mx-auto mt-6 grid w-full max-w-7xl grid-cols-1 gap-6 px-4 md:mt-10 md:gap-10 md:px-8 lg:grid-cols-3">
         {/* Left Column: Budget details & Captain/Owner details (1/3 width) */}
         <div className="space-y-8 lg:col-span-1">
           {/* Budget Meter */}

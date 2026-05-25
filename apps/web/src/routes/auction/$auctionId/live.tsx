@@ -20,6 +20,7 @@ import { useMemo, useState, useRef, useEffect } from "react";
 import { ImageViewer } from "#/components/image-viewer";
 import { PublicAuctionGuard } from "#/components/public-auction-guard";
 import { useLiveAuction } from "#/hooks/use-live-auction";
+import { useScrollDirection } from "#/hooks/use-scroll-direction";
 import { $getAuction, $getAuctionState } from "#/lib/auction-actions";
 
 export const Route = createFileRoute("/auction/$auctionId/live")({
@@ -29,6 +30,7 @@ export const Route = createFileRoute("/auction/$auctionId/live")({
 function LiveTrackerPage() {
   const { auctionId } = Route.useParams();
   const queryClient = useQueryClient();
+  const { scrollDirection } = useScrollDirection();
 
   // Queries
   const { data: auction, isLoading: isAuctionLoading } = useQuery({
@@ -122,7 +124,11 @@ function LiveTrackerPage() {
     <PublicAuctionGuard auction={auction}>
       <div className="relative flex min-h-screen flex-col overflow-hidden bg-black font-sans text-white">
         {/* Header bar */}
-        <header className="sticky top-0 z-40 flex items-center justify-between border-b border-[#3c3c3c] bg-black px-8 py-5">
+        <header
+          className={`sticky top-0 z-40 flex flex-col justify-between gap-4 border-b border-[#3c3c3c] bg-black px-4 py-4 transition-transform duration-300 ease-in-out md:flex-row md:items-center md:gap-0 md:px-8 md:py-5 ${
+            scrollDirection === "down" ? "-translate-y-full" : "translate-y-0"
+          }`}
+        >
           <div className="flex items-center space-x-4">
             <Link to="/">
               <button className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-none border border-[#3c3c3c] bg-black text-[#bbbbbb] hover:bg-white hover:text-black">
@@ -167,7 +173,7 @@ function LiveTrackerPage() {
         </header>
 
         {/* Main Broadcast Layout */}
-        <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col space-y-8 px-8 py-10">
+        <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col space-y-6 px-4 py-8 md:space-y-8 md:px-8 md:py-10">
           {/* Top Section: Active bidding card viewport */}
           <div className="mx-auto flex w-full max-w-6xl flex-col space-y-6">
             <div className="relative flex min-h-120 flex-1 flex-col items-center justify-center overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8">
@@ -249,7 +255,7 @@ function LiveTrackerPage() {
                     </div>
 
                     {/* Bidding values layout */}
-                    <div className="mt-4 grid w-full max-w-md grid-cols-2 gap-4">
+                    <div className="mt-4 grid w-full max-w-md grid-cols-1 gap-4 md:grid-cols-2">
                       {/* Left: Base Points */}
                       <div className="flex flex-col items-center justify-center rounded-none border border-[#3c3c3c] bg-black p-4">
                         <span className="text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">

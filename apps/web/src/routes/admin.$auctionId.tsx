@@ -28,10 +28,13 @@ export const Route = createFileRoute("/admin/$auctionId")({
   component: AdminLayout,
 });
 
+import { useScrollDirection } from "#/hooks/use-scroll-direction";
+
 function AdminLayout() {
   const { auctionId } = Route.useParams();
   const routerState = useRouterState();
   const currentPath = routerState.location.pathname;
+  const { scrollDirection } = useScrollDirection();
 
   // Query details of the current auction to show in the sidebar
   const { data: auction, isLoading } = useQuery({
@@ -91,7 +94,11 @@ function AdminLayout() {
   return (
     <div className="flex min-h-screen flex-col bg-black font-sans text-white">
       {/* Header bar */}
-      <header className="flex items-center justify-between border-b border-[#3c3c3c] bg-black px-8 py-5">
+      <header
+        className={`sticky top-0 z-50 flex flex-col justify-between gap-4 border-b border-[#3c3c3c] bg-black px-4 py-4 transition-transform duration-300 ease-in-out md:flex-row md:items-center md:gap-0 md:px-8 md:py-5 ${
+          scrollDirection === "down" ? "-translate-y-full" : "translate-y-0"
+        }`}
+      >
         <div className="flex items-center space-x-4">
           <Link to="/">
             <button className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] text-[#bbbbbb] hover:bg-white hover:text-black">
@@ -127,8 +134,8 @@ function AdminLayout() {
       </header>
 
       {/* Tabs navigation */}
-      <div className="border-b border-[#3c3c3c] bg-[#1a1a1a] px-8">
-        <div className="mx-auto flex max-w-7xl space-x-2 py-3">
+      <div className="no-scrollbar overflow-x-auto border-b border-[#3c3c3c] bg-[#1a1a1a] px-4 md:px-8">
+        <div className="mx-auto flex max-w-7xl min-w-max space-x-2 py-3">
           {tabs.map((tab) => {
             const isActive = currentPath === tab.path;
             const Icon = tab.icon;
@@ -152,7 +159,7 @@ function AdminLayout() {
 
       {/* Main content render area */}
       <div className="relative flex-1 overflow-hidden bg-black">
-        <div className="relative z-10 mx-auto max-w-7xl px-8 py-12">
+        <div className="relative z-10 mx-auto max-w-7xl px-4 py-8 md:px-8 md:py-12">
           <Outlet />
         </div>
       </div>
