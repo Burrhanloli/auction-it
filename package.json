@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "build": "vp run --recursive build",
-    "build:web": "vp run web#build",
+    "build:web": "vp run --filter=@repo/web build",
+    "deploy:web": "vp run --filter=@repo/web deploy",
     "dev": "pnpm run --recursive --parallel dev",
     "dev:web": "vp run --filter=@repo/web dev",
     "lint": "vp lint --type-aware --type-check",

@@ -1,2 +1,0 @@
-ALTER TABLE "teams" ADD COLUMN "captain_player_id" uuid;--> statement-breakpoint
-ALTER TABLE "teams" ADD CONSTRAINT "teams_captain_player_id_players_id_fkey" FOREIGN KEY ("captain_player_id") REFERENCES "players"("id") ON DELETE SET NULL;

@@ -26,7 +26,8 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { $getAuctionsByUser, $createAuction } from "#/lib/auction-actions";
+import { ImageViewer } from "#/components/image-viewer";
+import { $getAuctionsByUser, $createAuction, $updateAuctionStatus } from "#/lib/auction-actions";
 
 export const Route = createFileRoute("/admin/")({
   beforeLoad: async ({ context }) => {
@@ -57,6 +58,7 @@ function AdminDashboardPage() {
   const form = useForm({
     defaultValues: {
       name: "",
+      logoUrl: "",
       budgetPerTeam: 1000,
       categories: [
         { name: "Elite", basePoints: 500 },
@@ -72,6 +74,7 @@ function AdminDashboardPage() {
       createAuctionMutation.mutate({
         name: value.name.trim(),
         budgetPerTeam: value.budgetPerTeam,
+        logoUrl: value.logoUrl ? value.logoUrl.trim() : null,
         categories: value.categories,
       });
     },
@@ -81,6 +84,7 @@ function AdminDashboardPage() {
     mutationFn: (vars: {
       name: string;
       budgetPerTeam: number;
+      logoUrl: string | null;
       categories: Array<{ name: string; basePoints: number }>;
     }) => $createAuction({ data: vars }),
     onSuccess: (res: any) => {
@@ -361,6 +365,33 @@ function AdminDashboardPage() {
               />
 
               <form.Field
+                name="logoUrl"
+                children={(field) => (
+                  <div className="space-y-2">
+                    <Label htmlFor={field.name} className="text-sm font-medium text-white">
+                      Auction Logo URL (Optional)
+                    </Label>
+                    <div className="flex items-center gap-3">
+                      {field.state.value && (
+                        <ImageViewer
+                          src={field.state.value}
+                          alt="Logo preview"
+                          className="h-12 w-12 rounded-none border border-[#3c3c3c] bg-black object-cover"
+                        />
+                      )}
+                      <Input
+                        id={field.name}
+                        placeholder="https://example.com/logo.png"
+                        value={field.state.value}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        className="flex-1 rounded-none border-[#3c3c3c] bg-black py-3 text-sm text-white placeholder-[#7e7e7e] focus:border-white"
+                      />
+                    </div>
+                  </div>
+                )}
+              />
+
+              <form.Field
                 name="budgetPerTeam"
                 children={(field) => (
                   <div className="space-y-2">
@@ -479,6 +510,7 @@ function AdminDashboardPage() {
 
 function AuctionCard({ auction, badge }: { auction: any; badge: "live" | "draft" }) {
   const isLive = badge === "live";
+
   return (
     <div className="group relative flex flex-col justify-between overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] transition-all duration-300 hover:border-white">
       <div className="p-6">

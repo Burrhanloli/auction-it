@@ -5,6 +5,8 @@ packages:
 allowBuilds:
   esbuild: true
   msw: false
+  sharp: true
+  workerd: true
 
 # FIXME: Temporary workaround for experimental @better-auth/drizzle-adapter version,
 # which is currently being published via pkg.pr.new in an ongoing pull request:
@@ -72,6 +74,10 @@ catalog:
   canvas-confetti: ^1.9.4
   "@types/canvas-confetti": ^1.9.0
   input-otp: ^1.4.2
+  "@cloudflare/vite-plugin": ^1.38.0
+  wrangler: ^4.94.0
+  papaparse: ^5.5.3
+  "@types/papaparse": ^5.5.2
 
 catalogMode: prefer
 

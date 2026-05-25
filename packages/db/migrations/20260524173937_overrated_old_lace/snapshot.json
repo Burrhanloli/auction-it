@@ -1,7 +1,7 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "20e36fa7-c87b-45ae-91af-125740eaa70a",
+  "id": "982ba626-818e-4cf2-ad0b-f334822a404b",
   "prevIds": [
     "00000000-0000-0000-0000-000000000000"
   ],
@@ -411,32 +411,6 @@
       "table": "user"
     },
     {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "username",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "user"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "display_username",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "user"
-    },
-    {
       "type": "timestamp",
       "typeSchema": null,
       "notNull": true,
@@ -458,6 +432,32 @@
       "generated": null,
       "identity": null,
       "name": "updated_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "user"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "username",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "user"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "display_username",
       "entityType": "columns",
       "schema": "public",
       "table": "user"
@@ -562,6 +562,32 @@
       "generated": null,
       "identity": null,
       "name": "auction_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "auction_logs"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "team_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "auction_logs"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'info'",
+      "generated": null,
+      "identity": null,
+      "name": "action_type",
       "entityType": "columns",
       "schema": "public",
       "table": "auction_logs"
@@ -705,6 +731,19 @@
       "generated": null,
       "identity": null,
       "name": "name",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "auctions"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "logo_url",
       "entityType": "columns",
       "schema": "public",
       "table": "auctions"
@@ -1061,27 +1100,14 @@
       "table": "teams"
     },
     {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "captain_name",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "teams"
-    },
-    {
-      "type": "text",
+      "type": "uuid",
       "typeSchema": null,
       "notNull": false,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "captain_image_url",
+      "name": "captain_player_id",
       "entityType": "columns",
       "schema": "public",
       "table": "teams"
@@ -1356,6 +1382,23 @@
     {
       "nameExplicit": false,
       "columns": [
+        "team_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "teams",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "SET NULL",
+      "name": "auction_logs_team_id_teams_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "auction_logs"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
         "auction_id"
       ],
       "schemaTo": "public",
@@ -1502,6 +1545,23 @@
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "teams_auction_id_auctions_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "teams"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "captain_player_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "players",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "SET NULL",
+      "name": "teams_captain_player_id_players_id_fkey",
       "entityType": "fks",
       "schema": "public",
       "table": "teams"

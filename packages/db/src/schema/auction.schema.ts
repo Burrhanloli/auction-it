@@ -1,4 +1,4 @@
-import { pgTable, text, integer, timestamp, uuid, index } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, timestamp, uuid, index, AnyPgColumn } from "drizzle-orm/pg-core";
 
 import { user } from "./auth.schema";
 
@@ -6,6 +6,7 @@ export const auctions = pgTable("auctions", {
   id: uuid("id").defaultRandom().primaryKey(),
   slug: text("slug").unique(),
   name: text("name").notNull(),
+  logoUrl: text("logo_url"),
   status: text("status").$type<"draft" | "active" | "completed">().default("draft").notNull(),
   budgetPerTeam: integer("budget_per_team").default(1000).notNull(),
   userId: text("user_id")
@@ -38,7 +39,9 @@ export const teams = pgTable("teams", {
   logoUrl: text("logo_url"),
   ownerName: text("owner_name").notNull(),
   ownerImageUrl: text("owner_image_url"),
-  captainPlayerId: uuid("captain_player_id").references(() => players.id, { onDelete: "set null" }),
+  captainPlayerId: uuid("captain_player_id").references((): AnyPgColumn => players.id, {
+    onDelete: "set null",
+  }),
   totalBudget: integer("total_budget").notNull(),
   remainingBudget: integer("remaining_budget").notNull(),
   passcode: text("passcode").notNull(), // 6-digit passcode for Strategy Deck
@@ -60,7 +63,9 @@ export const players = pgTable("players", {
     .$type<"unsold" | "bidding" | "sold" | "captain">()
     .default("unsold")
     .notNull(),
-  soldToTeamId: uuid("sold_to_team_id").references(() => teams.id, { onDelete: "set null" }),
+  soldToTeamId: uuid("sold_to_team_id").references((): AnyPgColumn => teams.id, {
+    onDelete: "set null",
+  }),
   soldPoints: integer("sold_points"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -106,6 +111,8 @@ export const auctionLogs = pgTable(
     auctionId: uuid("auction_id")
       .notNull()
       .references(() => auctions.id, { onDelete: "cascade" }),
+    teamId: uuid("team_id").references((): AnyPgColumn => teams.id, { onDelete: "set null" }),
+    actionType: text("action_type").$type<"info" | "sold" | "unsold">().default("info").notNull(),
     message: text("message").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },

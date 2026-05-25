@@ -20,6 +20,7 @@ export const $getAuction = createServerFn({ method: "GET" })
       with: {
         categories: true,
         teams: {
+          with: { captainPlayer: true },
           orderBy: (teams, { asc }) => [asc(teams.name)],
         },
         players: {
@@ -57,6 +58,9 @@ export const $getAuctionState = createServerFn({ method: "GET" })
       where: {
         auctionId: resolvedId,
       },
+      with: {
+        team: true,
+      },
       orderBy: (auctionLogs, { desc }) => [desc(auctionLogs.createdAt)],
       limit: 100,
     });
@@ -71,6 +75,7 @@ export const $createAuction = createServerFn({ method: "POST" })
     (data: {
       name: string;
       budgetPerTeam: number;
+      logoUrl: string | null;
       categories: Array<{ name: string; basePoints: number }>;
     }) => data,
   )
@@ -79,13 +84,14 @@ export const $createAuction = createServerFn({ method: "POST" })
 
     // Use transaction for safe multi-table creation
     const slugVal = `${slugify(data.name)}-${generateRandomSuffix()}`;
-    const auction = await db.transaction(async (tx) => {
+    const auction = await (async () => {
       // 1. Create Auction
-      const [auction] = await tx
+      const [auction] = await db
         .insert(schema.auctions)
         .values({
           name: data.name,
           budgetPerTeam: data.budgetPerTeam,
+          logoUrl: data.logoUrl,
           userId,
           slug: slugVal,
         })
@@ -93,7 +99,7 @@ export const $createAuction = createServerFn({ method: "POST" })
 
       // 2. Create Categories
       if (data.categories.length > 0) {
-        await tx.insert(schema.categories).values(
+        await db.insert(schema.categories).values(
           data.categories.map((c) => ({
             auctionId: auction.id,
             name: c.name,
@@ -103,19 +109,19 @@ export const $createAuction = createServerFn({ method: "POST" })
       }
 
       // 3. Create Default Auction State
-      await tx.insert(schema.auctionState).values({
+      await db.insert(schema.auctionState).values({
         auctionId: auction.id,
         stage: "paused",
       });
 
       // 4. Create initial log entry
-      await tx.insert(schema.auctionLogs).values({
+      await db.insert(schema.auctionLogs).values({
         auctionId: auction.id,
         message: `Auction "${data.name}" was successfully configured.`,
       });
 
       return auction;
-    });
+    })();
 
     return { auctionId: auction.slug };
   });
@@ -129,15 +135,16 @@ export const $updateAuction = createServerFn({ method: "POST" })
       slug: string;
       name: string;
       budgetPerTeam: number;
+      logoUrl: string | null;
       categories: Array<{ id?: string; name: string; basePoints: number }>;
     }) => data,
   )
   .handler(async ({ data }) => {
     const resolvedId = await resolveAuctionId(data.auctionId);
 
-    const result = await db.transaction(async (tx) => {
+    const result = await (async () => {
       // 1. Get existing to resolve suffix
-      const existing = await tx.query.auctions.findFirst({
+      const existing = await db.query.auctions.findFirst({
         where: {
           id: resolvedId,
         },
@@ -149,17 +156,18 @@ export const $updateAuction = createServerFn({ method: "POST" })
       const newSlug = `${slugify(data.slug)}-${suffix}`;
 
       // 2. Update Auction metadata
-      await tx
+      await db
         .update(schema.auctions)
         .set({
           name: data.name,
           budgetPerTeam: data.budgetPerTeam,
+          logoUrl: data.logoUrl,
           slug: newSlug,
         })
         .where(eq(schema.auctions.id, resolvedId));
 
       // 3. Safe Category Diffing to preserve active player assignments
-      const existingCats = await tx
+      const existingCats = await db
         .select()
         .from(schema.categories)
         .where(eq(schema.categories.auctionId, resolvedId));
@@ -169,7 +177,7 @@ export const $updateAuction = createServerFn({ method: "POST" })
       // Delete categories that are omitted from the new configuration
       for (const exc of existingCats) {
         if (!inputCatIds.includes(exc.id)) {
-          await tx.delete(schema.categories).where(eq(schema.categories.id, exc.id));
+          await db.delete(schema.categories).where(eq(schema.categories.id, exc.id));
         }
       }
 
@@ -177,7 +185,7 @@ export const $updateAuction = createServerFn({ method: "POST" })
       for (const inputCat of data.categories) {
         if (inputCat.id) {
           // Update
-          await tx
+          await db
             .update(schema.categories)
             .set({
               name: inputCat.name,
@@ -186,7 +194,7 @@ export const $updateAuction = createServerFn({ method: "POST" })
             .where(eq(schema.categories.id, inputCat.id));
         } else {
           // Insert
-          await tx.insert(schema.categories).values({
+          await db.insert(schema.categories).values({
             auctionId: resolvedId,
             name: inputCat.name,
             basePoints: inputCat.basePoints,
@@ -195,17 +203,37 @@ export const $updateAuction = createServerFn({ method: "POST" })
       }
 
       // Log setup update
-      await tx.insert(schema.auctionLogs).values({
+      await db.insert(schema.auctionLogs).values({
         auctionId: resolvedId,
         message: `Auction setup was updated (Budget: ${data.budgetPerTeam} pts).`,
       });
 
       return { newSlug };
-    });
+    })();
 
     // Notify connected streams
     publishAuctionUpdate(resolvedId, "state", {});
     return { success: true, slug: result.newSlug };
+  });
+
+// Mutation: Change auction status (e.g. draft to active)
+export const $updateAuctionStatus = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .inputValidator((data: { auctionId: string; status: "draft" | "active" | "completed" }) => data)
+  .handler(async ({ data }) => {
+    const resolvedId = await resolveAuctionId(data.auctionId);
+    await db
+      .update(schema.auctions)
+      .set({ status: data.status })
+      .where(eq(schema.auctions.id, resolvedId));
+
+    await db.insert(schema.auctionLogs).values({
+      auctionId: resolvedId,
+      message: `Auction status updated to ${data.status.toUpperCase()}.`,
+    });
+
+    publishAuctionUpdate(resolvedId, "state", { status: data.status });
+    return { success: true };
   });
 
 // Mutation: Roster Manager - Create a new team with budget and passcode
@@ -228,8 +256,8 @@ export const $addTeam = createServerFn({ method: "POST" })
     const suffix = generateRandomSuffix();
     const slugVal = `${slugBase}-${suffix}`;
 
-    const result = await db.transaction(async (tx) => {
-      const [team] = await tx
+    const result = await (async () => {
+      const [team] = await db
         .insert(schema.teams)
         .values({
           auctionId: resolvedAuctionId,
@@ -244,13 +272,13 @@ export const $addTeam = createServerFn({ method: "POST" })
         })
         .returning();
 
-      await tx.insert(schema.auctionLogs).values({
+      await db.insert(schema.auctionLogs).values({
         auctionId: resolvedAuctionId,
         message: `Team "${data.name}" (Owner: ${data.ownerName}) registered.`,
       });
 
       return { teamId: team.id, slug: team.slug };
-    });
+    })();
 
     // Notify connected streams that team listings have changed
     publishAuctionUpdate(resolvedAuctionId, "team_update", { teamId: result.teamId });
@@ -275,8 +303,8 @@ export const $updateTeam = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const resolvedTeamId = await resolveTeamId(data.teamId);
 
-    const result = await db.transaction(async (tx) => {
-      const existing = await tx.query.teams.findFirst({
+    const result = await (async () => {
+      const existing = await db.query.teams.findFirst({
         where: {
           id: resolvedTeamId,
         },
@@ -291,7 +319,7 @@ export const $updateTeam = createServerFn({ method: "POST" })
       const budgetDiff = data.totalBudget - existing.totalBudget;
       const newRemainingBudget = existing.remainingBudget + budgetDiff;
 
-      await tx
+      await db
         .update(schema.teams)
         .set({
           name: data.name,
@@ -305,13 +333,13 @@ export const $updateTeam = createServerFn({ method: "POST" })
         })
         .where(eq(schema.teams.id, resolvedTeamId));
 
-      await tx.insert(schema.auctionLogs).values({
+      await db.insert(schema.auctionLogs).values({
         auctionId: existing.auctionId,
         message: `Team "${data.name}" details updated.`,
       });
 
       return { auctionId: existing.auctionId, slug: newSlug };
-    });
+    })();
 
     publishAuctionUpdate(result.auctionId, "team_update", { teamId: resolvedTeamId });
     return { success: true, slug: result.slug };
@@ -352,9 +380,9 @@ export const $drawPlayer = createServerFn({ method: "POST" })
   .inputValidator((data: { auctionId: string; categoryId: string }) => data)
   .handler(async ({ data }) => {
     const resolvedId = await resolveAuctionId(data.auctionId);
-    const result = await db.transaction(async (tx) => {
+    const result = await (async () => {
       // 1. Get unsold players in category
-      const unsoldPlayers = await tx
+      const unsoldPlayers = await db
         .select()
         .from(schema.players)
         .where(
@@ -374,7 +402,7 @@ export const $drawPlayer = createServerFn({ method: "POST" })
       const chosenPlayer = unsoldPlayers[randomIndex];
 
       // 3. Get category base points
-      const [category] = await tx
+      const [category] = await db
         .select()
         .from(schema.categories)
         .where(eq(schema.categories.id, data.categoryId));
@@ -382,13 +410,13 @@ export const $drawPlayer = createServerFn({ method: "POST" })
       const basePoints = category?.basePoints ?? 100;
 
       // 4. Update player status to 'bidding' to prevent double extraction
-      await tx
+      await db
         .update(schema.players)
         .set({ status: "bidding" })
         .where(eq(schema.players.id, chosenPlayer.id));
 
       // 5. Reset and configure active state
-      await tx
+      await db
         .update(schema.auctionState)
         .set({
           currentPlayerId: chosenPlayer.id,
@@ -401,13 +429,13 @@ export const $drawPlayer = createServerFn({ method: "POST" })
 
       // 6. Log dynamic action
       const logMessage = `Player "${chosenPlayer.name}" drawn for bidding (Base: ${basePoints} pts).`;
-      await tx.insert(schema.auctionLogs).values({
+      await db.insert(schema.auctionLogs).values({
         auctionId: resolvedId,
         message: logMessage,
       });
 
       return { player: chosenPlayer, basePoints, logMessage };
-    });
+    })();
 
     // Broadcast update to open screens instantly
     publishAuctionUpdate(resolvedId, "state", { stage: "bidding" });
@@ -423,9 +451,9 @@ export const $incrementBid = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const resolvedAuctionId = await resolveAuctionId(data.auctionId);
     const resolvedTeamId = await resolveTeamId(data.teamId);
-    const result = await db.transaction(async (tx) => {
+    const result = await (async () => {
       // 1. Get current active state
-      const state = await tx.query.auctionState.findFirst({
+      const state = await db.query.auctionState.findFirst({
         where: {
           auctionId: resolvedAuctionId,
         },
@@ -444,7 +472,7 @@ export const $incrementBid = createServerFn({ method: "POST" })
       }
 
       // 3. Get team budget and validate remaining
-      const [team] = await tx
+      const [team] = await db
         .select()
         .from(schema.teams)
         .where(eq(schema.teams.id, resolvedTeamId));
@@ -460,7 +488,7 @@ export const $incrementBid = createServerFn({ method: "POST" })
       }
 
       // 4. Record new high bid
-      await tx
+      await db
         .update(schema.auctionState)
         .set({
           currentBidPoints: data.bidPoints,
@@ -471,13 +499,13 @@ export const $incrementBid = createServerFn({ method: "POST" })
 
       // 5. Log the new bid
       const logMessage = `"${team.name}" bid ${data.bidPoints} points for ${state.currentPlayer?.name}.`;
-      await tx.insert(schema.auctionLogs).values({
+      await db.insert(schema.auctionLogs).values({
         auctionId: resolvedAuctionId,
         message: logMessage,
       });
 
       return { logMessage };
-    });
+    })();
 
     // Broadcast real-time updates
     publishAuctionUpdate(resolvedAuctionId, "state", { stage: "bidding" });
@@ -492,9 +520,9 @@ export const $markSold = createServerFn({ method: "POST" })
   .inputValidator((auctionId: string) => auctionId)
   .handler(async ({ data: auctionId }) => {
     const resolvedId = await resolveAuctionId(auctionId);
-    const result = await db.transaction(async (tx) => {
+    const result = await (async () => {
       // 1. Query current state details
-      const state = await tx.query.auctionState.findFirst({
+      const state = await db.query.auctionState.findFirst({
         where: {
           auctionId: resolvedId,
         },
@@ -517,7 +545,7 @@ export const $markSold = createServerFn({ method: "POST" })
       const buyerTeamName = state.currentHighestBidderTeam?.name ?? "Unknown Team";
 
       // 2. Lock player to sold status
-      await tx
+      await db
         .update(schema.players)
         .set({
           status: "sold",
@@ -528,7 +556,7 @@ export const $markSold = createServerFn({ method: "POST" })
 
       // 3. Deduct budget from the winning team
       const newRemainingBudget = state.currentHighestBidderTeam!.remainingBudget - finalPoints;
-      await tx
+      await db
         .update(schema.teams)
         .set({
           remainingBudget: newRemainingBudget,
@@ -536,7 +564,7 @@ export const $markSold = createServerFn({ method: "POST" })
         .where(eq(schema.teams.id, buyerTeamId));
 
       // 4. Transition state to 'sold' stage for celebration screen
-      await tx
+      await db
         .update(schema.auctionState)
         .set({
           stage: "sold",
@@ -546,13 +574,15 @@ export const $markSold = createServerFn({ method: "POST" })
 
       // 5. Insert historical ticker log
       const logMessage = `🔨 SOLD: "${state.currentPlayer?.name}" joins "${buyerTeamName}" for ${finalPoints} points!`;
-      await tx.insert(schema.auctionLogs).values({
+      await db.insert(schema.auctionLogs).values({
         auctionId: resolvedId,
         message: logMessage,
+        actionType: "sold",
+        teamId: buyerTeamId,
       });
 
       return { logMessage, buyerTeamId };
-    });
+    })();
 
     // Notify connected client layouts
     publishAuctionUpdate(resolvedId, "state", { stage: "sold" });
@@ -568,9 +598,9 @@ export const $markUnsold = createServerFn({ method: "POST" })
   .inputValidator((auctionId: string) => auctionId)
   .handler(async ({ data: auctionId }) => {
     const resolvedId = await resolveAuctionId(auctionId);
-    const result = await db.transaction(async (tx) => {
+    const result = await (async () => {
       // 1. Get active player details
-      const state = await tx.query.auctionState.findFirst({
+      const state = await db.query.auctionState.findFirst({
         where: {
           auctionId: resolvedId,
         },
@@ -584,7 +614,7 @@ export const $markUnsold = createServerFn({ method: "POST" })
       }
 
       // 2. Set player back to unsold state
-      await tx
+      await db
         .update(schema.players)
         .set({
           status: "unsold",
@@ -592,7 +622,7 @@ export const $markUnsold = createServerFn({ method: "POST" })
         .where(eq(schema.players.id, state.currentPlayerId));
 
       // 3. Transition stage to 'unsold'
-      await tx
+      await db
         .update(schema.auctionState)
         .set({
           stage: "unsold",
@@ -602,13 +632,14 @@ export const $markUnsold = createServerFn({ method: "POST" })
 
       // 4. Log event
       const logMessage = `💨 UNSOLD: "${state.currentPlayer?.name}" went unsold.`;
-      await tx.insert(schema.auctionLogs).values({
+      await db.insert(schema.auctionLogs).values({
         auctionId: resolvedId,
         message: logMessage,
+        actionType: "unsold",
       });
 
       return { logMessage };
-    });
+    })();
 
     // Broadcast changes
     publishAuctionUpdate(resolvedId, "state", { stage: "unsold" });
@@ -662,6 +693,7 @@ export const $getTeamStrategyDeck = createServerFn({ method: "GET" })
             category: true,
           },
         },
+        captainPlayer: true,
       },
     });
 
@@ -748,9 +780,9 @@ export const $selectCaptain = createServerFn({ method: "POST" })
   .handler(async ({ data }: { data: { teamId: string; playerId: string } }) => {
     const resolvedTeamId = await resolveTeamId(data.teamId);
 
-    const result = await db.transaction(async (tx) => {
+    const result = await (async () => {
       // 1. Fetch team to verify it exists and get auctionId
-      const team = await tx.query.teams.findFirst({
+      const team = await db.query.teams.findFirst({
         where: { id: resolvedTeamId },
         with: { auction: true },
       });
@@ -758,7 +790,7 @@ export const $selectCaptain = createServerFn({ method: "POST" })
       if (!team) throw new Error("Team not found!");
 
       // 2. Fetch the player to be selected
-      const player = await tx.query.players.findFirst({
+      const player = await db.query.players.findFirst({
         where: { id: data.playerId },
       });
 
@@ -768,7 +800,7 @@ export const $selectCaptain = createServerFn({ method: "POST" })
 
       // 3. Optional: check if auction has started (e.g., if there are any sold players).
       // If the user wants to block changing after auction starts, we can check if any player is sold.
-      const soldPlayersCount = await tx.$count(
+      const soldPlayersCount = await db.$count(
         schema.players,
         and(eq(schema.players.auctionId, team.auctionId), eq(schema.players.status, "sold")),
       );
@@ -778,7 +810,7 @@ export const $selectCaptain = createServerFn({ method: "POST" })
       }
 
       // 4. Release old captain if exists
-      const oldCaptain = await tx.query.players.findFirst({
+      const oldCaptain = await db.query.players.findFirst({
         where: {
           auctionId: team.auctionId,
           soldToTeamId: resolvedTeamId,
@@ -787,30 +819,28 @@ export const $selectCaptain = createServerFn({ method: "POST" })
       });
 
       if (oldCaptain) {
-        await tx
+        await db
           .update(schema.players)
           .set({ status: "unsold", soldToTeamId: null, soldPoints: null })
           .where(eq(schema.players.id, oldCaptain.id));
       }
 
       // 5. Update new captain
-      await tx
+      await db
         .update(schema.players)
         .set({ status: "captain", soldToTeamId: resolvedTeamId, soldPoints: 0 })
         .where(eq(schema.players.id, player.id));
 
       // 6. Update team record
-      await tx
+      await db
         .update(schema.teams)
         .set({
           captainPlayerId: player.id,
-          captainName: player.name,
-          captainImageUrl: player.imageUrl,
         })
         .where(eq(schema.teams.id, resolvedTeamId));
 
       return { auctionId: team.auctionId };
-    });
+    })();
 
     publishAuctionUpdate(result.auctionId, "team_update", { teamId: resolvedTeamId });
     return { success: true };
@@ -833,3 +863,90 @@ export const $getAllAuctions = createServerFn({ method: "GET" }).handler(async (
   const list = await db.select().from(schema.auctions).orderBy(desc(schema.auctions.createdAt));
   return list;
 });
+
+// Mutation: Roster Manager - Create multiple teams from CSV
+export const $addTeamsBulk = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .inputValidator(
+    (data: {
+      auctionId: string;
+      teams: Array<{
+        name: string;
+        logoUrl: string | null;
+        ownerName: string;
+        ownerImageUrl: string | null;
+        totalBudget: number;
+        passcode: string;
+      }>;
+    }) => data,
+  )
+  .handler(async ({ data }) => {
+    const resolvedAuctionId = await resolveAuctionId(data.auctionId);
+
+    if (data.teams.length === 0) return { success: true };
+
+    const teamsToInsert = data.teams.map((team) => {
+      const slugBase = slugify(team.name);
+      const suffix = generateRandomSuffix();
+      return {
+        auctionId: resolvedAuctionId,
+        name: team.name,
+        logoUrl: team.logoUrl,
+        ownerName: team.ownerName,
+        ownerImageUrl: team.ownerImageUrl,
+        totalBudget: team.totalBudget,
+        remainingBudget: team.totalBudget,
+        passcode: team.passcode,
+        slug: `${slugBase}-${suffix}`,
+      };
+    });
+
+    await db.insert(schema.teams).values(teamsToInsert);
+
+    await db.insert(schema.auctionLogs).values({
+      auctionId: resolvedAuctionId,
+      message: `Bulk uploaded ${data.teams.length} teams.`,
+    });
+
+    // Notify connected streams that team listings have changed
+    publishAuctionUpdate(resolvedAuctionId, "team_update", {});
+    return { success: true, count: data.teams.length };
+  });
+
+// Mutation: Player Directory - Create multiple players from CSV
+export const $addPlayersBulk = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .inputValidator(
+    (data: {
+      auctionId: string;
+      players: Array<{
+        categoryId: string;
+        name: string;
+        skills: string;
+        imageUrl: string | null;
+      }>;
+    }) => data,
+  )
+  .handler(async ({ data }) => {
+    const resolvedId = await resolveAuctionId(data.auctionId);
+
+    if (data.players.length === 0) return { success: true };
+
+    const playersToInsert = data.players.map((player) => ({
+      auctionId: resolvedId,
+      categoryId: player.categoryId,
+      name: player.name,
+      skills: player.skills,
+      imageUrl: player.imageUrl,
+      status: "unsold" as const,
+    }));
+
+    await db.insert(schema.players).values(playersToInsert);
+
+    await db.insert(schema.auctionLogs).values({
+      auctionId: resolvedId,
+      message: `Bulk uploaded ${data.players.length} players.`,
+    });
+
+    return { success: true, count: data.players.length };
+  });

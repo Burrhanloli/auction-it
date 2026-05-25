@@ -18,6 +18,7 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { ImageViewer } from "#/components/image-viewer";
 import { $getAuction, $updateAuction } from "#/lib/auction-actions";
 import { slugify } from "#/lib/slug";
 
@@ -84,6 +85,7 @@ function SetupForm({ auction, auctionId }: SetupFormProps) {
   const form = useForm({
     defaultValues: {
       name: auction.name,
+      logoUrl: auction.logoUrl || "",
       slug: slugPrefix,
       suffix: slugSuffix,
       budgetPerTeam: auction.budgetPerTeam,
@@ -131,6 +133,7 @@ function SetupForm({ auction, auctionId }: SetupFormProps) {
         auctionId,
         slug: value.slug.trim(),
         name: value.name.trim(),
+        logoUrl: value.logoUrl ? value.logoUrl.trim() : null,
         budgetPerTeam: value.budgetPerTeam,
         categories: value.categories.map((c) => ({
           id: c.id,
@@ -215,6 +218,33 @@ function SetupForm({ auction, auctionId }: SetupFormProps) {
           />
 
           <form.Field
+            name="logoUrl"
+            children={(field) => (
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
+                  Auction Logo URL (Optional)
+                </Label>
+                <div className="flex items-center gap-3">
+                  {field.state.value && (
+                    <ImageViewer
+                      src={field.state.value}
+                      alt="Logo preview"
+                      className="h-12 w-12 rounded-none border border-[#3c3c3c] bg-black object-cover"
+                    />
+                  )}
+                  <Input
+                    id={field.name}
+                    placeholder="https://example.com/logo.png"
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    className="flex-1 rounded-none border border-[#3c3c3c] bg-black text-xs text-white"
+                  />
+                </div>
+              </div>
+            )}
+          />
+
+          <form.Field
             name="budgetPerTeam"
             children={(field) => (
               <div className="space-y-2">
@@ -269,10 +299,8 @@ function SetupForm({ auction, auctionId }: SetupFormProps) {
       </div>
 
       {/* Category Decks Card */}
-      <form.Field
-        name="categories"
-        mode="array"
-        children={(field) => (
+      <form.Field name="categories" mode="array">
+        {(field) => (
           <div className="relative overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8">
             <div className="mb-8 flex items-center justify-between border-b border-[#3c3c3c] pb-5">
               <div className="flex items-center space-x-3">
@@ -311,9 +339,8 @@ function SetupForm({ auction, auctionId }: SetupFormProps) {
                       <Label className="text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
                         Category Name
                       </Label>
-                      <form.Field
-                        name={`categories[${idx}].name`}
-                        children={(subField) => (
+                      <form.Field name={`categories[${idx}].name`}>
+                        {(subField) => (
                           <Input
                             placeholder="e.g. Elite Players, Batsmen, All-rounders"
                             value={subField.state.value}
@@ -321,7 +348,7 @@ function SetupForm({ auction, auctionId }: SetupFormProps) {
                             className="rounded-none border border-[#3c3c3c] bg-black text-xs text-white"
                           />
                         )}
-                      />
+                      </form.Field>
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
@@ -329,9 +356,8 @@ function SetupForm({ auction, auctionId }: SetupFormProps) {
                       </Label>
                       <div className="relative">
                         <CoinsIcon className="absolute top-2.5 left-3 h-4 w-4 text-[#bbbbbb]" />
-                        <form.Field
-                          name={`categories[${idx}].basePoints`}
-                          children={(subField) => (
+                        <form.Field name={`categories[${idx}].basePoints`}>
+                          {(subField) => (
                             <Input
                               type="number"
                               placeholder="100"
@@ -340,7 +366,7 @@ function SetupForm({ auction, auctionId }: SetupFormProps) {
                               className="rounded-none border border-[#3c3c3c] bg-black pl-9 text-xs text-white"
                             />
                           )}
-                        />
+                        </form.Field>
                       </div>
                     </div>
                   </div>
@@ -375,7 +401,7 @@ function SetupForm({ auction, auctionId }: SetupFormProps) {
             </div>
           </div>
         )}
-      />
+      </form.Field>
 
       {/* Save Settings Block */}
       <div className="flex items-center justify-between rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8">

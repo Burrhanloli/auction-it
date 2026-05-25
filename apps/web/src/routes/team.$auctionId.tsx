@@ -21,6 +21,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 
+import { ImageViewer } from "#/components/image-viewer";
 import { useAuctionSubscription } from "#/hooks/use-auction-subscription";
 import { useTeamSession } from "#/hooks/use-team-session";
 import {
@@ -392,7 +393,7 @@ function TeamStrategyDeckPage() {
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-3">
             {team.logoUrl ? (
-              <img
+              <ImageViewer
                 src={team.logoUrl}
                 alt={team.name}
                 className="h-10 w-10 rounded-none border border-[#3c3c3c] bg-black object-cover"
@@ -410,8 +411,17 @@ function TeamStrategyDeckPage() {
                 </span>
               </div>
               <span className="mt-1 flex items-center text-[8px] font-black tracking-[1.5px] text-[#bbbbbb] uppercase">
-                <div className="mr-1.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-none border border-white bg-white p-0.5">
-                  <TrophyIcon className="h-2.5 w-2.5 text-black" />
+                <div className="mr-1.5 flex h-4 w-4 shrink-0 items-center justify-center overflow-hidden rounded-none border border-white bg-white p-0.5">
+                  {auction.logoUrl ? (
+                    <ImageViewer
+                      src={auction.logoUrl}
+                      alt="Logo"
+                      className="h-full w-full object-cover"
+                      triggerClassName="w-full h-full block"
+                    />
+                  ) : (
+                    <TrophyIcon className="h-2.5 w-2.5 text-black" />
+                  )}
                 </div>
                 <span>AUCTION-IT : {auction.name}</span>
               </span>
@@ -504,7 +514,7 @@ function TeamStrategyDeckPage() {
               <div className="flex items-center justify-between rounded-none border border-[#3c3c3c] bg-black p-3.5">
                 <div className="flex items-center space-x-3">
                   {team.ownerImageUrl ? (
-                    <img
+                    <ImageViewer
                       src={team.ownerImageUrl}
                       alt={team.ownerName}
                       className="h-10 w-10 rounded-none border border-[#3c3c3c] bg-[#1a1a1a] object-cover"
@@ -525,10 +535,10 @@ function TeamStrategyDeckPage() {
 
               <div className="flex items-center justify-between rounded-none border border-[#3c3c3c] bg-black p-3.5">
                 <div className="flex items-center space-x-3">
-                  {team.captainImageUrl ? (
+                  {team.captainPlayer?.imageUrl ? (
                     <img
-                      src={team.captainImageUrl}
-                      alt={team.captainName}
+                      src={team.captainPlayer?.imageUrl}
+                      alt={team.captainPlayer?.name}
                       className="h-10 w-10 rounded-none border border-[#3c3c3c] bg-[#1a1a1a] object-cover"
                     />
                   ) : (
@@ -537,7 +547,9 @@ function TeamStrategyDeckPage() {
                     </div>
                   )}
                   <div>
-                    <span className="block text-xs font-bold text-white">{team.captainName}</span>
+                    <span className="block text-xs font-bold text-white">
+                      {team.captainPlayer?.name}
+                    </span>
                     <span className="mt-0.5 block text-[9px] font-semibold tracking-[1.5px] text-[#bbbbbb] uppercase">
                       Team Captain
                     </span>
@@ -799,70 +811,100 @@ function TeamStrategyDeckPage() {
             </div>
 
             {/* List */}
-            <div className="grid max-h-[48vh] grid-cols-1 gap-4 overflow-y-auto pr-1 md:grid-cols-2">
+            <div className="grid max-h-[48vh] grid-cols-1 gap-6 overflow-y-auto pr-1 md:grid-cols-2 lg:max-h-[68vh]">
               {filteredUnsoldPlayers.map((player: any) => {
                 const isWishlisted = wishlistPlayerIds.includes(player.id);
 
                 return (
                   <div
                     key={player.id}
-                    className="flex items-center justify-between rounded-none border border-[#3c3c3c] bg-black p-4 transition-colors hover:border-white"
+                    className="relative flex flex-col overflow-hidden rounded-none border border-[#3c3c3c] bg-black transition-all duration-300 hover:scale-[1.02] hover:border-white"
                   >
-                    <div className="flex items-center space-x-3">
+                    {/* Top Half: Full Bleed 4:5 Image */}
+                    <div className="relative aspect-[4/5] w-full shrink-0 border-b border-[#3c3c3c] bg-black">
                       {player.imageUrl ? (
                         <img
                           src={player.imageUrl}
                           alt={player.name}
-                          className="h-10 w-10 rounded-none border border-[#3c3c3c] bg-[#1a1a1a] object-cover"
+                          className="h-full w-full rounded-none object-cover"
                         />
                       ) : (
-                        <div className="flex h-10 w-10 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] text-xs font-bold text-[#bbbbbb]">
-                          {player.name.slice(0, 2)}
+                        <div className="flex h-full w-full flex-col items-center justify-center font-black text-white uppercase opacity-20">
+                          <span className="text-8xl">{player.name.slice(0, 1)}</span>
+                          <span className="text-5xl">
+                            {player.name.split(" ")?.[1]?.slice(0, 1) || ""}
+                          </span>
                         </div>
                       )}
-                      <div>
-                        <h4 className="text-xs font-black text-white">{player.name}</h4>
-                        <span
-                          className="block max-w-[120px] truncate text-[9px] text-[#bbbbbb]"
-                          title={player.skills}
-                        >
-                          Skills: {player.skills}
-                        </span>
-                        <span className="mt-1 inline-block rounded-none border border-[#3c3c3c] bg-black px-1.5 py-0.5 text-[8px] font-black tracking-[1.5px] text-[#bbbbbb] uppercase">
-                          Deck: {player.category?.name}
-                        </span>
-                      </div>
-                    </div>
 
-                    <div className="flex items-center space-x-3.5 text-right">
-                      <div>
-                        <span className="block text-[8px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
-                          Base price
-                        </span>
-                        <span className="text-xs font-black text-white">
-                          {player.category?.basePoints} pts
-                        </span>
-                      </div>
-
-                      <div className="flex flex-col space-y-2">
-                        <button
-                          onClick={() => handleSelectCaptain(player.id)}
-                          className="flex cursor-pointer items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] px-2 py-1 text-[8px] font-bold tracking-[1px] text-[#bbbbbb] uppercase transition-all hover:border-white hover:text-white"
-                          title="Select as Team Captain"
-                        >
-                          Make Captain
-                        </button>
+                      {/* Action buttons overlay top-right */}
+                      <div className="absolute top-4 right-4 flex flex-col gap-2">
                         <button
                           onClick={() => handleToggleWishlist(player.id, isWishlisted)}
-                          className={`flex cursor-pointer items-center justify-center rounded-none border p-2 transition-all ${
+                          className={`flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border transition-all ${
                             isWishlisted
-                              ? "border-white bg-white text-black"
-                              : "border-[#3c3c3c] bg-[#1a1a1a] text-[#bbbbbb] hover:border-white hover:text-white"
+                              ? "border-white bg-white text-black shadow-lg shadow-black/50"
+                              : "border-[#3c3c3c] bg-[#1a1a1a] text-[#bbbbbb] hover:border-white hover:bg-black hover:text-white"
                           }`}
                           title={isWishlisted ? "Remove Wishlist Star" : "Add Wishlist Star"}
                         >
-                          <StarIcon className={`h-3 w-3 ${isWishlisted ? "fill-current" : ""}`} />
+                          <StarIcon className={`h-5 w-5 ${isWishlisted ? "fill-current" : ""}`} />
                         </button>
+                      </div>
+
+                      {/* Status badge bottom-left */}
+                      {player.status === "bidding" && (
+                        <div className="absolute bottom-4 left-4 flex flex-col gap-2">
+                          <span className="inline-flex w-fit animate-pulse items-center rounded-none border border-[#3c3c3c] bg-black px-3 py-1 text-[10px] font-black tracking-[1.5px] text-white uppercase shadow-lg shadow-black/50">
+                            <span className="mr-1.5 h-2 w-2 rounded-full bg-[#0fa336]" />
+                            ACTIVE BID
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Bottom Half: Content padding p-6 */}
+                    <div className="flex flex-1 flex-col justify-between bg-[#1a1a1a] p-6">
+                      <div>
+                        {/* Category tag */}
+                        <span className="mb-4 inline-block rounded-none border border-[#3c3c3c] bg-black px-2.5 py-1 text-[10px] font-black tracking-[1.5px] text-[#bbbbbb] uppercase">
+                          {player.category?.name || "Player Pool"}
+                        </span>
+
+                        <h4
+                          className="mb-2 text-2xl leading-none font-bold tracking-tight text-white uppercase"
+                          title={player.name}
+                        >
+                          {player.name}
+                        </h4>
+
+                        <p className="mb-6 text-sm font-light text-[#bbbbbb]">
+                          <span className="mb-1 block text-[10px] font-bold tracking-[1.5px] text-[#7e7e7e] uppercase">
+                            Skills
+                          </span>
+                          {player.skills}
+                        </p>
+                      </div>
+
+                      {/* Bottom Stats Line & Actions */}
+                      <div className="flex w-full items-center justify-between border-t border-[#3c3c3c] pt-4">
+                        <div className="min-w-0 flex-1">
+                          <span className="block text-[10px] font-bold tracking-[1.5px] text-[#7e7e7e] uppercase">
+                            Base Value
+                          </span>
+                          <span className="text-xl font-bold text-white uppercase">
+                            {player.category?.basePoints} pts
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <button
+                            onClick={() => handleSelectCaptain(player.id)}
+                            className="flex cursor-pointer items-center justify-center rounded-none border border-white bg-transparent px-4 py-2 text-[10px] font-bold tracking-[1.5px] text-white uppercase transition-all hover:bg-white hover:text-black"
+                            title="Select as Team Captain"
+                          >
+                            Make Captain
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>

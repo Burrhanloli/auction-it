@@ -66,75 +66,106 @@ function SignupForm() {
         <div className="flex flex-col gap-6">
           <div className="flex flex-col items-center gap-4 text-center">
             <Link to="/" className="flex flex-col items-center gap-2 font-medium">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-linear-to-tr from-emerald-500 to-teal-400 p-0.5 shadow-[0_0_20px_rgba(16,185,129,0.35)]">
-                <TrophyIcon className="h-6 w-6 text-slate-950" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-0.5">
+                <TrophyIcon className="h-6 w-6 text-white" />
               </div>
             </Link>
             <div>
-              <span className="bg-linear-to-r from-emerald-400 to-teal-200 bg-clip-text text-xl font-black tracking-widest text-transparent uppercase">
+              <span className="text-xl font-bold tracking-[1.5px] text-white uppercase">
                 AUCTION-IT
               </span>
-              <h1 className="mt-2 text-sm font-bold text-slate-300">
+              <h1 className="mt-2 text-xs font-semibold tracking-[1.5px] text-[#bbbbbb] uppercase">
                 Create Administrative Account
               </h1>
             </div>
           </div>
           <div className="flex flex-col gap-5">
             <div className="grid gap-2">
-              <Label htmlFor="name">Name</Label>
+              <Label
+                htmlFor="name"
+                className="text-xs font-bold tracking-[1.5px] text-[#bbbbbb] uppercase"
+              >
+                Name
+              </Label>
               <Input
                 id="name"
                 name="name"
                 type="text"
                 placeholder="John Doe"
                 readOnly={isPending}
+                className="h-12 rounded-none border-[#3c3c3c] bg-black text-white placeholder-[#7e7e7e] focus:border-white"
                 required
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="username">Username</Label>
+              <Label
+                htmlFor="username"
+                className="text-xs font-bold tracking-[1.5px] text-[#bbbbbb] uppercase"
+              >
+                Username
+              </Label>
               <Input
                 id="username"
                 name="username"
                 type="text"
                 placeholder="username"
                 readOnly={isPending}
+                className="h-12 rounded-none border-[#3c3c3c] bg-black text-white placeholder-[#7e7e7e] focus:border-white"
                 required
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="password">Password</Label>
+              <Label
+                htmlFor="password"
+                className="text-xs font-bold tracking-[1.5px] text-[#bbbbbb] uppercase"
+              >
+                Password
+              </Label>
               <Input
                 id="password"
                 name="password"
                 type="password"
                 placeholder="Password"
                 readOnly={isPending}
+                className="h-12 rounded-none border-[#3c3c3c] bg-black text-white placeholder-[#7e7e7e] focus:border-white"
                 required
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="confirm_password">Confirm Password</Label>
+              <Label
+                htmlFor="confirm_password"
+                className="text-xs font-bold tracking-[1.5px] text-[#bbbbbb] uppercase"
+              >
+                Confirm Password
+              </Label>
               <Input
                 id="confirm_password"
                 name="confirm_password"
                 type="password"
                 placeholder="Confirm Password"
                 readOnly={isPending}
+                className="h-12 rounded-none border-[#3c3c3c] bg-black text-white placeholder-[#7e7e7e] focus:border-white"
                 required
               />
             </div>
-            <Button type="submit" className="mt-2 w-full" size="lg" disabled={isPending}>
-              {isPending && <LoaderCircleIcon className="animate-spin" />}
+            <Button
+              type="submit"
+              className="mt-4 h-12 w-full rounded-none border border-white bg-white font-bold tracking-[1.5px] text-black uppercase transition-colors hover:bg-black hover:text-white"
+              disabled={isPending}
+            >
+              {isPending && <LoaderCircleIcon className="mr-2 h-4 w-4 animate-spin" />}
               {isPending ? "Signing up..." : "Sign up"}
             </Button>
           </div>
         </div>
       </form>
 
-      <div className="text-center text-sm">
+      <div className="text-center text-sm text-[#bbbbbb]">
         Already have an account?{" "}
-        <Link to="/login" className="underline underline-offset-4">
+        <Link
+          to="/login"
+          className="font-bold tracking-[1.5px] text-white uppercase hover:underline"
+        >
           Login
         </Link>
       </div>

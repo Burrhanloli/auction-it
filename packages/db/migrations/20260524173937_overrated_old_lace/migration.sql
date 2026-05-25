@@ -31,10 +31,10 @@ CREATE TABLE "user" (
 	"email" text NOT NULL UNIQUE,
 	"email_verified" boolean DEFAULT false NOT NULL,
 	"image" text,
-	"username" text UNIQUE,
-	"display_username" text,
 	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	"username" text UNIQUE,
+	"display_username" text
 );
 --> statement-breakpoint
 CREATE TABLE "verification" (
@@ -49,6 +49,8 @@ CREATE TABLE "verification" (
 CREATE TABLE "auction_logs" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
 	"auction_id" uuid NOT NULL,
+	"team_id" uuid,
+	"action_type" text DEFAULT 'info' NOT NULL,
 	"message" text NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
@@ -66,6 +68,7 @@ CREATE TABLE "auctions" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
 	"slug" text UNIQUE,
 	"name" text NOT NULL,
+	"logo_url" text,
 	"status" text DEFAULT 'draft' NOT NULL,
 	"budget_per_team" integer DEFAULT 1000 NOT NULL,
 	"user_id" text NOT NULL,
@@ -102,8 +105,7 @@ CREATE TABLE "teams" (
 	"logo_url" text,
 	"owner_name" text NOT NULL,
 	"owner_image_url" text,
-	"captain_name" text NOT NULL,
-	"captain_image_url" text,
+	"captain_player_id" uuid,
 	"total_budget" integer NOT NULL,
 	"remaining_budget" integer NOT NULL,
 	"passcode" text NOT NULL,
@@ -125,6 +127,7 @@ CREATE INDEX "wishlist_team_player_idx" ON "wishlists" ("team_id","player_id");-
 ALTER TABLE "account" ADD CONSTRAINT "account_user_id_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "session" ADD CONSTRAINT "session_user_id_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "auction_logs" ADD CONSTRAINT "auction_logs_auction_id_auctions_id_fkey" FOREIGN KEY ("auction_id") REFERENCES "auctions"("id") ON DELETE CASCADE;--> statement-breakpoint
+ALTER TABLE "auction_logs" ADD CONSTRAINT "auction_logs_team_id_teams_id_fkey" FOREIGN KEY ("team_id") REFERENCES "teams"("id") ON DELETE SET NULL;--> statement-breakpoint
 ALTER TABLE "auction_state" ADD CONSTRAINT "auction_state_auction_id_auctions_id_fkey" FOREIGN KEY ("auction_id") REFERENCES "auctions"("id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "auction_state" ADD CONSTRAINT "auction_state_current_player_id_players_id_fkey" FOREIGN KEY ("current_player_id") REFERENCES "players"("id") ON DELETE SET NULL;--> statement-breakpoint
 ALTER TABLE "auction_state" ADD CONSTRAINT "auction_state_current_highest_bidder_team_id_teams_id_fkey" FOREIGN KEY ("current_highest_bidder_team_id") REFERENCES "teams"("id") ON DELETE SET NULL;--> statement-breakpoint
@@ -134,5 +137,6 @@ ALTER TABLE "players" ADD CONSTRAINT "players_auction_id_auctions_id_fkey" FOREI
 ALTER TABLE "players" ADD CONSTRAINT "players_category_id_categories_id_fkey" FOREIGN KEY ("category_id") REFERENCES "categories"("id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "players" ADD CONSTRAINT "players_sold_to_team_id_teams_id_fkey" FOREIGN KEY ("sold_to_team_id") REFERENCES "teams"("id") ON DELETE SET NULL;--> statement-breakpoint
 ALTER TABLE "teams" ADD CONSTRAINT "teams_auction_id_auctions_id_fkey" FOREIGN KEY ("auction_id") REFERENCES "auctions"("id") ON DELETE CASCADE;--> statement-breakpoint
+ALTER TABLE "teams" ADD CONSTRAINT "teams_captain_player_id_players_id_fkey" FOREIGN KEY ("captain_player_id") REFERENCES "players"("id") ON DELETE SET NULL;--> statement-breakpoint
 ALTER TABLE "wishlists" ADD CONSTRAINT "wishlists_team_id_teams_id_fkey" FOREIGN KEY ("team_id") REFERENCES "teams"("id") ON DELETE CASCADE;--> statement-breakpoint
 ALTER TABLE "wishlists" ADD CONSTRAINT "wishlists_player_id_players_id_fkey" FOREIGN KEY ("player_id") REFERENCES "players"("id") ON DELETE CASCADE;

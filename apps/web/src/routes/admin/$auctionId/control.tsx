@@ -15,6 +15,7 @@ import {
   $incrementBid,
   $markSold,
   $markUnsold,
+  $updateAuctionStatus,
 } from "#/lib/auction-actions";
 
 export const Route = createFileRoute("/admin/$auctionId/control")({
@@ -92,6 +93,19 @@ function AuctionControlPanel() {
     },
   });
 
+  const updateStatusMutation = useMutation({
+    mutationFn: (vars: { auctionId: string; status: "draft" | "active" | "completed" }) =>
+      $updateAuctionStatus({ data: vars }),
+    onSuccess: () => {
+      toast.success("Auction status updated successfully!");
+      queryClient.invalidateQueries({ queryKey: ["auction", auctionId] });
+      queryClient.invalidateQueries({ queryKey: ["my-auctions"] });
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to update auction status");
+    },
+  });
+
   const handleDrawPlayer = () => {
     if (!activeCategoryId) {
       toast.error("Please select a category first!");
@@ -118,6 +132,30 @@ function AuctionControlPanel() {
     <div className="grid grid-cols-1 gap-10 lg:grid-cols-3">
       {/* Left Column: Action board (Category selection, Draw button, bid console) (2/3 width) */}
       <div className="space-y-8 lg:col-span-2">
+        {/* Launch Auction Prompt */}
+        {auction?.status === "draft" && (
+          <div className="rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8">
+            <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+              <div>
+                <h3 className="flex items-center text-base font-bold tracking-[1.5px] text-white uppercase">
+                  <PlayIcon className="mr-2 h-5 w-5 text-white" />
+                  Auction is in Draft Mode
+                </h3>
+                <p className="mt-1 text-xs text-[#bbbbbb]">
+                  Launch the auction to move it to the Live Arena.
+                </p>
+              </div>
+              <Button
+                onClick={() => updateStatusMutation.mutate({ auctionId, status: "active" })}
+                disabled={updateStatusMutation.isPending}
+                className="rounded-none border border-white bg-white px-8 py-3.5 font-bold tracking-[1.5px] text-black uppercase hover:bg-black hover:text-white disabled:border-[#3c3c3c] disabled:bg-[#1a1a1a] disabled:text-[#7e7e7e]"
+              >
+                {updateStatusMutation.isPending ? "Launching..." : "Launch Auction"}
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Draw Player Console */}
         <div className="rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8">
           <h3 className="mb-6 flex items-center text-base font-bold tracking-[1.5px] text-white uppercase">

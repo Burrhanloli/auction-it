@@ -1,15 +1,43 @@
 import type { AuthQueryResult } from "@repo/auth/tanstack/queries";
 import { Toaster } from "@repo/ui/components/sonner";
-import { a11yDevtoolsPlugin } from "@tanstack/devtools-a11y/react";
-import { TanStackDevtools } from "@tanstack/react-devtools";
-import { formDevtoolsPlugin } from "@tanstack/react-form-devtools";
 import type { QueryClient } from "@tanstack/react-query";
-import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools";
 import { createRootRouteWithContext, HeadContent, Scripts } from "@tanstack/react-router";
-import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { TrophyIcon } from "lucide-react";
+import React, { Suspense } from "react";
 
 import appCss from "#/styles.css?url";
+
+const Devtools =
+  process.env.NODE_ENV === "production"
+    ? () => null
+    : React.lazy(() =>
+        Promise.all([
+          import("@tanstack/react-devtools"),
+          import("@tanstack/react-query-devtools"),
+          import("@tanstack/react-router-devtools"),
+          import("@tanstack/react-form-devtools"),
+          import("@tanstack/devtools-a11y/react"),
+        ]).then(([core, query, router, form, a11y]) => {
+          return {
+            default: () => (
+              <core.TanStackDevtools
+                plugins={[
+                  {
+                    name: "TanStack Query",
+                    render: <query.ReactQueryDevtoolsPanel />,
+                  },
+                  {
+                    name: "TanStack Router",
+                    render: <router.TanStackRouterDevtoolsPanel />,
+                  },
+                  form.formDevtoolsPlugin(),
+                  a11y.a11yDevtoolsPlugin(),
+                ]}
+              />
+            ),
+          };
+        }),
+      );
 
 interface MyRouterContext {
   queryClient: QueryClient;
@@ -79,20 +107,9 @@ function RootDocument({ children }: { readonly children: React.ReactNode }) {
         </div>
         <Toaster richColors />
 
-        <TanStackDevtools
-          plugins={[
-            {
-              name: "TanStack Query",
-              render: <ReactQueryDevtoolsPanel />,
-            },
-            {
-              name: "TanStack Router",
-              render: <TanStackRouterDevtoolsPanel />,
-            },
-            formDevtoolsPlugin(),
-            a11yDevtoolsPlugin(),
-          ]}
-        />
+        <Suspense>
+          <Devtools />
+        </Suspense>
 
         <Scripts />
       </body>

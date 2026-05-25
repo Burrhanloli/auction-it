@@ -16,10 +16,12 @@ import {
   PencilIcon,
   XIcon,
 } from "lucide-react";
+import Papa from "papaparse";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { $getAuction, $addTeam, $updateTeam } from "#/lib/auction-actions";
+import { ImageViewer } from "#/components/image-viewer";
+import { $getAuction, $addTeam, $updateTeam, $addTeamsBulk } from "#/lib/auction-actions";
 import { slugify } from "#/lib/slug";
 
 export const Route = createFileRoute("/admin/$auctionId/teams")({
@@ -44,7 +46,7 @@ function RosterManagerPage() {
   const [copiedTeamId, setCopiedTeamId] = useState<string | null>(null);
 
   // Edit Team state
-  const [editingTeam, setEditingTeam] = useState<any | null>(null);
+  const [editingTeam, setEditingTeam] = useState<any>(null);
 
   // TanStack Forms
   const addTeamForm = useForm({
@@ -186,10 +188,85 @@ function RosterManagerPage() {
     },
   });
 
+  const addTeamsBulkMutation = useMutation({
+    mutationFn: (vars: any) => $addTeamsBulk({ data: vars }),
+    onSuccess: (data) => {
+      toast.success(`Successfully added ${data.count} teams!`);
+      queryClient.invalidateQueries({ queryKey: ["auction", auctionId] });
+      const fileInput = document.getElementById("team-csv-upload") as HTMLInputElement;
+      if (fileInput) fileInput.value = "";
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to bulk add teams");
+      const fileInput = document.getElementById("team-csv-upload") as HTMLInputElement;
+      if (fileInput) fileInput.value = "";
+    },
+  });
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        const parsedTeams = results.data
+          .map((row: any) => ({
+            name: row["Team Name"] || row.name,
+            ownerName: row["Owner Name"] || row.ownerName,
+            totalBudget:
+              row["Total Budget"] || row.totalBudget
+                ? Number(row["Total Budget"] || row.totalBudget)
+                : (auction?.budgetPerTeam ?? 1000),
+            passcode: generateRandomPasscode(),
+            logoUrl: row["Logo URL"] || row.logoUrl || null,
+            ownerImageUrl: row["Owner Image URL"] || row.ownerImageUrl || null,
+          }))
+          .filter((t: any) => t.name && t.ownerName);
+
+        if (parsedTeams.length === 0) {
+          toast.error(
+            "No valid teams found in CSV. Please ensure 'Team Name' and 'Owner Name' columns exist.",
+          );
+          return;
+        }
+
+        addTeamsBulkMutation.mutate({
+          auctionId,
+          teams: parsedTeams,
+        });
+      },
+      error: (error: any) => {
+        toast.error(`Error parsing CSV: ${error.message}`);
+      },
+    });
+  };
+
+  const downloadSampleCsv = () => {
+    const csvContent =
+      "Team Name,Owner Name,Total Budget,Logo URL,Owner Image URL\nSample Team,John Doe,1000,,\n";
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "teams_sample.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const copyToClipboard = (teamId: string, passcodeStr: string, teamName: string) => {
     const origin = typeof window !== "undefined" ? window.location.origin : "";
     const strategyUrl = `${origin}/team/${auctionId}?teamId=${teamId}`;
-    const shareText = `🎟️ Strategy Deck invitation for team "${teamName}":\n🔗 Link: ${strategyUrl}\n🔑 Access Code: ${passcodeStr}`;
+    const shareText = `👋 Hello ${teamName} Owner!
+
+Here is your exclusive access to the Auction Strategy Deck. You can use this portal to manage your player wishlist, monitor your remaining budget, and track your squad live during the auction draft.
+
+🔗 Strategy Portal: ${strategyUrl}
+🔑 Your Secret Passcode: ${passcodeStr}
+
+Best of luck with building your team! 🏆`;
 
     navigator.clipboard.writeText(shareText).then(() => {
       setCopiedTeamId(teamId);
@@ -246,13 +323,22 @@ function RosterManagerPage() {
                   <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
                     Logo Image URL
                   </Label>
-                  <Input
-                    id={field.name}
-                    placeholder="https://example.com/logo.png"
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    className="rounded-none border border-[#3c3c3c] bg-black text-xs text-white"
-                  />
+                  <div className="flex items-center gap-3">
+                    {field.state.value && (
+                      <ImageViewer
+                        src={field.state.value}
+                        alt="Logo preview"
+                        className="h-10 w-10 rounded-none border border-[#3c3c3c] bg-black object-cover"
+                      />
+                    )}
+                    <Input
+                      id={field.name}
+                      placeholder="https://example.com/logo.png"
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      className="flex-1 rounded-none border border-[#3c3c3c] bg-black text-xs text-white"
+                    />
+                  </div>
                 </div>
               )}
             />
@@ -284,13 +370,22 @@ function RosterManagerPage() {
                     <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
                       Owner Avatar URL
                     </Label>
-                    <Input
-                      id={field.name}
-                      placeholder="https://example.com/owner.png"
-                      value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      className="rounded-none border border-[#3c3c3c] bg-black text-xs text-white"
-                    />
+                    <div className="flex items-center gap-3">
+                      {field.state.value && (
+                        <ImageViewer
+                          src={field.state.value}
+                          alt="Owner preview"
+                          className="h-10 w-10 rounded-none border border-[#3c3c3c] bg-black object-cover"
+                        />
+                      )}
+                      <Input
+                        id={field.name}
+                        placeholder="https://example.com/owner.png"
+                        value={field.state.value}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        className="flex-1 rounded-none border border-[#3c3c3c] bg-black text-xs text-white"
+                      />
+                    </div>
                   </div>
                 )}
               />
@@ -372,11 +467,39 @@ function RosterManagerPage() {
             />
           </form>
         </div>
+
+        <div className="relative overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8">
+          <h3 className="mb-6 flex items-center text-sm font-bold tracking-[1.5px] text-white uppercase sm:text-base">
+            <PlusIcon className="mr-2 h-5 w-5 text-white" />
+            Bulk Upload Teams
+          </h3>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="team-csv-upload" className="text-xs text-[#bbbbbb]">
+                Upload CSV File
+              </Label>
+              <Input
+                id="team-csv-upload"
+                type="file"
+                accept=".csv"
+                onChange={handleFileUpload}
+                disabled={addTeamsBulkMutation.isPending}
+                className="cursor-pointer rounded-none border border-[#3c3c3c] bg-black text-xs text-white file:mr-4 file:border-0 file:bg-[#3c3c3c] file:px-4 file:py-1 file:text-xs file:text-white file:uppercase hover:file:bg-white hover:file:text-black"
+              />
+            </div>
+            <button
+              onClick={downloadSampleCsv}
+              className="text-[10px] font-bold tracking-[1.5px] text-[#7e7e7e] uppercase underline hover:text-white"
+            >
+              Download Sample CSV
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Roster Listing Area: 2/3 width */}
       <div className="space-y-6 lg:col-span-2">
-        <div className="flex h-full flex-col rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8">
+        <div className="flex flex-col rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8">
           <div className="mb-8 flex items-center justify-between border-b border-[#3c3c3c] pb-5">
             <div>
               <h3 className="text-sm font-bold tracking-[1.5px] text-white uppercase">
@@ -395,31 +518,76 @@ function RosterManagerPage() {
             {teams.map((team: any) => (
               <div
                 key={team.id}
-                className="flex flex-col justify-between rounded-none border border-[#3c3c3c] bg-black p-6 transition-all hover:border-white"
+                className="relative flex flex-col overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] transition-all hover:border-[#7e7e7e]"
               >
-                <div>
-                  <div className="mb-4 flex items-start justify-between gap-2">
-                    <div className="flex items-center space-x-3">
-                      {team.logoUrl ? (
-                        <img
-                          src={team.logoUrl}
-                          alt={team.name}
-                          className="h-10 w-10 rounded-none border border-[#3c3c3c] bg-[#1a1a1a] object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-10 w-10 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] text-sm font-black text-[#bbbbbb] uppercase">
-                          {team.name.slice(0, 2)}
-                        </div>
-                      )}
-                      <div>
-                        <h4 className="text-sm font-black text-white">{team.name}</h4>
-                        <span className="mt-0.5 block text-[9px] font-bold tracking-[1.5px] text-white uppercase">
-                          {team.remainingBudget} of {team.totalBudget} pts
+                {/* Top Section: Compact Full Bleed Image */}
+                <div className="relative h-[140px] w-full shrink-0 bg-black">
+                  {team.logoUrl ? (
+                    <ImageViewer
+                      src={team.logoUrl}
+                      alt={team.name}
+                      className="h-full w-full object-cover"
+                      triggerClassName="w-full h-full block"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-black text-[48px] font-bold tracking-tight text-white uppercase">
+                      {team.name.slice(0, 2)}
+                    </div>
+                  )}
+                  {/* M-Stripe Divider */}
+                  <div className="absolute right-0 bottom-0 left-0 h-1 bg-gradient-to-r from-[#0066b1] via-[#1c69d4] to-[#e22718]" />
+                </div>
+
+                {/* Content Section */}
+                <div className="flex flex-1 flex-col p-4">
+                  <div className="mb-4">
+                    <span className="mb-1 block text-[12px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
+                      {team.remainingBudget} / {team.totalBudget} PTS LEFT
+                    </span>
+                    <h4
+                      className="line-clamp-1 text-[24px] leading-[1.1] font-bold text-white uppercase"
+                      title={team.name}
+                    >
+                      {team.name}
+                    </h4>
+                  </div>
+
+                  <div className="mt-auto flex flex-col gap-2">
+                    {/* Owner Details */}
+                    <div className="flex items-center justify-between border-t border-[#3c3c3c] pt-2">
+                      <span className="text-[12px] font-bold tracking-[1.5px] text-[#7e7e7e] uppercase">
+                        Owner
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        {team.ownerImageUrl ? (
+                          <img
+                            src={team.ownerImageUrl}
+                            alt={team.ownerName}
+                            className="h-5 w-5 rounded-none object-cover grayscale"
+                          />
+                        ) : (
+                          <div className="flex h-5 w-5 items-center justify-center bg-[#2b2b2b] text-[10px]">
+                            💼
+                          </div>
+                        )}
+                        <span className="line-clamp-1 text-[14px] font-light text-white">
+                          {team.ownerName}
                         </span>
                       </div>
                     </div>
 
-                    <div className="flex space-x-1.5">
+                    {/* Passcode Details */}
+                    <div className="flex items-center justify-between border-t border-[#3c3c3c] pt-2">
+                      <span className="text-[12px] font-bold tracking-[1.5px] text-[#7e7e7e] uppercase">
+                        Passcode
+                      </span>
+                      <span className="text-[14px] font-bold tracking-[1px] text-white uppercase">
+                        {team.passcode}
+                      </span>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="mt-2 flex w-full space-x-2">
                       <button
                         onClick={() => {
                           setEditingTeam(team);
@@ -442,65 +610,21 @@ function RosterManagerPage() {
                             passcode: team.passcode,
                           });
                         }}
-                        className="flex cursor-pointer items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-2 text-[#bbbbbb] hover:bg-white hover:text-black"
-                        title="Edit Franchise Details"
+                        className="flex h-[36px] flex-1 items-center justify-center border border-white bg-transparent text-[12px] font-bold tracking-[1px] text-white uppercase transition-colors hover:bg-white hover:text-black"
+                        title="Edit Details"
                       >
-                        <PencilIcon className="h-3.5 w-3.5" />
+                        Edit
                       </button>
 
                       <button
                         onClick={() => copyToClipboard(team.id, team.passcode, team.name)}
-                        className="flex cursor-pointer items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-2 text-[#bbbbbb] hover:bg-white hover:text-black"
+                        className="flex h-[36px] flex-1 items-center justify-center border border-transparent bg-white text-[12px] font-bold tracking-[1px] text-black uppercase transition-colors hover:bg-[#e6e6e6]"
                         title="Copy Share Link & Passcode"
                       >
-                        {copiedTeamId === team.id ? (
-                          <CheckIcon className="h-3.5 w-3.5 text-[currentcolor]" />
-                        ) : (
-                          <CopyIcon className="h-3.5 w-3.5" />
-                        )}
+                        {copiedTeamId === team.id ? "Copied" : "Copy Invite"}
                       </button>
                     </div>
                   </div>
-
-                  {/* Staff Info Grid */}
-                  <div className="mb-4 rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-3 text-[11px]">
-                    <div className="space-y-1">
-                      <span className="block text-[8px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
-                        Franchise Owner
-                      </span>
-                      <div className="flex items-center space-x-2">
-                        {team.ownerImageUrl ? (
-                          <img
-                            src={team.ownerImageUrl}
-                            alt={team.ownerName}
-                            className="h-5 w-5 rounded-none border border-[#3c3c3c] bg-black object-cover"
-                          />
-                        ) : (
-                          <div className="flex h-5 w-5 items-center justify-center rounded-none border border-[#3c3c3c] bg-black text-[9px]">
-                            💼
-                          </div>
-                        )}
-                        <span
-                          className="max-w-[80px] truncate font-semibold text-[#bbbbbb]"
-                          title={team.ownerName}
-                        >
-                          {team.ownerName}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between border-t border-[#3c3c3c] pt-3">
-                  <div className="flex items-center space-x-1.5">
-                    <KeyIcon className="h-3 w-3 text-[#bbbbbb]" />
-                    <span className="text-[9px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
-                      Strategy Passcode:
-                    </span>
-                  </div>
-                  <span className="rounded-none border border-white bg-white px-2.5 py-0.5 font-mono text-xs font-black tracking-[1.5px] text-black uppercase">
-                    {team.passcode}
-                  </span>
                 </div>
               </div>
             ))}
@@ -606,13 +730,22 @@ function RosterManagerPage() {
                     <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
                       Logo Image URL
                     </Label>
-                    <Input
-                      id={field.name}
-                      placeholder="https://example.com/logo.png"
-                      value={field.state.value}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                      className="rounded-none border border-[#3c3c3c] bg-black text-xs text-white"
-                    />
+                    <div className="flex items-center gap-3">
+                      {field.state.value && (
+                        <ImageViewer
+                          src={field.state.value}
+                          alt="Logo preview"
+                          className="h-10 w-10 rounded-none border border-[#3c3c3c] bg-black object-cover"
+                        />
+                      )}
+                      <Input
+                        id={field.name}
+                        placeholder="https://example.com/logo.png"
+                        value={field.state.value}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        className="flex-1 rounded-none border border-[#3c3c3c] bg-black text-xs text-white"
+                      />
+                    </div>
                   </div>
                 )}
               />
@@ -644,13 +777,22 @@ function RosterManagerPage() {
                       <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
                         Owner Avatar URL
                       </Label>
-                      <Input
-                        id={field.name}
-                        placeholder="https://example.com/owner.png"
-                        value={field.state.value}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                        className="rounded-none border border-[#3c3c3c] bg-black text-xs text-white"
-                      />
+                      <div className="flex items-center gap-3">
+                        {field.state.value && (
+                          <ImageViewer
+                            src={field.state.value}
+                            alt="Owner preview"
+                            className="h-10 w-10 rounded-none border border-[#3c3c3c] bg-black object-cover"
+                          />
+                        )}
+                        <Input
+                          id={field.name}
+                          placeholder="https://example.com/owner.png"
+                          value={field.state.value}
+                          onChange={(e) => field.handleChange(e.target.value)}
+                          className="flex-1 rounded-none border border-[#3c3c3c] bg-black text-xs text-white"
+                        />
+                      </div>
                     </div>
                   )}
                 />

@@ -58,6 +58,7 @@ function HomePage() {
       createAuctionMutation.mutate({
         name: value.name.trim(),
         budgetPerTeam: value.budgetPerTeam,
+        logoUrl: null,
         categories: value.categories,
       });
     },
@@ -68,6 +69,7 @@ function HomePage() {
     mutationFn: (vars: {
       name: string;
       budgetPerTeam: number;
+      logoUrl: string | null;
       categories: Array<{ name: string; basePoints: number }>;
     }) => $createAuction({ data: vars }),
     onSuccess: (res: any) => {
@@ -486,21 +488,29 @@ function HomePage() {
                 </div>
 
                 <div className="grid grid-cols-3 gap-3 border-t border-[#3c3c3c] bg-[#1a1a1a] px-8 py-5">
-                  <Link
-                    to="/auction/$auctionId/live"
-                    params={{ auctionId: auc.slug! }}
-                    className="flex items-center justify-center space-x-1 rounded-none border border-[#3c3c3c] bg-black py-2 text-center text-xs font-bold tracking-[1.5px] text-white uppercase transition-colors hover:bg-white hover:text-black"
-                  >
-                    <span>Arena</span>
-                  </Link>
+                  {auc.status !== "draft" ? (
+                    <>
+                      <Link
+                        to="/auction/$auctionId/live"
+                        params={{ auctionId: auc.slug! }}
+                        className="flex items-center justify-center space-x-1 rounded-none border border-[#3c3c3c] bg-black py-2 text-center text-xs font-bold tracking-[1.5px] text-white uppercase transition-colors hover:bg-white hover:text-black"
+                      >
+                        <span>Arena</span>
+                      </Link>
 
-                  <Link
-                    to="/auction/$auctionId/leaderboard"
-                    params={{ auctionId: auc.slug! }}
-                    className="flex items-center justify-center space-x-1 rounded-none border border-[#3c3c3c] bg-black py-2 text-center text-xs font-bold tracking-[1.5px] text-white uppercase transition-colors hover:bg-white hover:text-black"
-                  >
-                    <span>Stats</span>
-                  </Link>
+                      <Link
+                        to="/auction/$auctionId/leaderboard"
+                        params={{ auctionId: auc.slug! }}
+                        className="flex items-center justify-center space-x-1 rounded-none border border-[#3c3c3c] bg-black py-2 text-center text-xs font-bold tracking-[1.5px] text-white uppercase transition-colors hover:bg-white hover:text-black"
+                      >
+                        <span>Stats</span>
+                      </Link>
+                    </>
+                  ) : (
+                    <div className="col-span-2 flex items-center justify-center rounded-none border border-[#3c3c3c] bg-black py-2 text-center text-xs font-bold tracking-[1.5px] text-[#7e7e7e] uppercase">
+                      <span>Draft Mode (Locked)</span>
+                    </div>
+                  )}
 
                   <Link
                     to="/team/$auctionId"

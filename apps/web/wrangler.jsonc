@@ -1,0 +1,16 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "auction-it",
+  // Set this to today's date
+  "compatibility_date": "2026-05-23",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "@tanstack/react-start/server-entry",
+  "observability": {
+    "enabled": true,
+  },
+  "vars": {
+    "BETTER_AUTH_SECRET": "fc96b8de3f5b1b5185996b7d10ee164f07590b59ef94d313d59d3149c7d96b24",
+    "DATABASE_URL": "postgresql://neondb_owner:npg_7JCUYHZX2TnR@ep-round-meadow-aoj6jccs-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
+    "VITE_BASE_URL": "https://auction-it.burhanloli.workers.dev",
+  },
+}

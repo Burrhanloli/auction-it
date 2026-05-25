@@ -4,11 +4,12 @@ import { Label } from "@repo/ui/components/label";
 import { useForm } from "@tanstack/react-form";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { UserPlusIcon, SearchIcon, Loader2Icon } from "lucide-react";
+import { UserPlusIcon, SearchIcon, Loader2Icon, PlusIcon } from "lucide-react";
+import Papa from "papaparse";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { $getAuction, $addPlayer } from "#/lib/auction-actions";
+import { $getAuction, $addPlayer, $addPlayersBulk } from "#/lib/auction-actions";
 
 export const Route = createFileRoute("/admin/$auctionId/players")({
   component: PlayerDirectoryPage,
@@ -99,6 +100,76 @@ function PlayerDirectoryPage() {
 
   const players = auction?.players ?? [];
   const categories = auction?.categories ?? [];
+
+  const addPlayersBulkMutation = useMutation({
+    mutationFn: (vars: any) => $addPlayersBulk({ data: vars }),
+    onSuccess: (data) => {
+      toast.success(`Successfully added ${data.count} players!`);
+      queryClient.invalidateQueries({ queryKey: ["auction", auctionId] });
+      const fileInput = document.getElementById("player-csv-upload") as HTMLInputElement;
+      if (fileInput) fileInput.value = "";
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to bulk add players");
+      const fileInput = document.getElementById("player-csv-upload") as HTMLInputElement;
+      if (fileInput) fileInput.value = "";
+    },
+  });
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        const parsedPlayers = results.data
+          .map((row: any) => {
+            const categoryName = row["Category Name"] || row.categoryName || row.category;
+            const matchedCategory = categories.find(
+              (c: any) => c.name.toLowerCase() === (categoryName || "").toLowerCase(),
+            );
+
+            return {
+              name: row["Player Name"] || row.name,
+              skills: row["Skills"] || row.skills,
+              categoryId: matchedCategory?.id || categories[0]?.id,
+              imageUrl: row["Image URL"] || row.imageUrl || null,
+            };
+          })
+          .filter((p: any) => p.name && p.skills && p.categoryId);
+
+        if (parsedPlayers.length === 0) {
+          toast.error(
+            "No valid players found in CSV. Please ensure 'Player Name' and 'Skills' columns exist.",
+          );
+          return;
+        }
+
+        addPlayersBulkMutation.mutate({
+          auctionId,
+          players: parsedPlayers,
+        });
+      },
+      error: (error: any) => {
+        toast.error(`Error parsing CSV: ${error.message}`);
+      },
+    });
+  };
+
+  const downloadSampleCsv = () => {
+    const defaultCatName = categories[0]?.name || "Elite";
+    const csvContent = `Player Name,Skills,Category Name,Image URL\nSample Player,Right-hand Batsman,${defaultCatName},\n`;
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "players_sample.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   // Filter players list
   const filteredPlayers = players.filter((player: any) => {
@@ -288,11 +359,40 @@ function PlayerDirectoryPage() {
               />
             </form>
           </div>
+
+          <div className="relative overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-6 sm:p-8">
+            <h3 className="mb-6 flex items-center text-sm font-bold tracking-[1.5px] text-white uppercase sm:text-base">
+              <PlusIcon className="mr-2 h-5 w-5 text-white" />
+              Bulk Upload Players
+            </h3>
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="player-csv-upload" className="text-xs text-[#bbbbbb]">
+                  Upload CSV File
+                </Label>
+                <Input
+                  id="player-csv-upload"
+                  type="file"
+                  accept=".csv"
+                  onChange={handleFileUpload}
+                  disabled={addPlayersBulkMutation.isPending || categories.length === 0}
+                  className="cursor-pointer rounded-none border border-[#3c3c3c] bg-black text-xs text-white file:mr-4 file:border-0 file:bg-[#3c3c3c] file:px-4 file:py-1 file:text-xs file:text-white file:uppercase hover:file:bg-white hover:file:text-black"
+                />
+              </div>
+              <button
+                onClick={downloadSampleCsv}
+                disabled={categories.length === 0}
+                className="text-[10px] font-bold tracking-[1.5px] text-[#7e7e7e] uppercase underline hover:text-white disabled:opacity-50"
+              >
+                Download Sample CSV
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Right Area: Interactive Search & Directory */}
         <div className="w-full space-y-6 lg:col-span-2">
-          <div className="flex h-full w-full flex-col rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-4 sm:p-6 md:p-8">
+          <div className="flex w-full flex-col rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-4 sm:p-6 md:p-8">
             {/* Header & Filter Controls */}
             <div className="mb-6 w-full space-y-4 border-b border-[#3c3c3c] pb-6">
               <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
@@ -385,153 +485,88 @@ function PlayerDirectoryPage() {
                 return (
                   <div
                     key={player.id}
-                    className={`relative flex flex-col justify-between overflow-hidden rounded-none border p-4 transition-all duration-300 hover:scale-[1.02] sm:p-5 ${glowClass} ${
+                    className={`relative flex flex-col overflow-hidden rounded-none border bg-[#1a1a1a] transition-all duration-300 hover:scale-[1.02] ${glowClass} ${
                       player.status === "sold" || player.status === "captain"
                         ? "opacity-90 hover:border-[#7e7e7e]"
                         : ""
                     }`}
                   >
-                    {/* Top Row: Category tag (left) & Status badge (right) - No Absolute Overlaps */}
-                    <div className="mb-4 flex w-full items-center justify-between gap-2">
-                      <span
-                        className={`rounded-none border px-2.5 py-0.5 text-[8px] font-black tracking-[1.5px] uppercase ${badgeColor}`}
-                      >
-                        {categoryName}
-                      </span>
-
-                      {player.status === "sold" ? (
-                        <span className="inline-flex items-center rounded-none border border-white bg-white px-2.5 py-0.5 text-[7px] font-black tracking-[1.5px] text-black uppercase">
-                          SOLD
-                        </span>
-                      ) : player.status === "captain" ? (
-                        <span className="inline-flex items-center rounded-none border border-white bg-white px-2.5 py-0.5 text-[7px] font-black tracking-[1.5px] text-black uppercase">
-                          CAPTAIN
-                        </span>
-                      ) : player.status === "bidding" ? (
-                        <span className="inline-flex animate-pulse items-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] px-2.5 py-0.5 text-[7px] font-black tracking-[1.5px] text-white uppercase">
-                          BIDDING
-                        </span>
+                    {/* Top Section: Compact Full Bleed Image */}
+                    <div className="relative h-[140px] w-full shrink-0 bg-black">
+                      {player.imageUrl ? (
+                        <img
+                          src={player.imageUrl}
+                          alt={player.name}
+                          className="h-full w-full object-cover"
+                        />
                       ) : (
-                        <span className="inline-flex items-center rounded-none border border-[#3c3c3c] bg-black px-2.5 py-0.5 text-[7px] font-black tracking-[1.5px] text-[#bbbbbb] uppercase">
-                          UNSOLD
-                        </span>
+                        <div className="flex h-full w-full items-center justify-center bg-black text-[48px] font-bold tracking-tight text-white uppercase">
+                          {player.name.slice(0, 2)}
+                        </div>
                       )}
+
+                      {/* Overlay badges */}
+                      <div className="absolute top-3 left-3 flex flex-col gap-1.5">
+                        <span
+                          className={`inline-flex w-fit items-center rounded-none border px-2 py-0.5 text-[10px] font-bold tracking-[1px] uppercase shadow-lg ${badgeColor}`}
+                        >
+                          {categoryName}
+                        </span>
+                        {player.status === "sold" ? (
+                          <span className="inline-flex w-fit items-center rounded-none border border-white bg-white px-2 py-0.5 text-[10px] font-bold tracking-[1px] text-black uppercase shadow-lg">
+                            SOLD TO {player.soldToTeam?.name}
+                          </span>
+                        ) : player.status === "captain" ? (
+                          <span className="inline-flex w-fit items-center rounded-none border border-white bg-white px-2 py-0.5 text-[10px] font-bold tracking-[1px] text-black uppercase shadow-lg">
+                            CAPTAIN: {player.soldToTeam?.name}
+                          </span>
+                        ) : player.status === "bidding" ? (
+                          <span className="inline-flex w-fit animate-pulse items-center rounded-none border border-[#3c3c3c] bg-black px-2 py-0.5 text-[10px] font-bold tracking-[1px] text-white uppercase shadow-lg">
+                            <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-[#0fa336]" />
+                            ACTIVE BID
+                          </span>
+                        ) : null}
+                      </div>
+
+                      {/* M-Stripe Divider */}
+                      <div className="absolute right-0 bottom-0 left-0 h-1 bg-gradient-to-r from-[#0066b1] via-[#1c69d4] to-[#e22718]" />
                     </div>
 
-                    {/* Profile Section: Avatar & Info - Mobile responsive centering, desktop layout */}
-                    <div className="xs:flex-row xs:items-start xs:text-left flex w-full flex-col items-center gap-4 text-center">
-                      {player.imageUrl ? (
-                        <div className="relative shrink-0">
-                          <img
-                            src={player.imageUrl}
-                            alt={player.name}
-                            className={`h-16 w-16 rounded-none border object-cover ${ringClass} transition-all`}
-                          />
-                          {(player.status === "sold" || player.status === "captain") && (
-                            <div className="absolute inset-0 flex items-center justify-center rounded-none bg-black/60">
-                              <span className="rotate-[-12deg] rounded-none border border-white bg-white px-1 py-0.5 text-[7px] font-black tracking-[1.5px] text-black">
-                                {player.status === "captain" ? "CAPTAIN" : "SOLD"}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="relative shrink-0">
-                          <div
-                            className={`flex h-16 w-16 items-center justify-center rounded-none border text-base font-black text-white uppercase ${ringClass}`}
-                          >
-                            {player.name.slice(0, 2)}
-                          </div>
-                          {(player.status === "sold" || player.status === "captain") && (
-                            <div className="absolute inset-0 flex items-center justify-center rounded-none bg-black/60">
-                              <span className="rotate-[-12deg] rounded-none border border-white bg-white px-1 py-0.5 text-[7px] font-black tracking-[1.5px] text-black">
-                                {player.status === "captain" ? "CAPTAIN" : "SOLD"}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      <div className="w-full min-w-0 flex-1 space-y-1">
+                    {/* Content Section */}
+                    <div className="flex flex-1 flex-col p-4">
+                      <div className="mb-4">
                         <h4
-                          className="w-full truncate text-sm font-black text-white uppercase sm:text-base"
+                          className="line-clamp-1 text-[24px] leading-[1.1] font-bold text-white uppercase"
                           title={player.name}
                         >
                           {player.name}
                         </h4>
-                        <p className="xs:justify-start flex flex-wrap items-center justify-center gap-1.5 text-xs text-[#bbbbbb]">
-                          <span className="shrink-0 text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
-                            SKILLS:
+                      </div>
+
+                      <div className="mt-auto flex flex-col gap-2">
+                        {/* Skills */}
+                        <div className="flex items-start justify-between border-t border-[#3c3c3c] pt-2">
+                          <span className="text-[12px] font-bold tracking-[1.5px] text-[#7e7e7e] uppercase">
+                            Skills
                           </span>
-                          <span
-                            className="block max-w-full truncate font-medium text-[#bbbbbb]"
-                            title={player.skills}
-                          >
+                          <span className="line-clamp-1 text-right text-[12px] font-light text-[#bbbbbb] uppercase">
                             {player.skills}
                           </span>
-                        </p>
-                      </div>
-                    </div>
+                        </div>
 
-                    {/* Bottom Stats and Bid Price Tag Section */}
-                    <div className="mt-5 flex w-full items-center justify-between gap-4 border-t border-[#3c3c3c] pt-4">
-                      <div className="min-w-0 flex-1">
-                        {player.status === "sold" || player.status === "captain" ? (
-                          <div className="text-left">
-                            <span className="block text-[8px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
-                              {player.status === "captain" ? "Captain for Team" : "Sold to Team"}
-                            </span>
-                            <span
-                              className="block w-full truncate text-xs font-black text-white uppercase"
-                              title={player.soldToTeam?.name}
-                            >
-                              {player.soldToTeam?.name}
-                            </span>
-                          </div>
-                        ) : player.status === "bidding" ? (
-                          <div className="text-left">
-                            <span className="block text-[8px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
-                              Bidding Stage
-                            </span>
-                            <span className="flex items-center text-xs font-black text-white uppercase">
-                              <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-[#0fa336]" />
-                              Active Bid
-                            </span>
-                          </div>
-                        ) : (
-                          <div className="text-left">
-                            <span className="block text-[8px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
-                              Current Status
-                            </span>
-                            <span className="text-xs font-bold text-white uppercase">
-                              Available Draft
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="shrink-0 rounded-none border border-[#3c3c3c] bg-[#1a1a1a] px-3.5 py-1.5 text-right">
-                        {player.status === "sold" || player.status === "captain" ? (
-                          <>
-                            <span className="block text-[8px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
-                              {player.status === "captain" ? "Role" : "Final Value"}
-                            </span>
-                            <span className="text-sm font-black text-white">
-                              {player.status === "captain"
-                                ? "TEAM CAPTAIN"
-                                : `${player.soldPoints} pts`}
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            <span className="block text-[8px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
-                              Base Value
-                            </span>
-                            <span className="text-sm font-black text-white">
-                              {player.category?.basePoints} pts
-                            </span>
-                          </>
-                        )}
+                        {/* Value Details */}
+                        <div className="flex items-center justify-between border-t border-[#3c3c3c] pt-2">
+                          <span className="text-[12px] font-bold tracking-[1.5px] text-[#7e7e7e] uppercase">
+                            {player.status === "sold" || player.status === "captain"
+                              ? "Acquired Value"
+                              : "Base Value"}
+                          </span>
+                          <span className="text-[14px] font-bold tracking-[1px] text-white uppercase">
+                            {player.status === "sold" || player.status === "captain"
+                              ? `${player.soldPoints} pts`
+                              : `${player.category?.basePoints} pts`}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
