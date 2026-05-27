@@ -9,7 +9,13 @@ import Papa from "papaparse";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { $getAuction, $addPlayer, $addPlayersBulk, $updatePlayer } from "#/lib/auction-actions";
+import {
+  $getAuction,
+  $addPlayer,
+  $addPlayersBulk,
+  $updatePlayer,
+  $deletePlayer,
+} from "#/lib/auction-actions";
 
 export const Route = createFileRoute("/admin/$auctionId/players")({
   component: PlayerDirectoryPage,
@@ -132,6 +138,17 @@ function PlayerDirectoryPage() {
     },
     onError: (err: any) => {
       toast.error(err.message || "Failed to update player");
+    },
+  });
+
+  const deletePlayerMutation = useMutation({
+    mutationFn: (vars: any) => $deletePlayer({ data: vars }),
+    onSuccess: () => {
+      toast.success("Player deleted successfully!");
+      queryClient.invalidateQueries({ queryKey: ["auction", auctionId] });
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to delete player");
     },
   });
 
@@ -540,15 +557,15 @@ function PlayerDirectoryPage() {
                     }`}
                   >
                     {/* Top Section: Compact Full Bleed Image */}
-                    <div className="relative h-[140px] w-full shrink-0 bg-black">
+                    <div className="relative aspect-[3/4] max-h-64 w-full shrink-0 bg-black">
                       {player.imageUrl ? (
                         <img
                           src={player.imageUrl}
                           alt={player.name}
-                          className="h-full w-full object-cover"
+                          className="absolute inset-0 h-full w-full object-contain"
                         />
                       ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-black text-[48px] font-bold tracking-tight text-white uppercase">
+                        <div className="absolute inset-0 flex h-full w-full items-center justify-center bg-black text-[48px] font-bold tracking-tight text-white uppercase">
                           {player.name.slice(0, 2)}
                         </div>
                       )}
@@ -576,6 +593,34 @@ function PlayerDirectoryPage() {
                         ) : null}
                       </div>
 
+                      {/* Wishlists */}
+                      {player.wishlists?.length > 0 && (
+                        <div className="absolute top-3 right-3 z-10 flex flex-col items-end gap-1.5">
+                          {player.wishlists.map((w: any) => (
+                            <div
+                              key={w.id}
+                              className="flex items-center space-x-1.5 rounded-none border border-[#3c3c3c] bg-black/80 px-2 py-0.5 shadow-lg backdrop-blur-sm"
+                              title={`Wishlisted by ${w.team?.name}`}
+                            >
+                              <span className="text-[10px] font-black tracking-[1px] text-yellow-400 uppercase">
+                                ⭐
+                              </span>
+                              {w.team?.logoUrl ? (
+                                <img
+                                  src={w.team.logoUrl}
+                                  alt={w.team.name}
+                                  className="h-4 w-4 rounded-full object-cover"
+                                />
+                              ) : (
+                                <span className="text-[10px] font-bold text-white uppercase">
+                                  {w.team?.name?.slice(0, 2)}
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
                       {/* M-Stripe Divider */}
                       <div className="absolute right-0 bottom-0 left-0 h-1 bg-gradient-to-r from-[#0066b1] via-[#1c69d4] to-[#e22718]" />
                     </div>
@@ -584,7 +629,7 @@ function PlayerDirectoryPage() {
                     <div className="flex flex-1 flex-col p-4">
                       <div className="mb-4">
                         <h4
-                          className="line-clamp-1 text-[24px] leading-[1.1] font-bold text-white uppercase"
+                          className="line-clamp-2 text-[24px] leading-[1.1] font-bold text-white uppercase"
                           title={player.name}
                         >
                           {player.name}
@@ -593,21 +638,33 @@ function PlayerDirectoryPage() {
 
                       <div className="mt-auto flex flex-col gap-2">
                         {auction?.status === "draft" && (
-                          <div className="border-t border-[#3c3c3c] pt-2">
+                          <div className="flex gap-2 border-t border-[#3c3c3c] pt-2">
                             <button
                               onClick={() => {
                                 setEditingPlayer(player);
-                                editPlayerForm.reset({
-                                  name: player.name,
-                                  skills: player.skills,
-                                  categoryId: player.categoryId,
-                                  imageUrl: player.imageUrl || "",
-                                });
+                                editPlayerForm.setFieldValue("name", player.name);
+                                editPlayerForm.setFieldValue("skills", player.skills);
+                                editPlayerForm.setFieldValue("categoryId", player.categoryId);
+                                editPlayerForm.setFieldValue("imageUrl", player.imageUrl || "");
                               }}
-                              className="flex h-[28px] w-full items-center justify-center border border-white bg-transparent text-[10px] font-bold tracking-[1px] text-white uppercase transition-colors hover:bg-white hover:text-black"
+                              className="flex h-[28px] flex-1 items-center justify-center border border-white bg-transparent text-[10px] font-bold tracking-[1px] text-white uppercase transition-colors hover:bg-white hover:text-black"
                               title="Edit Details"
                             >
                               Edit Player
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (
+                                  window.confirm("Are you sure you want to delete this player?")
+                                ) {
+                                  deletePlayerMutation.mutate({ playerId: player.id });
+                                }
+                              }}
+                              disabled={deletePlayerMutation.isPending}
+                              className="flex h-[28px] flex-1 items-center justify-center border border-[#e22718] bg-transparent text-[10px] font-bold tracking-[1px] text-[#e22718] uppercase transition-colors hover:bg-[#e22718] hover:text-white disabled:opacity-50"
+                              title="Delete Player"
+                            >
+                              Delete
                             </button>
                           </div>
                         )}

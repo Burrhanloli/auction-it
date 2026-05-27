@@ -27,6 +27,9 @@ export const $getAuction = createServerFn({ method: "GET" })
           with: {
             category: true,
             soldToTeam: true,
+            wishlists: {
+              with: { team: true },
+            },
           },
           orderBy: (players, { asc }) => [asc(players.name)],
         },
@@ -349,6 +352,33 @@ export const $updateTeam = createServerFn({ method: "POST" })
     return { success: true, slug: result.slug };
   });
 
+// Mutation: Roster Manager - Delete a franchise team
+export const $deleteTeam = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .inputValidator((data: { teamId: string }) => data)
+  .handler(async ({ data }) => {
+    const resolvedTeamId = await resolveTeamId(data.teamId);
+
+    const existing = await db.query.teams.findFirst({
+      where: { id: resolvedTeamId },
+      with: { auction: true },
+    });
+    if (!existing) throw new Error("Team not found");
+    if (existing.auction?.status !== "draft") {
+      throw new Error("Cannot delete team when auction is not in draft mode");
+    }
+
+    await db.delete(schema.teams).where(eq(schema.teams.id, resolvedTeamId));
+
+    await db.insert(schema.auctionLogs).values({
+      auctionId: existing.auctionId,
+      message: `Team "${existing.name}" was removed from the roster.`,
+    });
+
+    publishAuctionUpdate(existing.auctionId, "state", {});
+    return { success: true };
+  });
+
 // Mutation: Player Directory - Create and assign incoming player to a category
 export const $addPlayer = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
@@ -413,6 +443,31 @@ export const $updatePlayer = createServerFn({ method: "POST" })
     await db.insert(schema.auctionLogs).values({
       auctionId: existing.auctionId,
       message: `Player "${data.name}" details updated.`,
+    });
+
+    publishAuctionUpdate(existing.auctionId, "state", {});
+    return { success: true };
+  });
+
+// Mutation: Player Directory - Delete a player
+export const $deletePlayer = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .inputValidator((data: { playerId: string }) => data)
+  .handler(async ({ data }) => {
+    const existing = await db.query.players.findFirst({
+      where: { id: data.playerId },
+      with: { auction: true },
+    });
+    if (!existing) throw new Error("Player not found");
+    if (existing.auction?.status !== "draft") {
+      throw new Error("Cannot delete player when auction is not in draft mode");
+    }
+
+    await db.delete(schema.players).where(eq(schema.players.id, data.playerId));
+
+    await db.insert(schema.auctionLogs).values({
+      auctionId: existing.auctionId,
+      message: `Player "${existing.name}" was removed from the pool.`,
     });
 
     publishAuctionUpdate(existing.auctionId, "state", {});

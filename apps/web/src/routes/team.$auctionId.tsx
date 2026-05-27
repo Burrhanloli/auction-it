@@ -399,17 +399,6 @@ function TeamStrategyDeckPage() {
       >
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-3">
-            {team.logoUrl ? (
-              <ImageViewer
-                src={team.logoUrl}
-                alt={team.name}
-                className="h-10 w-10 rounded-none border border-[#3c3c3c] bg-black object-cover"
-              />
-            ) : (
-              <div className="flex h-10 w-10 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] text-sm font-black text-[#bbbbbb] uppercase">
-                {team.name.slice(0, 2)}
-              </div>
-            )}
             <div>
               <div className="flex items-center space-x-2">
                 <h1 className="text-sm font-bold tracking-wide text-white">{team.name}</h1>
@@ -417,8 +406,8 @@ function TeamStrategyDeckPage() {
                   Strategy Deck
                 </span>
               </div>
-              <span className="mt-1 flex items-center text-[8px] font-black tracking-[1.5px] text-[#bbbbbb] uppercase">
-                <div className="mr-1.5 flex h-4 w-4 shrink-0 items-center justify-center overflow-hidden rounded-none border border-white bg-white p-0.5">
+              <span className="mt-2 flex items-center text-[10px] font-black tracking-[1.5px] text-[#bbbbbb] uppercase">
+                <div className="mr-2 flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-none border border-white bg-white p-1">
                   {auction.logoUrl ? (
                     <ImageViewer
                       src={auction.logoUrl}
@@ -427,7 +416,7 @@ function TeamStrategyDeckPage() {
                       triggerClassName="w-full h-full block"
                     />
                   ) : (
-                    <TrophyIcon className="h-2.5 w-2.5 text-black" />
+                    <TrophyIcon className="h-5 w-5 text-black" />
                   )}
                 </div>
                 <span>AUCTION-IT : {auction.name}</span>
@@ -453,10 +442,42 @@ function TeamStrategyDeckPage() {
         </div>
       </header>
 
+      {/* Background Watermark for Team Strategy */}
+      <div className="pointer-events-none fixed inset-0 z-0 flex items-center justify-center opacity-5">
+        {team.logoUrl ? (
+          <img
+            src={team.logoUrl}
+            alt="Watermark"
+            className="max-h-[80vh] max-w-[80vw] object-contain blur-[2px]"
+          />
+        ) : null}
+      </div>
+
       {/* Main Grid */}
       <div className="relative z-10 mx-auto mt-6 grid w-full max-w-7xl grid-cols-1 gap-6 px-4 md:mt-10 md:gap-10 md:px-8 lg:grid-cols-3">
         {/* Left Column: Budget details & Captain/Owner details (1/3 width) */}
         <div className="space-y-8 lg:col-span-1">
+          {/* Team Branding */}
+          <div className="relative flex flex-col items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8 text-center">
+            {team.logoUrl ? (
+              <ImageViewer
+                src={team.logoUrl}
+                alt={team.name}
+                className="mb-4 h-32 w-32 rounded-none border border-[#3c3c3c] bg-black object-cover"
+              />
+            ) : (
+              <div className="mb-4 flex h-32 w-32 items-center justify-center rounded-none border border-[#3c3c3c] bg-black text-4xl font-black text-[#bbbbbb] uppercase">
+                {team.name.slice(0, 2)}
+              </div>
+            )}
+            <h2 className="text-xl font-black tracking-[1.5px] text-white uppercase">
+              {team.name}
+            </h2>
+            <p className="mt-1 text-[10px] font-bold text-[#bbbbbb] uppercase">
+              Official Strategy Deck
+            </p>
+          </div>
+
           {/* Budget Meter */}
           <div className="relative rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8">
             <h3 className="mb-6 flex items-center text-xs font-black tracking-[1.5px] text-[#bbbbbb] uppercase">

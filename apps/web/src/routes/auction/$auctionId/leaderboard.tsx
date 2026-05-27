@@ -8,6 +8,7 @@ import {
   ActivityIcon,
   DollarSignIcon,
   Loader2Icon,
+  StarIcon,
 } from "lucide-react";
 import { motion } from "motion/react";
 
@@ -69,6 +70,11 @@ function LeaderboardPage() {
   const soldPlayers = (auction.players ?? [])
     .filter((p: any) => p.status === "sold" && p.soldPoints !== null && p.soldToTeamId !== null)
     .sort((a: any, b: any) => (b.soldPoints ?? 0) - (a.soldPoints ?? 0));
+
+  // Filter wishlisted players and sort by number of wishlists descending
+  const wishlistedPlayers = (auction.players ?? [])
+    .filter((p: any) => p.wishlists && p.wishlists.length > 0)
+    .sort((a: any, b: any) => b.wishlists.length - a.wishlists.length);
 
   return (
     <PublicAuctionGuard auction={auction}>
@@ -233,6 +239,114 @@ function LeaderboardPage() {
                         <td colSpan={5} className="py-12 text-center font-medium text-[#bbbbbb]">
                           No players have been purchased yet in this arena. Bids will stream here
                           live.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          {/* SECTION 1.5: MOST WISHLISTED PLAYERS */}
+          <div>
+            <div className="mb-6 flex flex-col">
+              <h2 className="flex items-center text-xl font-black tracking-[1.5px] text-white uppercase">
+                <StarIcon className="mr-2 h-5 w-5 text-white" />
+                Most Wishlisted Players
+              </h2>
+              <p className="mt-1 text-xs text-[#bbbbbb]">
+                Top players ranked by the number of teams that wishlisted them
+              </p>
+            </div>
+
+            <div className="overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a]">
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-[#3c3c3c] bg-black text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
+                      <th className="w-16 px-6 py-4 text-center">Rank</th>
+                      <th className="px-6 py-4">Player</th>
+                      <th className="px-6 py-4">Category</th>
+                      <th className="px-6 py-4">Status</th>
+                      <th className="px-6 py-4 pr-8 text-right">Wishlists</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#3c3c3c]">
+                    {wishlistedPlayers.map((player: any, index: number) => {
+                      const rank = index + 1;
+                      const rankStyle =
+                        rank === 1
+                          ? "bg-white text-black font-black"
+                          : rank === 2
+                            ? "bg-[#bbbbbb] text-black font-black"
+                            : rank === 3
+                              ? "bg-[#3c3c3c] text-white font-black"
+                              : "bg-black text-[#bbbbbb] border border-[#3c3c3c]";
+
+                      return (
+                        <motion.tr
+                          key={player.id}
+                          layout
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="transition-colors hover:bg-[#3c3c3c]"
+                        >
+                          <td className="px-6 py-4 text-center">
+                            <span
+                              className={`inline-flex h-6 w-6 items-center justify-center rounded-none border border-[#3c3c3c] text-[10px] ${rankStyle}`}
+                            >
+                              {rank}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center space-x-3">
+                              {player.imageUrl ? (
+                                <img
+                                  src={player.imageUrl}
+                                  alt={player.name}
+                                  className="h-8 w-8 rounded-none border border-[#3c3c3c] bg-black object-cover"
+                                />
+                              ) : (
+                                <div className="flex h-8 w-8 items-center justify-center rounded-none border border-[#3c3c3c] bg-black text-[10px] font-bold text-[#bbbbbb]">
+                                  {player.name.slice(0, 2)}
+                                </div>
+                              )}
+                              <div>
+                                <span className="block text-sm font-bold text-white">
+                                  {player.name}
+                                </span>
+                                <span className="text-[10px] font-medium text-[#bbbbbb]">
+                                  Skills: {player.skills}
+                                </span>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span
+                              className={`inline-block rounded-none border border-[#3c3c3c] bg-black px-2.5 py-0.5 text-[9px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase`}
+                            >
+                              {player.category?.name}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="text-[10px] font-bold text-white uppercase">
+                              {player.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 pr-8 text-right">
+                            <span className="text-sm font-black text-white">
+                              {player.wishlists?.length ?? 0}
+                            </span>
+                          </td>
+                        </motion.tr>
+                      );
+                    })}
+                    {wishlistedPlayers.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="py-12 text-center font-medium text-[#bbbbbb]">
+                          No players have been wishlisted yet.
                         </td>
                       </tr>
                     )}

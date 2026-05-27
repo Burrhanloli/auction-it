@@ -335,6 +335,8 @@ function BiddingFormConsole({
   activePlayer,
   categoryColor,
 }: BiddingFormConsoleProps) {
+  const [lastIncrement, setLastIncrement] = useState<number | null>(null);
+
   const bidForm = useForm({
     defaultValues: {
       biddingTeamId: state.currentHighestBidderTeamId || auction?.teams?.[0]?.id || "",
@@ -369,8 +371,11 @@ function BiddingFormConsole({
   });
 
   const incrementShortcut = (amount: number) => {
+    setLastIncrement(amount);
     bidForm.setFieldValue("customBidAmount", (prev) => prev + amount);
   };
+
+  const incrementOptions = [5, 10, 20, 50, 100, 200, 500];
 
   return (
     <div className="space-y-6">
@@ -381,10 +386,10 @@ function BiddingFormConsole({
             <img
               src={activePlayer.imageUrl}
               alt={activePlayer.name}
-              className="h-16 w-16 rounded-none border border-[#3c3c3c] bg-black object-cover"
+              className="h-24 w-16 rounded-none border border-[#3c3c3c] bg-black object-cover"
             />
           ) : (
-            <div className="flex h-16 w-16 items-center justify-center rounded-none border border-[#3c3c3c] bg-black text-lg font-black text-[#bbbbbb] uppercase">
+            <div className="flex h-24 w-16 items-center justify-center rounded-none border border-[#3c3c3c] bg-black text-lg font-black text-[#bbbbbb] uppercase">
               {activePlayer.name.slice(0, 2)}
             </div>
           )}
@@ -448,6 +453,7 @@ function BiddingFormConsole({
           e.preventDefault();
           e.stopPropagation();
           bidForm.handleSubmit();
+          setLastIncrement(null);
         }}
         className="space-y-4 border-t border-[#3c3c3c] pt-2"
       >
@@ -575,42 +581,29 @@ function BiddingFormConsole({
           <span className="mr-1 self-center text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
             Quick Increments:
           </span>
-          <button
-            type="button"
-            onClick={() => incrementShortcut(10)}
-            className="cursor-pointer rounded-none border border-[#3c3c3c] bg-black px-2.5 py-1 text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] hover:bg-white hover:text-black"
-          >
-            +10
-          </button>
-          <button
-            type="button"
-            onClick={() => incrementShortcut(20)}
-            className="cursor-pointer rounded-none border border-[#3c3c3c] bg-black px-2.5 py-1 text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] hover:bg-white hover:text-black"
-          >
-            +20
-          </button>
-          <button
-            type="button"
-            onClick={() => incrementShortcut(50)}
-            className="cursor-pointer rounded-none border border-[#3c3c3c] bg-black px-2.5 py-1 text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] hover:bg-white hover:text-black"
-          >
-            +50
-          </button>
-          <button
-            type="button"
-            onClick={() => incrementShortcut(100)}
-            className="cursor-pointer rounded-none border border-[#3c3c3c] bg-black px-2.5 py-1 text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] hover:bg-white hover:text-black"
-          >
-            +100
-          </button>
+          {incrementOptions.map((amount) => (
+            <button
+              key={amount}
+              type="button"
+              onClick={() => incrementShortcut(amount)}
+              className={`cursor-pointer rounded-none border px-2.5 py-1 text-[10px] font-bold tracking-[1.5px] transition-colors ${
+                lastIncrement === amount
+                  ? "border-white bg-white text-black"
+                  : "border-[#3c3c3c] bg-black text-[#bbbbbb] hover:bg-[#1a1a1a] hover:text-white"
+              }`}
+            >
+              +{amount}
+            </button>
+          ))}
           <button
             type="button"
             onClick={() => {
+              setLastIncrement(null);
               bidForm.setFieldValue("customBidAmount", state.currentBidPoints + 20);
             }}
-            className="cursor-pointer rounded-none border border-[#3c3c3c] bg-black px-2.5 py-1 text-[10px] font-bold tracking-[1.5px] text-white hover:bg-white hover:text-black"
+            className="cursor-pointer rounded-none border border-[#3c3c3c] bg-black px-2.5 py-1 text-[10px] font-bold tracking-[1.5px] text-white hover:bg-[#1a1a1a]"
           >
-            Reset Increment
+            Reset
           </button>
         </div>
       </form>

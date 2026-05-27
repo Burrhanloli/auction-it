@@ -23,7 +23,7 @@ import { useLiveAuction } from "#/hooks/use-live-auction";
 import { useScrollDirection } from "#/hooks/use-scroll-direction";
 import { $getAuction, $getAuctionState } from "#/lib/auction-actions";
 
-export const Route = createFileRoute("/auction/$auctionId/live")({
+export const Route = createFileRoute("/auction/$auctionId/fast-live")({
   component: LiveTrackerPage,
 });
 
@@ -47,7 +47,7 @@ function LiveTrackerPage() {
   const initialLogs = stateData?.logs ?? [];
 
   // Local state for streaming logs
-  const { logs: realTimeLogs } = useLiveAuction(auctionId);
+  const { logs: realTimeLogs } = useLiveAuction(auctionId, { intervalMs: 2000 });
   const logsEndRef = useRef<HTMLDivElement>(null);
 
   const [isLogsOpen, setIsLogsOpen] = useState(true);

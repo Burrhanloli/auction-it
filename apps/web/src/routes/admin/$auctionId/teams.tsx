@@ -21,7 +21,13 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { ImageViewer } from "#/components/image-viewer";
-import { $getAuction, $addTeam, $updateTeam, $addTeamsBulk } from "#/lib/auction-actions";
+import {
+  $getAuction,
+  $addTeam,
+  $updateTeam,
+  $addTeamsBulk,
+  $deleteTeam,
+} from "#/lib/auction-actions";
 import { slugify } from "#/lib/slug";
 
 export const Route = createFileRoute("/admin/$auctionId/teams")({
@@ -185,6 +191,17 @@ function RosterManagerPage() {
     },
     onError: (err: any) => {
       toast.error(err.message || "Failed to update team");
+    },
+  });
+
+  const deleteTeamMutation = useMutation({
+    mutationFn: (vars: any) => $deleteTeam({ data: vars }),
+    onSuccess: () => {
+      toast.success("Team deleted successfully!");
+      queryClient.invalidateQueries({ queryKey: ["auction", auctionId] });
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to delete team");
     },
   });
 
@@ -521,16 +538,16 @@ Best of luck with building your team! 🏆`;
                 className="relative flex flex-col overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] transition-all hover:border-[#7e7e7e]"
               >
                 {/* Top Section: Compact Full Bleed Image */}
-                <div className="relative h-[140px] w-full shrink-0 bg-black">
+                <div className="relative aspect-[3/4] max-h-64 w-full shrink-0 bg-black">
                   {team.logoUrl ? (
                     <ImageViewer
                       src={team.logoUrl}
                       alt={team.name}
-                      className="h-full w-full object-cover"
-                      triggerClassName="w-full h-full block"
+                      className="absolute inset-0 h-full w-full object-contain"
+                      triggerClassName="absolute inset-0 w-full h-full block"
                     />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-black text-[48px] font-bold tracking-tight text-white uppercase">
+                    <div className="absolute inset-0 flex h-full w-full items-center justify-center bg-black text-[48px] font-bold tracking-tight text-white uppercase">
                       {team.name.slice(0, 2)}
                     </div>
                   )}
@@ -545,7 +562,7 @@ Best of luck with building your team! 🏆`;
                       {team.remainingBudget} / {team.totalBudget} PTS LEFT
                     </span>
                     <h4
-                      className="line-clamp-1 text-[24px] leading-[1.1] font-bold text-white uppercase"
+                      className="line-clamp-2 text-[24px] leading-[1.1] font-bold text-white uppercase"
                       title={team.name}
                     >
                       {team.name}
@@ -589,33 +606,47 @@ Best of luck with building your team! 🏆`;
                     {/* Action Buttons */}
                     <div className="mt-2 flex w-full space-x-2">
                       {auction?.status === "draft" && (
-                        <button
-                          onClick={() => {
-                            setEditingTeam(team);
-                            const fullSlug = team.slug || "";
-                            let slugPrefix = fullSlug;
-                            let slugSuffix = "";
-                            const parts = fullSlug.split("-");
-                            if (parts.length > 1) {
-                              slugSuffix = parts[parts.length - 1];
-                              slugPrefix = parts.slice(0, -1).join("-");
-                            }
-                            editTeamForm.reset({
-                              name: team.name,
-                              slug: slugPrefix,
-                              suffix: slugSuffix,
-                              logoUrl: team.logoUrl || "",
-                              ownerName: team.ownerName,
-                              ownerImageUrl: team.ownerImageUrl || "",
-                              totalBudget: team.totalBudget,
-                              passcode: team.passcode,
-                            });
-                          }}
-                          className="flex h-[36px] flex-1 items-center justify-center border border-white bg-transparent text-[12px] font-bold tracking-[1px] text-white uppercase transition-colors hover:bg-white hover:text-black"
-                          title="Edit Details"
-                        >
-                          Edit
-                        </button>
+                        <>
+                          <button
+                            onClick={() => {
+                              setEditingTeam(team);
+                              const fullSlug = team.slug || "";
+                              let slugPrefix = fullSlug;
+                              let slugSuffix = "";
+                              const parts = fullSlug.split("-");
+                              if (parts.length > 1) {
+                                slugSuffix = parts[parts.length - 1];
+                                slugPrefix = parts.slice(0, -1).join("-");
+                              }
+                              editTeamForm.setFieldValue("name", team.name);
+                              editTeamForm.setFieldValue("slug", slugPrefix);
+                              editTeamForm.setFieldValue("suffix", slugSuffix);
+                              editTeamForm.setFieldValue("logoUrl", team.logoUrl || "");
+                              editTeamForm.setFieldValue("ownerName", team.ownerName);
+                              editTeamForm.setFieldValue("ownerImageUrl", team.ownerImageUrl || "");
+                              editTeamForm.setFieldValue("totalBudget", team.totalBudget);
+                              editTeamForm.setFieldValue("passcode", team.passcode);
+                            }}
+                            className="flex h-[36px] flex-1 items-center justify-center border border-white bg-transparent text-[12px] font-bold tracking-[1px] text-white uppercase transition-colors hover:bg-white hover:text-black"
+                            title="Edit Details"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (
+                                window.confirm("Are you sure you want to delete this franchise?")
+                              ) {
+                                deleteTeamMutation.mutate({ teamId: team.id });
+                              }
+                            }}
+                            disabled={deleteTeamMutation.isPending}
+                            className="flex h-[36px] flex-1 items-center justify-center border border-[#e22718] bg-transparent text-[12px] font-bold tracking-[1px] text-[#e22718] uppercase transition-colors hover:bg-[#e22718] hover:text-white disabled:opacity-50"
+                            title="Delete Franchise"
+                          >
+                            Delete
+                          </button>
+                        </>
                       )}
 
                       <button
