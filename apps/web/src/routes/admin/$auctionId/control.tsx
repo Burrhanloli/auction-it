@@ -5,7 +5,7 @@ import { useForm } from "@tanstack/react-form";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { PlayIcon, GavelIcon, XOctagonIcon, TagIcon } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 import {
@@ -335,7 +335,7 @@ function BiddingFormConsole({
   activePlayer,
   categoryColor,
 }: BiddingFormConsoleProps) {
-  const [lastIncrement, setLastIncrement] = useState<number | null>(null);
+  const [lastIncrement, setLastIncrement] = useState<number | null>(20);
 
   const bidForm = useForm({
     defaultValues: {
@@ -370,9 +370,15 @@ function BiddingFormConsole({
     },
   });
 
+  useEffect(() => {
+    if (lastIncrement !== null) {
+      bidForm.setFieldValue("customBidAmount", state.currentBidPoints + lastIncrement);
+    }
+  }, [state.currentBidPoints]);
+
   const incrementShortcut = (amount: number) => {
     setLastIncrement(amount);
-    bidForm.setFieldValue("customBidAmount", (prev) => prev + amount);
+    bidForm.setFieldValue("customBidAmount", state.currentBidPoints + amount);
   };
 
   const incrementOptions = [5, 10, 20, 50, 100, 200, 500];
@@ -453,7 +459,6 @@ function BiddingFormConsole({
           e.preventDefault();
           e.stopPropagation();
           bidForm.handleSubmit();
-          setLastIncrement(null);
         }}
         className="space-y-4 border-t border-[#3c3c3c] pt-2"
       >
@@ -553,7 +558,10 @@ function BiddingFormConsole({
                       id={field.name}
                       type="number"
                       value={field.state.value}
-                      onChange={(e) => field.handleChange(Number(e.target.value))}
+                      onChange={(e) => {
+                        field.handleChange(Number(e.target.value));
+                        setLastIncrement(null);
+                      }}
                       className="rounded-none border border-[#3c3c3c] bg-[#1a1a1a] text-xs text-white"
                       required
                     />
