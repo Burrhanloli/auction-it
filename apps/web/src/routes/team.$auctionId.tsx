@@ -16,12 +16,14 @@ import {
   Loader2Icon,
   TvIcon,
   TrashIcon,
+  UsersIcon,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 
 import { ImageViewer } from "#/components/image-viewer";
+import { PlayerCard } from "#/components/player-card";
 import { useAuctionSubscription } from "#/hooks/use-auction-subscription";
 import { useTeamSession } from "#/hooks/use-team-session";
 import {
@@ -30,6 +32,7 @@ import {
   $getTeamStrategyDeck,
   $toggleWishlist,
   $selectCaptain,
+  $revertPlayer,
 } from "#/lib/auction-actions";
 
 const teamSearchSchema = z.object({
@@ -123,6 +126,19 @@ function TeamStrategyDeckPage() {
     },
     onError: (err: any) => {
       toast.error(err.message || "Failed to select captain");
+    },
+  });
+
+  const revertPlayerMutation = useMutation({
+    mutationFn: (vars: { auctionId: string; playerId: string }) => $revertPlayer({ data: vars }),
+    onSuccess: () => {
+      toast.success("Player reverted successfully!");
+      queryClient.invalidateQueries({
+        queryKey: ["strategy-deck", auctionId, verifiedTeamId],
+      });
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to revert player");
     },
   });
 
@@ -379,6 +395,11 @@ function TeamStrategyDeckPage() {
 
   const wishlistPlayers = allPlayers.filter((p: any) => wishlistPlayerIds.includes(p.id));
 
+  // Determine limits
+  const currentSquadSize = soldToThisTeam.length;
+  const minSquadSize = auction.minPlayersPerSquad;
+  const maxSquadSize = auction.maxPlayersPerSquad;
+
   // Determine budget status bar metrics
   const budgetRatio = team.remainingBudget / team.totalBudget;
   const isBudgetLow = team.remainingBudget < 150;
@@ -532,6 +553,87 @@ function TeamStrategyDeckPage() {
             </div>
           </div>
 
+          {/* Roster Constraints */}
+          {(minSquadSize != null ||
+            maxSquadSize != null ||
+            (auction.categories &&
+              auction.categories.some(
+                (c: any) => c.minPlayersPerCategory != null || c.maxPlayersPerCategory != null,
+              ))) && (
+            <div className="relative rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8">
+              <h3 className="mb-6 flex items-center text-xs font-black tracking-[1.5px] text-[#bbbbbb] uppercase">
+                <UsersIcon className="mr-2 h-4 w-4 text-white" />
+                Roster Constraints
+              </h3>
+
+              <div className="space-y-4">
+                {/* Squad Size */}
+                {(minSquadSize != null || maxSquadSize != null) && (
+                  <div>
+                    <div className="mb-2 flex items-center justify-between text-[10px] font-bold text-[#bbbbbb] uppercase">
+                      <span>Total Squad Size</span>
+                      <span
+                        className={
+                          maxSquadSize != null && currentSquadSize > maxSquadSize
+                            ? "text-red-500"
+                            : "text-white"
+                        }
+                      >
+                        {currentSquadSize} / {maxSquadSize ?? "∞"}
+                      </span>
+                    </div>
+                    {minSquadSize != null && currentSquadSize < minSquadSize && (
+                      <div className="text-[10px] text-yellow-500">
+                        ⚠️ Need {minSquadSize - currentSquadSize} more to reach minimum of{" "}
+                        {minSquadSize}
+                      </div>
+                    )}
+                    {maxSquadSize != null && currentSquadSize >= maxSquadSize && (
+                      <div className="text-[10px] text-red-500">🚨 Maximum squad size reached!</div>
+                    )}
+                  </div>
+                )}
+
+                {/* Category Constraints */}
+                {auction.categories?.map((cat: any) => {
+                  if (cat.minPlayersPerCategory == null && cat.maxPlayersPerCategory == null)
+                    return null;
+                  const catCount = soldToThisTeam.filter(
+                    (p: any) => p.categoryId === cat.id,
+                  ).length;
+                  return (
+                    <div key={cat.id} className="border-t border-[#3c3c3c] pt-2">
+                      <div className="mb-2 flex items-center justify-between text-[10px] font-bold text-[#bbbbbb] uppercase">
+                        <span>{cat.name}</span>
+                        <span
+                          className={
+                            cat.maxPlayersPerCategory != null &&
+                            catCount > cat.maxPlayersPerCategory
+                              ? "text-red-500"
+                              : "text-white"
+                          }
+                        >
+                          {catCount} / {cat.maxPlayersPerCategory ?? "∞"}
+                        </span>
+                      </div>
+                      {cat.minPlayersPerCategory != null &&
+                        catCount < cat.minPlayersPerCategory && (
+                          <div className="text-[10px] text-yellow-500">
+                            ⚠️ Need {cat.minPlayersPerCategory - catCount} more (min:{" "}
+                            {cat.minPlayersPerCategory})
+                          </div>
+                        )}
+                      {cat.maxPlayersPerCategory != null &&
+                        catCount >= cat.maxPlayersPerCategory && (
+                          <div className="text-[10px] text-red-500">🚨 Max limit reached!</div>
+                        )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Franchise Personnel */}
           <div className="relative rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8">
             <h3 className="mb-6 text-xs font-black tracking-[1.5px] text-[#bbbbbb] uppercase">
@@ -630,13 +732,30 @@ function TeamStrategyDeckPage() {
                       </div>
                     </div>
 
-                    <div className="text-right">
-                      <span className="block text-[8px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
-                        {player.status === "captain" ? "Role" : "Acquired at"}
-                      </span>
-                      <span className="text-xs font-black text-white">
-                        {player.status === "captain" ? "TEAM CAPTAIN" : `${player.soldPoints} pts`}
-                      </span>
+                    <div className="flex flex-col items-end gap-2 text-right">
+                      <div>
+                        <span className="block text-[8px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
+                          {player.status === "captain" ? "Role" : "Acquired at"}
+                        </span>
+                        <span className="text-xs font-black text-white">
+                          {player.status === "captain"
+                            ? "TEAM CAPTAIN"
+                            : `${player.soldPoints} pts`}
+                        </span>
+                      </div>
+                      {player.status !== "captain" && (
+                        <Button
+                          onClick={() => {
+                            if (window.confirm(`Are you sure you want to revert ${player.name}?`)) {
+                              revertPlayerMutation.mutate({ auctionId, playerId: player.id });
+                            }
+                          }}
+                          disabled={revertPlayerMutation.isPending}
+                          className="h-6 cursor-pointer rounded-none border border-[#e22718] bg-transparent px-2 text-[8px] font-bold tracking-[1px] text-[#e22718] uppercase hover:bg-[#e22718] hover:text-white disabled:opacity-50"
+                        >
+                          Revert
+                        </Button>
+                      )}
                     </div>
                   </div>
                 );
@@ -844,98 +963,14 @@ function TeamStrategyDeckPage() {
                 const isWishlisted = wishlistPlayerIds.includes(player.id);
 
                 return (
-                  <div
+                  <PlayerCard
                     key={player.id}
-                    className="relative flex flex-col overflow-hidden rounded-none border border-[#3c3c3c] bg-black transition-all duration-300 hover:scale-[1.02] hover:border-white"
-                  >
-                    {/* Top Half: Full Bleed 4:5 Image */}
-                    <div className="relative aspect-[4/5] w-full shrink-0 border-b border-[#3c3c3c] bg-black">
-                      {player.imageUrl ? (
-                        <img
-                          src={player.imageUrl}
-                          alt={player.name}
-                          className="h-full w-full rounded-none object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-full w-full flex-col items-center justify-center font-black text-white uppercase opacity-20">
-                          <span className="text-8xl">{player.name.slice(0, 1)}</span>
-                          <span className="text-5xl">
-                            {player.name.split(" ")?.[1]?.slice(0, 1) || ""}
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Action buttons overlay top-right */}
-                      <div className="absolute top-4 right-4 flex flex-col gap-2">
-                        <button
-                          onClick={() => handleToggleWishlist(player.id, isWishlisted)}
-                          className={`flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border transition-all ${
-                            isWishlisted
-                              ? "border-white bg-white text-black shadow-lg shadow-black/50"
-                              : "border-[#3c3c3c] bg-[#1a1a1a] text-[#bbbbbb] hover:border-white hover:bg-black hover:text-white"
-                          }`}
-                          title={isWishlisted ? "Remove Wishlist Star" : "Add Wishlist Star"}
-                        >
-                          <StarIcon className={`h-5 w-5 ${isWishlisted ? "fill-current" : ""}`} />
-                        </button>
-                      </div>
-
-                      {/* Status badge bottom-left */}
-                      {player.status === "bidding" && (
-                        <div className="absolute bottom-4 left-4 flex flex-col gap-2">
-                          <span className="inline-flex w-fit animate-pulse items-center rounded-none border border-[#3c3c3c] bg-black px-3 py-1 text-[10px] font-black tracking-[1.5px] text-white uppercase shadow-lg shadow-black/50">
-                            <span className="mr-1.5 h-2 w-2 rounded-full bg-[#0fa336]" />
-                            ACTIVE BID
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Bottom Half: Content padding p-6 */}
-                    <div className="flex flex-1 flex-col justify-between bg-[#1a1a1a] p-6">
-                      <div>
-                        {/* Category tag */}
-                        <span className="mb-4 inline-block rounded-none border border-[#3c3c3c] bg-black px-2.5 py-1 text-[10px] font-black tracking-[1.5px] text-[#bbbbbb] uppercase">
-                          {player.category?.name || "Player Pool"}
-                        </span>
-
-                        <h4
-                          className="mb-2 text-2xl leading-none font-bold tracking-tight text-white uppercase"
-                          title={player.name}
-                        >
-                          {player.name}
-                        </h4>
-
-                        <p className="mb-6 text-sm font-light text-[#bbbbbb]">
-                          <span className="mb-1 block text-[10px] font-bold tracking-[1.5px] text-[#7e7e7e] uppercase">
-                            Skills
-                          </span>
-                          {player.skills}
-                        </p>
-                      </div>
-
-                      {/* Bottom Stats Line & Actions */}
-                      <div className="flex w-full items-center justify-between border-t border-[#3c3c3c] pt-4">
-                        <div className="min-w-0 flex-1">
-                          <span className="block text-[10px] font-bold tracking-[1.5px] text-[#7e7e7e] uppercase">
-                            Base Value
-                          </span>
-                          <span className="text-xl font-bold text-white uppercase">
-                            {player.category?.basePoints} pts
-                          </span>
-                        </div>
-                        <div className="text-right">
-                          <button
-                            onClick={() => handleSelectCaptain(player.id)}
-                            className="flex cursor-pointer items-center justify-center rounded-none border border-white bg-transparent px-4 py-2 text-[10px] font-bold tracking-[1.5px] text-white uppercase transition-all hover:bg-white hover:text-black"
-                            title="Select as Team Captain"
-                          >
-                            Make Captain
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                    player={player}
+                    variant="strategyLobby"
+                    isWishlisted={isWishlisted}
+                    onToggleWishlist={handleToggleWishlist}
+                    onMakeCaptain={handleSelectCaptain}
+                  />
                 );
               })}
 

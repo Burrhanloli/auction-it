@@ -66,10 +66,25 @@ function AdminDashboardPage() {
       logoUrl: "",
       budgetPerTeam: 1000,
       categories: [
-        { name: "Elite", basePoints: 500 },
-        { name: "Pro", basePoints: 300 },
-        { name: "Batsmen", basePoints: 200 },
-      ] as Array<{ name: string; basePoints: number }>,
+        {
+          name: "Elite",
+          basePoints: 500,
+          minPlayersPerCategory: null,
+          maxPlayersPerCategory: null,
+        },
+        { name: "Pro", basePoints: 300, minPlayersPerCategory: null, maxPlayersPerCategory: null },
+        {
+          name: "Batsmen",
+          basePoints: 200,
+          minPlayersPerCategory: null,
+          maxPlayersPerCategory: null,
+        },
+      ] as Array<{
+        name: string;
+        basePoints: number;
+        minPlayersPerCategory?: number | null;
+        maxPlayersPerCategory?: number | null;
+      }>,
     },
     onSubmit: async ({ value }) => {
       if (!value.name.trim()) {
@@ -89,8 +104,15 @@ function AdminDashboardPage() {
     mutationFn: (vars: {
       name: string;
       budgetPerTeam: number;
+      minPlayersPerSquad?: number | null;
+      maxPlayersPerSquad?: number | null;
       logoUrl: string | null;
-      categories: Array<{ name: string; basePoints: number }>;
+      categories: Array<{
+        name: string;
+        basePoints: number;
+        minPlayersPerCategory?: number | null;
+        maxPlayersPerCategory?: number | null;
+      }>;
     }) => $createAuction({ data: vars }),
     onSuccess: (res: any) => {
       toast.success("Auction created successfully!");

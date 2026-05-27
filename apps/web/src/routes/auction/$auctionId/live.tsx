@@ -55,6 +55,7 @@ function LiveTrackerPage() {
 
   const activePlayer = state?.currentPlayer;
   const isBiddingActive = state?.stage === "bidding" && activePlayer;
+  const isCompleted = auction?.status === "completed";
 
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawingPlayerId, setDrawingPlayerId] = useState<string | null>(null);
@@ -194,318 +195,338 @@ function LiveTrackerPage() {
         {/* Main Broadcast Layout */}
         <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col space-y-6 px-4 py-8 md:space-y-8 md:px-8 md:py-10">
           {/* Top Section: Active bidding card viewport */}
-          <div className="mx-auto flex w-full max-w-6xl flex-col space-y-6">
-            <div className="relative flex min-h-120 flex-1 flex-col items-center justify-center overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8">
-              {/* Background Watermark */}
-              <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center opacity-10">
-                {auction.logoUrl ? (
-                  <img
-                    src={auction.logoUrl}
-                    alt="Watermark"
-                    className="max-h-full max-w-full object-contain p-12 blur-[2px]"
-                  />
-                ) : (
-                  <TrophyIcon className="h-96 w-96 text-white blur-[2px]" />
-                )}
-              </div>
-
-              <div className="relative z-10 flex w-full flex-1 flex-col items-center justify-center">
-                <AnimatePresence mode="wait">
-                  {/* STAGE 1: ACTIVE BIDDING */}
-                  {isBiddingActive && isDrawing && (
-                    <motion.div
-                      key="drawing"
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      className="flex w-full flex-col items-center space-y-6 text-center"
-                    >
-                      <div className="relative flex h-32 w-32 items-center justify-center overflow-hidden rounded-none border border-[#3c3c3c] bg-black text-5xl font-black text-[#bbbbbb]">
-                        <motion.div
-                          animate={{ y: [0, -400] }}
-                          transition={{
-                            repeat: Infinity,
-                            duration: 0.5,
-                            ease: "linear",
-                          }}
-                          className="flex flex-col items-center space-y-8"
-                        >
-                          <span>?</span>
-                          <span>?</span>
-                          <span>?</span>
-                          <span>?</span>
-                          <span>?</span>
-                          <span>?</span>
-                          <span>?</span>
-                          <span>?</span>
-                        </motion.div>
-                      </div>
-                      <div>
-                        <h2 className="mb-2 text-2xl font-black tracking-[1.5px] text-white uppercase">
-                          Drawing Player...
-                        </h2>
-                        <p className="text-sm text-[#bbbbbb]">
-                          The auctioneer is shuffling the deck
-                        </p>
-                      </div>
-                    </motion.div>
+          {!isCompleted ? (
+            <div className="mx-auto flex w-full max-w-6xl flex-col space-y-6">
+              <div className="relative flex min-h-120 flex-1 flex-col items-center justify-center overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-4 md:p-6">
+                {/* Background Watermark */}
+                <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center opacity-10">
+                  {auction.logoUrl ? (
+                    <img
+                      src={auction.logoUrl}
+                      alt="Watermark"
+                      className="max-h-full max-w-full object-contain p-12 blur-[2px]"
+                    />
+                  ) : (
+                    <TrophyIcon className="h-96 w-96 text-white blur-[2px]" />
                   )}
-                  {isBiddingActive && !isDrawing && (
-                    <motion.div
-                      key="bidding"
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      className="flex w-full flex-col items-center space-y-6 text-center"
-                    >
-                      {/* Glowing category badge */}
-                      <span className="inline-flex items-center rounded-none border border-white bg-white px-3 py-1 text-xs font-bold tracking-[1.5px] text-black uppercase">
-                        <FlameIcon className="mr-1 h-4 w-4 animate-pulse" />
-                        {categoryName} Category
-                      </span>
+                </div>
 
-                      {/* Player Image with dynamic category color glow borders */}
-                      <div className="group relative mt-2">
+                <div className="relative z-10 flex w-full flex-1 flex-col items-center justify-center">
+                  <AnimatePresence mode="wait">
+                    {/* STAGE 1: ACTIVE BIDDING */}
+                    {isBiddingActive && isDrawing && (
+                      <motion.div
+                        key="drawing"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="flex w-full flex-col items-center space-y-6 text-center"
+                      >
+                        <div className="relative flex h-32 w-32 items-center justify-center overflow-hidden rounded-none border border-[#3c3c3c] bg-black text-5xl font-black text-[#bbbbbb]">
+                          <motion.div
+                            animate={{ y: [0, -400] }}
+                            transition={{
+                              repeat: Infinity,
+                              duration: 0.5,
+                              ease: "linear",
+                            }}
+                            className="flex flex-col items-center space-y-8"
+                          >
+                            <span>?</span>
+                            <span>?</span>
+                            <span>?</span>
+                            <span>?</span>
+                            <span>?</span>
+                            <span>?</span>
+                            <span>?</span>
+                            <span>?</span>
+                          </motion.div>
+                        </div>
+                        <div>
+                          <h2 className="mb-2 text-2xl font-black tracking-[1.5px] text-white uppercase">
+                            Drawing Player...
+                          </h2>
+                          <p className="text-sm text-[#bbbbbb]">
+                            The auctioneer is shuffling the deck
+                          </p>
+                        </div>
+                      </motion.div>
+                    )}
+                    {isBiddingActive && !isDrawing && (
+                      <motion.div
+                        key="bidding"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="flex w-full flex-col items-center justify-center gap-6 md:flex-row md:items-start md:gap-8"
+                      >
+                        {/* Left Column: Player Image */}
+                        <div className="flex flex-col items-center">
+                          <div className="group relative">
+                            {activePlayer.imageUrl ? (
+                              <img
+                                src={activePlayer.imageUrl}
+                                alt={activePlayer.name}
+                                className="relative h-96 w-72 rounded-none border border-[#3c3c3c] bg-black object-cover"
+                              />
+                            ) : (
+                              <div className="relative flex h-96 w-72 items-center justify-center rounded-none border border-[#3c3c3c] bg-black text-4xl font-black text-[#bbbbbb] uppercase">
+                                {activePlayer.name.slice(0, 2)}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Right Column: Player Details */}
+                        <div className="flex w-full max-w-lg flex-col items-center space-y-4 text-center md:items-start md:text-left">
+                          {/* Glowing category badge */}
+                          <span className="inline-flex items-center rounded-none border border-white bg-white px-3 py-1 text-xs font-bold tracking-[1.5px] text-black uppercase">
+                            <FlameIcon className="mr-1 h-4 w-4 animate-pulse" />
+                            {categoryName} Category
+                          </span>
+
+                          {/* Name and skills */}
+                          <div>
+                            <h2 className="mb-2 text-4xl font-black tracking-tight text-white">
+                              {activePlayer.name}
+                            </h2>
+                            <span className="inline-block rounded-none border border-[#3c3c3c] bg-[#1a1a1a] px-3 py-1 text-xs font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
+                              Skills: {activePlayer.skills}
+                            </span>
+                          </div>
+
+                          {/* Bidding values layout */}
+                          <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2">
+                            {/* Left: Base Points */}
+                            <div className="flex flex-col items-center justify-center rounded-none border border-[#3c3c3c] bg-black p-4">
+                              <span className="text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
+                                Base Price
+                              </span>
+                              <span className="mt-1 text-lg font-bold text-white">
+                                {activePlayer.category?.basePoints} pts
+                              </span>
+                            </div>
+
+                            {/* Right: Current High Bid */}
+                            <div className="flex flex-col items-center justify-center rounded-none border border-white bg-white p-4 text-black">
+                              <span className="flex items-center text-[10px] font-black tracking-[1.5px] text-black uppercase">
+                                <span className="mr-1 h-1.5 w-1.5 animate-ping rounded-none bg-black" />
+                                Current Bid
+                              </span>
+                              <motion.span
+                                key={state.currentBidPoints}
+                                initial={{ scale: 1.5, color: "#eab308" }}
+                                animate={{ scale: 1, color: "#000000" }}
+                                transition={{ type: "spring", stiffness: 300, damping: 15 }}
+                                className="mt-1 inline-block text-2xl font-black text-black"
+                              >
+                                {state.currentBidPoints} pts
+                              </motion.span>
+                            </div>
+                          </div>
+
+                          {/* Winning Bidder Team Box */}
+                          <div className="flex w-full items-center justify-between rounded-none border border-[#3c3c3c] bg-black p-4">
+                            <div className="flex items-center space-x-3">
+                              {state.currentHighestBidderTeam ? (
+                                <>
+                                  {state.currentHighestBidderTeam.logoUrl ? (
+                                    <ImageViewer
+                                      src={state.currentHighestBidderTeam.logoUrl}
+                                      alt={state.currentHighestBidderTeam.name}
+                                      className="h-10 w-10 rounded-none border border-[#3c3c3c] bg-[#1a1a1a] object-cover"
+                                    />
+                                  ) : (
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] text-xs font-bold text-white uppercase">
+                                      {state.currentHighestBidderTeam.name.slice(0, 2)}
+                                    </div>
+                                  )}
+                                  <div className="text-left">
+                                    <span className="block text-[9px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
+                                      Leading Bidder
+                                    </span>
+                                    <span className="text-sm font-black text-white">
+                                      {state.currentHighestBidderTeam.name}
+                                    </span>
+                                  </div>
+                                </>
+                              ) : (
+                                <div className="flex items-center space-x-2.5 text-left">
+                                  <div className="flex h-8 w-8 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] text-[#bbbbbb]">
+                                    👤
+                                  </div>
+                                  <div>
+                                    <span className="block text-[9px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
+                                      Leading Bidder
+                                    </span>
+                                    <span className="text-xs font-semibold text-[#bbbbbb]">
+                                      Waiting for opening bid...
+                                    </span>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="flex h-8 w-8 items-center justify-center rounded-none border border-white bg-white text-black">
+                              <Volume2Icon className="h-4 w-4 animate-bounce" />
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* STAGE 2: SOLD CELEBRATION */}
+                    {isSoldCelebration && (
+                      <motion.div
+                        key="sold"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="flex w-full flex-col items-center space-y-6 text-center"
+                      >
+                        <div className="pointer-events-none absolute inset-0 z-50 overflow-hidden">
+                          <Confetti
+                            className="absolute h-full w-full"
+                            options={{
+                              particleCount: 150,
+                              spread: 70,
+                              angle: 60,
+                              origin: { x: 0, y: 0.6 },
+                            }}
+                          />
+                          <Confetti
+                            className="absolute h-full w-full"
+                            options={{
+                              particleCount: 150,
+                              spread: 70,
+                              angle: 120,
+                              origin: { x: 1, y: 0.6 },
+                            }}
+                          />
+                        </div>
+                        <div className="relative">
+                          <motion.span
+                            initial={{ scale: 3, opacity: 0, rotate: -15 }}
+                            animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                            transition={{ type: "spring", stiffness: 200, damping: 10 }}
+                            className="inline-flex items-center rounded-none border border-white bg-white px-4 py-1.5 text-sm font-black tracking-[1.5px] text-black uppercase"
+                          >
+                            🔨 SOLD CELEBRATION 🔨
+                          </motion.span>
+                        </div>
+
                         {activePlayer.imageUrl ? (
                           <img
                             src={activePlayer.imageUrl}
                             alt={activePlayer.name}
-                            className="relative h-64 w-48 rounded-none border border-[#3c3c3c] bg-black object-cover"
+                            className="mt-2 h-56 w-40 rounded-none border border-white bg-black object-cover"
                           />
                         ) : (
-                          <div className="relative flex h-64 w-48 items-center justify-center rounded-none border border-[#3c3c3c] bg-black text-3xl font-black text-[#bbbbbb] uppercase">
+                          <div className="flex h-56 w-40 items-center justify-center rounded-none border border-white bg-black text-2xl font-black text-white uppercase">
                             {activePlayer.name.slice(0, 2)}
                           </div>
                         )}
-                      </div>
 
-                      {/* Name and skills */}
-                      <div>
-                        <h2 className="mb-2 text-3xl font-black tracking-tight text-white">
-                          {activePlayer.name}
-                        </h2>
-                        <span className="rounded-none border border-[#3c3c3c] bg-[#1a1a1a] px-3 py-1 text-xs font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
-                          Skills: {activePlayer.skills}
-                        </span>
-                      </div>
-
-                      {/* Bidding values layout */}
-                      <div className="mt-4 grid w-full max-w-md grid-cols-1 gap-4 md:grid-cols-2">
-                        {/* Left: Base Points */}
-                        <div className="flex flex-col items-center justify-center rounded-none border border-[#3c3c3c] bg-black p-4">
-                          <span className="text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
-                            Base Price
-                          </span>
-                          <span className="mt-1 text-lg font-bold text-white">
-                            {activePlayer.category?.basePoints} pts
-                          </span>
+                        <div>
+                          <h2 className="text-4xl font-black text-white">{activePlayer.name}</h2>
+                          <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-[#bbbbbb]">
+                            Joined the ranks of{" "}
+                            <span className="font-bold text-white">
+                              {state.currentHighestBidderTeam?.name}
+                            </span>{" "}
+                            for a spectacular sum of:
+                          </p>
                         </div>
 
-                        {/* Right: Current High Bid */}
-                        <div className="flex flex-col items-center justify-center rounded-none border border-white bg-white p-4 text-black">
-                          <span className="flex items-center text-[10px] font-black tracking-[1.5px] text-black uppercase">
-                            <span className="mr-1 h-1.5 w-1.5 animate-ping rounded-none bg-black" />
-                            Current Bid
+                        <div className="rounded-none border border-[#3c3c3c] bg-black px-8 py-4">
+                          <span className="block text-[10px] font-black tracking-[1.5px] text-[#bbbbbb] uppercase">
+                            Sold Price
                           </span>
-                          <motion.span
-                            key={state.currentBidPoints}
-                            initial={{ scale: 1.5, color: "#eab308" }}
-                            animate={{ scale: 1, color: "#000000" }}
-                            transition={{ type: "spring", stiffness: 300, damping: 15 }}
-                            className="mt-1 inline-block text-2xl font-black text-black"
-                          >
+                          <span className="text-4xl font-black text-white">
                             {state.currentBidPoints} pts
-                          </motion.span>
+                          </span>
                         </div>
-                      </div>
+                      </motion.div>
+                    )}
 
-                      {/* Winning Bidder Team Box */}
-                      <div className="flex w-full max-w-md items-center justify-between rounded-none border border-[#3c3c3c] bg-black p-4">
-                        <div className="flex items-center space-x-3">
-                          {state.currentHighestBidderTeam ? (
-                            <>
-                              {state.currentHighestBidderTeam.logoUrl ? (
-                                <ImageViewer
-                                  src={state.currentHighestBidderTeam.logoUrl}
-                                  alt={state.currentHighestBidderTeam.name}
-                                  className="h-10 w-10 rounded-none border border-[#3c3c3c] bg-[#1a1a1a] object-cover"
-                                />
-                              ) : (
-                                <div className="flex h-10 w-10 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] text-xs font-bold text-white uppercase">
-                                  {state.currentHighestBidderTeam.name.slice(0, 2)}
-                                </div>
-                              )}
-                              <div className="text-left">
-                                <span className="block text-[9px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
-                                  Leading Bidder
-                                </span>
-                                <span className="text-sm font-black text-white">
-                                  {state.currentHighestBidderTeam.name}
-                                </span>
-                              </div>
-                            </>
-                          ) : (
-                            <div className="flex items-center space-x-2.5 text-left">
-                              <div className="flex h-8 w-8 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] text-[#bbbbbb]">
-                                👤
-                              </div>
-                              <div>
-                                <span className="block text-[9px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
-                                  Leading Bidder
-                                </span>
-                                <span className="text-xs font-semibold text-[#bbbbbb]">
-                                  Waiting for opening bid...
-                                </span>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="flex h-8 w-8 items-center justify-center rounded-none border border-white bg-white text-black">
-                          <Volume2Icon className="h-4 w-4 animate-bounce" />
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-
-                  {/* STAGE 2: SOLD CELEBRATION */}
-                  {isSoldCelebration && (
-                    <motion.div
-                      key="sold"
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      className="flex w-full flex-col items-center space-y-6 text-center"
-                    >
-                      <div className="pointer-events-none absolute inset-0 z-50 overflow-hidden">
-                        <Confetti
-                          className="absolute h-full w-full"
-                          options={{
-                            particleCount: 150,
-                            spread: 70,
-                            angle: 60,
-                            origin: { x: 0, y: 0.6 },
-                          }}
-                        />
-                        <Confetti
-                          className="absolute h-full w-full"
-                          options={{
-                            particleCount: 150,
-                            spread: 70,
-                            angle: 120,
-                            origin: { x: 1, y: 0.6 },
-                          }}
-                        />
-                      </div>
-                      <div className="relative">
-                        <motion.span
-                          initial={{ scale: 3, opacity: 0, rotate: -15 }}
-                          animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                          transition={{ type: "spring", stiffness: 200, damping: 10 }}
-                          className="inline-flex items-center rounded-none border border-white bg-white px-4 py-1.5 text-sm font-black tracking-[1.5px] text-black uppercase"
-                        >
-                          🔨 SOLD CELEBRATION 🔨
-                        </motion.span>
-                      </div>
-
-                      {activePlayer.imageUrl ? (
-                        <img
-                          src={activePlayer.imageUrl}
-                          alt={activePlayer.name}
-                          className="mt-2 h-56 w-40 rounded-none border border-white bg-black object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-56 w-40 items-center justify-center rounded-none border border-white bg-black text-2xl font-black text-white uppercase">
-                          {activePlayer.name.slice(0, 2)}
-                        </div>
-                      )}
-
-                      <div>
-                        <h2 className="text-4xl font-black text-white">{activePlayer.name}</h2>
-                        <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-[#bbbbbb]">
-                          Joined the ranks of{" "}
-                          <span className="font-bold text-white">
-                            {state.currentHighestBidderTeam?.name}
-                          </span>{" "}
-                          for a spectacular sum of:
-                        </p>
-                      </div>
-
-                      <div className="rounded-none border border-[#3c3c3c] bg-black px-8 py-4">
-                        <span className="block text-[10px] font-black tracking-[1.5px] text-[#bbbbbb] uppercase">
-                          Sold Price
+                    {/* STAGE 3: UNSOLD SCREEN */}
+                    {isUnsoldScreen && (
+                      <motion.div
+                        key="unsold"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="flex w-full flex-col items-center space-y-6 text-center"
+                      >
+                        <span className="inline-flex items-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] px-4 py-1.5 text-xs font-black tracking-[1.5px] text-[#bbbbbb] uppercase">
+                          💨 UNSOLD 💨
                         </span>
-                        <span className="text-4xl font-black text-white">
-                          {state.currentBidPoints} pts
-                        </span>
-                      </div>
-                    </motion.div>
-                  )}
 
-                  {/* STAGE 3: UNSOLD SCREEN */}
-                  {isUnsoldScreen && (
-                    <motion.div
-                      key="unsold"
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      className="flex w-full flex-col items-center space-y-6 text-center"
-                    >
-                      <span className="inline-flex items-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] px-4 py-1.5 text-xs font-black tracking-[1.5px] text-[#bbbbbb] uppercase">
-                        💨 UNSOLD 💨
-                      </span>
+                        {activePlayer.imageUrl ? (
+                          <img
+                            src={activePlayer.imageUrl}
+                            alt={activePlayer.name}
+                            className="mt-2 h-56 w-40 rounded-none border border-[#3c3c3c] bg-black object-cover opacity-50"
+                          />
+                        ) : (
+                          <div className="flex h-56 w-40 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] text-2xl font-black text-[#bbbbbb] uppercase">
+                            {activePlayer.name.slice(0, 2)}
+                          </div>
+                        )}
 
-                      {activePlayer.imageUrl ? (
-                        <img
-                          src={activePlayer.imageUrl}
-                          alt={activePlayer.name}
-                          className="mt-2 h-56 w-40 rounded-none border border-[#3c3c3c] bg-black object-cover opacity-50"
-                        />
-                      ) : (
-                        <div className="flex h-56 w-40 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] text-2xl font-black text-[#bbbbbb] uppercase">
-                          {activePlayer.name.slice(0, 2)}
+                        <div>
+                          <h2 className="text-3xl font-black text-white">{activePlayer.name}</h2>
+                          <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-[#bbbbbb]">
+                            This player went unsold in this round and returns to the backup
+                            selection pool.
+                          </p>
                         </div>
-                      )}
+                      </motion.div>
+                    )}
 
-                      <div>
-                        <h2 className="text-3xl font-black text-white">{activePlayer.name}</h2>
-                        <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-[#bbbbbb]">
-                          This player went unsold in this round and returns to the backup selection
-                          pool.
-                        </p>
-                      </div>
-                    </motion.div>
-                  )}
+                    {/* STAGE 4: IDLE / PAUSED */}
+                    {!activePlayer && (
+                      <motion.div
+                        key="idle"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="flex w-full flex-col items-center space-y-6 text-center"
+                      >
+                        <div className="relative flex h-16 w-16 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] text-white">
+                          <span className="pointer-events-none absolute inset-0 animate-ping rounded-none border border-[#3c3c3c]" />
+                          <ClockIcon className="h-8 w-8 animate-pulse text-white" />
+                        </div>
 
-                  {/* STAGE 4: IDLE / PAUSED */}
-                  {!activePlayer && (
-                    <motion.div
-                      key="idle"
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      className="flex w-full flex-col items-center space-y-6 text-center"
-                    >
-                      <div className="relative flex h-16 w-16 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] text-white">
-                        <span className="pointer-events-none absolute inset-0 animate-ping rounded-none border border-[#3c3c3c]" />
-                        <ClockIcon className="h-8 w-8 animate-pulse text-white" />
-                      </div>
-
-                      <div>
-                        <h3 className="mb-2 text-xl font-black text-white">
-                          Arena Connection Active
-                        </h3>
-                        <p className="mx-auto max-w-xs text-sm leading-relaxed text-[#bbbbbb]">
-                          Waiting for the Auctioneer to draw the next player roster card from the
-                          selection deck...
-                        </p>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                        <div>
+                          <h3 className="mb-2 text-xl font-black text-white">
+                            Arena Connection Active
+                          </h3>
+                          <p className="mx-auto max-w-xs text-sm leading-relaxed text-[#bbbbbb]">
+                            Waiting for the Auctioneer to draw the next player roster card from the
+                            selection deck...
+                          </p>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="mx-auto flex w-full max-w-6xl flex-col space-y-6">
+              <div className="relative flex flex-1 flex-col items-center justify-center overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-12 text-center">
+                <TrophyIcon className="mb-4 h-16 w-16 text-[#eab308]" />
+                <h2 className="mb-2 text-3xl font-black tracking-[1.5px] text-white uppercase">
+                  Auction Event Concluded
+                </h2>
+                <p className="mx-auto max-w-md text-sm leading-relaxed text-[#bbbbbb]">
+                  The bidding session has officially ended. All rosters are locked and finalized.
+                  You can review the historical events in the logs below.
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Middle Section: Collapsible Auction Logs */}
           <div className="mx-auto flex w-full max-w-6xl flex-col">
@@ -613,83 +634,85 @@ function LiveTrackerPage() {
           </div>
 
           {/* Bottom Section: Collapsible Team Standings */}
-          <div className="mx-auto flex w-full max-w-6xl flex-col">
-            <div className="flex flex-col rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-6 transition-all">
-              <button
-                onClick={() => setIsTeamsOpen(!isTeamsOpen)}
-                className="group flex w-full cursor-pointer items-center justify-between border-b border-[#3c3c3c] pb-3 hover:opacity-80"
-              >
-                <div className="flex items-center space-x-3">
-                  <h3 className="text-xs font-black tracking-[1.5px] text-white uppercase">
-                    Registered Teams
-                  </h3>
-                  <span className="text-[10px] text-[#bbbbbb]">
-                    {auction.teams?.length ?? 0} total
-                  </span>
-                </div>
-                {isTeamsOpen ? (
-                  <ChevronUpIcon className="h-4 w-4 text-[#bbbbbb] transition-colors group-hover:text-white" />
-                ) : (
-                  <ChevronDownIcon className="h-4 w-4 text-[#bbbbbb] transition-colors group-hover:text-white" />
-                )}
-              </button>
+          {!isCompleted && (
+            <div className="mx-auto flex w-full max-w-6xl flex-col">
+              <div className="flex flex-col rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-6 transition-all">
+                <button
+                  onClick={() => setIsTeamsOpen(!isTeamsOpen)}
+                  className="group flex w-full cursor-pointer items-center justify-between border-b border-[#3c3c3c] pb-3 hover:opacity-80"
+                >
+                  <div className="flex items-center space-x-3">
+                    <h3 className="text-xs font-black tracking-[1.5px] text-white uppercase">
+                      Registered Teams
+                    </h3>
+                    <span className="text-[10px] text-[#bbbbbb]">
+                      {auction.teams?.length ?? 0} total
+                    </span>
+                  </div>
+                  {isTeamsOpen ? (
+                    <ChevronUpIcon className="h-4 w-4 text-[#bbbbbb] transition-colors group-hover:text-white" />
+                  ) : (
+                    <ChevronDownIcon className="h-4 w-4 text-[#bbbbbb] transition-colors group-hover:text-white" />
+                  )}
+                </button>
 
-              <AnimatePresence>
-                {isTeamsOpen && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="mt-4 max-h-[60vh] space-y-4 overflow-y-auto pr-1">
-                      {auction.teams?.map((team: any) => (
-                        <div
-                          key={team.id}
-                          className="flex items-center justify-between rounded-none border border-[#3c3c3c] bg-black p-3 transition-colors hover:border-white"
-                        >
-                          <div className="flex items-center space-x-3">
-                            {team.logoUrl ? (
-                              <ImageViewer
-                                src={team.logoUrl}
-                                alt={team.name}
-                                className="h-8 w-8 rounded-none border border-[#3c3c3c] bg-[#1a1a1a] object-cover"
-                              />
-                            ) : (
-                              <div className="flex h-8 w-8 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] text-xs font-bold text-white uppercase">
-                                {team.name.slice(0, 2)}
+                <AnimatePresence>
+                  {isTeamsOpen && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="mt-4 max-h-[60vh] space-y-4 overflow-y-auto pr-1">
+                        {auction.teams?.map((team: any) => (
+                          <div
+                            key={team.id}
+                            className="flex items-center justify-between rounded-none border border-[#3c3c3c] bg-black p-3 transition-colors hover:border-white"
+                          >
+                            <div className="flex items-center space-x-3">
+                              {team.logoUrl ? (
+                                <ImageViewer
+                                  src={team.logoUrl}
+                                  alt={team.name}
+                                  className="h-8 w-8 rounded-none border border-[#3c3c3c] bg-[#1a1a1a] object-cover"
+                                />
+                              ) : (
+                                <div className="flex h-8 w-8 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] text-xs font-bold text-white uppercase">
+                                  {team.name.slice(0, 2)}
+                                </div>
+                              )}
+                              <div>
+                                <span className="block text-xs font-bold text-white">
+                                  {team.name}
+                                </span>
+                                <span className="text-[9px] tracking-[1.5px] text-[#bbbbbb] uppercase">
+                                  Owner: {team.ownerName}
+                                </span>
                               </div>
-                            )}
-                            <div>
-                              <span className="block text-xs font-bold text-white">
-                                {team.name}
+                            </div>
+                            <div className="text-right">
+                              <span className="block text-[9px] font-semibold text-[#bbbbbb] uppercase">
+                                Budget Left
                               </span>
-                              <span className="text-[9px] tracking-[1.5px] text-[#bbbbbb] uppercase">
-                                Owner: {team.ownerName}
+                              <span className="text-xs font-black text-white">
+                                {team.remainingBudget} pts
                               </span>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <span className="block text-[9px] font-semibold text-[#bbbbbb] uppercase">
-                              Budget Left
-                            </span>
-                            <span className="text-xs font-black text-white">
-                              {team.remainingBudget} pts
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                      {(!auction.teams || auction.teams.length === 0) && (
-                        <p className="py-6 text-center text-xs text-[#bbbbbb]">
-                          No teams registered yet.
-                        </p>
-                      )}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                        ))}
+                        {(!auction.teams || auction.teams.length === 0) && (
+                          <p className="py-6 text-center text-xs text-[#bbbbbb]">
+                            No teams registered yet.
+                          </p>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
-          </div>
+          )}
         </div>
         {/* Ticker marquee footer */}
         <footer className="z-20 overflow-hidden border-t border-[#3c3c3c] bg-black py-3 select-none">

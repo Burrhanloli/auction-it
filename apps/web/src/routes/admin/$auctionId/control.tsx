@@ -4,7 +4,7 @@ import { Label } from "@repo/ui/components/label";
 import { useForm } from "@tanstack/react-form";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { PlayIcon, GavelIcon, XOctagonIcon, TagIcon } from "lucide-react";
+import { PlayIcon, GavelIcon, XOctagonIcon, TagIcon, UsersIcon } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
@@ -16,6 +16,7 @@ import {
   $markSold,
   $markUnsold,
   $updateAuctionStatus,
+  $revertPlayer,
 } from "#/lib/auction-actions";
 
 export const Route = createFileRoute("/admin/$auctionId/control")({
@@ -106,6 +107,18 @@ function AuctionControlPanel() {
     },
   });
 
+  const revertPlayerMutation = useMutation({
+    mutationFn: (vars: { auctionId: string; playerId: string }) => $revertPlayer({ data: vars }),
+    onSuccess: () => {
+      toast.success("Player reverted successfully!");
+      queryClient.invalidateQueries({ queryKey: ["auction-state", auctionId] });
+      queryClient.invalidateQueries({ queryKey: ["auction", auctionId] });
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to revert player");
+    },
+  });
+
   const handleDrawPlayer = () => {
     if (!activeCategoryId) {
       toast.error("Please select a category first!");
@@ -151,6 +164,34 @@ function AuctionControlPanel() {
                 className="rounded-none border border-white bg-white px-8 py-3.5 font-bold tracking-[1.5px] text-black uppercase hover:bg-black hover:text-white disabled:border-[#3c3c3c] disabled:bg-[#1a1a1a] disabled:text-[#7e7e7e]"
               >
                 {updateStatusMutation.isPending ? "Launching..." : "Launch Auction"}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* End Auction Prompt */}
+        {auction?.status === "active" && (
+          <div className="rounded-none border border-[#e22718]/30 bg-[#1a1a1a] p-8">
+            <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+              <div>
+                <h3 className="flex items-center text-base font-bold tracking-[1.5px] text-white uppercase">
+                  <XOctagonIcon className="mr-2 h-5 w-5 text-[#e22718]" />
+                  End Auction Session
+                </h3>
+                <p className="mt-1 text-xs text-[#bbbbbb]">
+                  Close the auction. This will hide the live bidding view and lock all team rosters.
+                </p>
+              </div>
+              <Button
+                onClick={() => {
+                  if (window.confirm("Are you sure you want to end this auction?")) {
+                    updateStatusMutation.mutate({ auctionId, status: "completed" });
+                  }
+                }}
+                disabled={updateStatusMutation.isPending}
+                className="rounded-none border border-[#e22718] bg-[#e22718] px-8 py-3.5 font-bold tracking-[1.5px] text-white uppercase hover:bg-black hover:text-[#e22718] disabled:opacity-50"
+              >
+                {updateStatusMutation.isPending ? "Ending..." : "End Auction"}
               </Button>
             </div>
           </div>
@@ -244,7 +285,7 @@ function AuctionControlPanel() {
 
           {isBidding ? (
             <BiddingFormConsole
-              key={`${activePlayer.id}-${state.currentBidPoints}`}
+              key={activePlayer.id}
               state={state}
               auction={auction}
               auctionId={auctionId}
@@ -310,6 +351,72 @@ function AuctionControlPanel() {
           </div>
         </div>
       </div>
+
+      {/* Acquired Squads Section */}
+      <div className="col-span-1 mt-6 rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8 lg:col-span-3">
+        <h3 className="mb-6 flex items-center text-base font-bold tracking-[1.5px] text-white uppercase">
+          <UsersIcon className="mr-3 h-5 w-5 text-white" />
+          Acquired Squads & Reversions
+        </h3>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {auction?.teams?.map((team: any) => {
+            const squad = auction.players?.filter((p: any) => p.soldToTeamId === team.id) || [];
+
+            return (
+              <div key={team.id} className="rounded-none border border-[#3c3c3c] bg-black p-4">
+                <div className="mb-4 flex items-center justify-between border-b border-[#3c3c3c] pb-2">
+                  <h4 className="text-sm font-bold tracking-[1px] text-white uppercase">
+                    {team.name}
+                  </h4>
+                  <span className="text-[10px] font-bold text-[#bbbbbb]">
+                    {team.remainingBudget} pts
+                  </span>
+                </div>
+                {squad.length > 0 ? (
+                  <div className="max-h-[300px] space-y-3 overflow-y-auto pr-2">
+                    {squad.map((player: any) => (
+                      <div
+                        key={player.id}
+                        className="flex items-center justify-between rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-2"
+                      >
+                        <div>
+                          <p className="text-xs font-bold text-white uppercase">{player.name}</p>
+                          <p className="text-[10px] text-[#bbbbbb]">
+                            {player.soldPoints} pts {player.status === "captain" ? "(Captain)" : ""}
+                          </p>
+                        </div>
+                        {player.status !== "captain" && (
+                          <Button
+                            onClick={() => {
+                              if (
+                                window.confirm(`Are you sure you want to revert ${player.name}?`)
+                              ) {
+                                revertPlayerMutation.mutate({ auctionId, playerId: player.id });
+                              }
+                            }}
+                            disabled={revertPlayerMutation.isPending}
+                            className="h-6 cursor-pointer rounded-none border border-[#e22718] bg-transparent px-2 text-[8px] font-bold tracking-[1px] text-[#e22718] uppercase hover:bg-[#e22718] hover:text-white disabled:opacity-50"
+                          >
+                            Revert
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-[#bbbbbb] italic">No players acquired yet.</p>
+                )}
+              </div>
+            );
+          })}
+
+          {(!auction?.teams || auction.teams.length === 0) && (
+            <div className="col-span-full py-8 text-center text-xs text-[#bbbbbb]">
+              No teams registered yet.
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -335,12 +442,12 @@ function BiddingFormConsole({
   activePlayer,
   categoryColor,
 }: BiddingFormConsoleProps) {
-  const [lastIncrement, setLastIncrement] = useState<number | null>(20);
+  const [lastIncrement, setLastIncrement] = useState<number | null>(100);
 
   const bidForm = useForm({
     defaultValues: {
       biddingTeamId: state.currentHighestBidderTeamId || auction?.teams?.[0]?.id || "",
-      customBidAmount: state.currentBidPoints + 20,
+      customBidAmount: state.currentBidPoints + 100,
     },
     onSubmit: async ({ value }) => {
       const biddingTeamId = value.biddingTeamId || auction?.teams?.[0]?.id;
@@ -381,7 +488,7 @@ function BiddingFormConsole({
     bidForm.setFieldValue("customBidAmount", state.currentBidPoints + amount);
   };
 
-  const incrementOptions = [5, 10, 20, 50, 100, 200, 500];
+  const incrementOptions = [100, 200, 500, 1000, 2000, 3000, 4000, 5000];
 
   return (
     <div className="space-y-6">
@@ -607,7 +714,7 @@ function BiddingFormConsole({
             type="button"
             onClick={() => {
               setLastIncrement(null);
-              bidForm.setFieldValue("customBidAmount", state.currentBidPoints + 20);
+              bidForm.setFieldValue("customBidAmount", state.currentBidPoints + 100);
             }}
             className="cursor-pointer rounded-none border border-[#3c3c3c] bg-black px-2.5 py-1 text-[10px] font-bold tracking-[1.5px] text-white hover:bg-[#1a1a1a]"
           >

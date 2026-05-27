@@ -78,8 +78,15 @@ export const $createAuction = createServerFn({ method: "POST" })
     (data: {
       name: string;
       budgetPerTeam: number;
+      minPlayersPerSquad?: number | null;
+      maxPlayersPerSquad?: number | null;
       logoUrl: string | null;
-      categories: Array<{ name: string; basePoints: number }>;
+      categories: Array<{
+        name: string;
+        basePoints: number;
+        minPlayersPerCategory?: number | null;
+        maxPlayersPerCategory?: number | null;
+      }>;
     }) => data,
   )
   .handler(async ({ data, context }) => {
@@ -94,6 +101,8 @@ export const $createAuction = createServerFn({ method: "POST" })
         .values({
           name: data.name,
           budgetPerTeam: data.budgetPerTeam,
+          minPlayersPerSquad: data.minPlayersPerSquad,
+          maxPlayersPerSquad: data.maxPlayersPerSquad,
           logoUrl: data.logoUrl,
           userId,
           slug: slugVal,
@@ -107,6 +116,8 @@ export const $createAuction = createServerFn({ method: "POST" })
             auctionId: auction.id,
             name: c.name,
             basePoints: c.basePoints,
+            minPlayersPerCategory: c.minPlayersPerCategory,
+            maxPlayersPerCategory: c.maxPlayersPerCategory,
           })),
         );
       }
@@ -138,8 +149,16 @@ export const $updateAuction = createServerFn({ method: "POST" })
       slug: string;
       name: string;
       budgetPerTeam: number;
+      minPlayersPerSquad?: number | null;
+      maxPlayersPerSquad?: number | null;
       logoUrl: string | null;
-      categories: Array<{ id?: string; name: string; basePoints: number }>;
+      categories: Array<{
+        id?: string;
+        name: string;
+        basePoints: number;
+        minPlayersPerCategory?: number | null;
+        maxPlayersPerCategory?: number | null;
+      }>;
     }) => data,
   )
   .handler(async ({ data }) => {
@@ -164,6 +183,8 @@ export const $updateAuction = createServerFn({ method: "POST" })
         .set({
           name: data.name,
           budgetPerTeam: data.budgetPerTeam,
+          minPlayersPerSquad: data.minPlayersPerSquad,
+          maxPlayersPerSquad: data.maxPlayersPerSquad,
           logoUrl: data.logoUrl,
           slug: newSlug,
         })
@@ -193,6 +214,8 @@ export const $updateAuction = createServerFn({ method: "POST" })
             .set({
               name: inputCat.name,
               basePoints: inputCat.basePoints,
+              minPlayersPerCategory: inputCat.minPlayersPerCategory,
+              maxPlayersPerCategory: inputCat.maxPlayersPerCategory,
             })
             .where(eq(schema.categories.id, inputCat.id));
         } else {
@@ -201,6 +224,8 @@ export const $updateAuction = createServerFn({ method: "POST" })
             auctionId: resolvedId,
             name: inputCat.name,
             basePoints: inputCat.basePoints,
+            minPlayersPerCategory: inputCat.minPlayersPerCategory,
+            maxPlayersPerCategory: inputCat.maxPlayersPerCategory,
           });
         }
       }
@@ -744,6 +769,62 @@ export const $markUnsold = createServerFn({ method: "POST" })
     // Broadcast changes
     publishAuctionUpdate(resolvedId, "state", { stage: "unsold" });
     publishAuctionUpdate(resolvedId, "ticker", { message: result.logMessage });
+
+    return { success: true };
+  });
+// Mutation: Revert a sold player back to the bidding pool
+export const $revertPlayer = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .inputValidator((data: { auctionId: string; playerId: string }) => data)
+  .handler(async ({ data }) => {
+    const resolvedAuctionId = await resolveAuctionId(data.auctionId);
+
+    const result = await (async () => {
+      const player = await db.query.players.findFirst({
+        where: { id: data.playerId, auctionId: resolvedAuctionId },
+        with: { soldToTeam: true },
+      });
+
+      if (!player) throw new Error("Player not found!");
+      if (player.status === "captain") throw new Error("Cannot revert a team captain!");
+      if (player.status !== "sold" || !player.soldToTeamId || player.soldPoints === null) {
+        throw new Error("Player is not sold, cannot revert.");
+      }
+
+      const team = player.soldToTeam!;
+
+      // 1. Refund the points to the team
+      const newRemainingBudget = team.remainingBudget + player.soldPoints;
+      await db
+        .update(schema.teams)
+        .set({ remainingBudget: newRemainingBudget })
+        .where(eq(schema.teams.id, team.id));
+
+      // 2. Set player back to unsold
+      await db
+        .update(schema.players)
+        .set({
+          status: "unsold",
+          soldToTeamId: null,
+          soldPoints: null,
+        })
+        .where(eq(schema.players.id, player.id));
+
+      // 3. Log event
+      const logMessage = `⏪ REVERT: "${player.name}" was reverted from "${team.name}". ${player.soldPoints} points refunded.`;
+      await db.insert(schema.auctionLogs).values({
+        auctionId: resolvedAuctionId,
+        message: logMessage,
+        actionType: "info",
+        teamId: team.id,
+      });
+
+      return { logMessage, teamId: team.id };
+    })();
+
+    // Broadcast changes
+    publishAuctionUpdate(resolvedAuctionId, "ticker", { message: result.logMessage });
+    publishAuctionUpdate(resolvedAuctionId, "team_update", { teamId: result.teamId });
 
     return { success: true };
   });

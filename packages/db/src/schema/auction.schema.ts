@@ -9,6 +9,8 @@ export const auctions = pgTable("auctions", {
   logoUrl: text("logo_url"),
   status: text("status").$type<"draft" | "active" | "completed">().default("draft").notNull(),
   budgetPerTeam: integer("budget_per_team").default(1000).notNull(),
+  minPlayersPerSquad: integer("min_players_per_squad"),
+  maxPlayersPerSquad: integer("max_players_per_squad"),
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
@@ -26,6 +28,8 @@ export const categories = pgTable("categories", {
     .references(() => auctions.id, { onDelete: "cascade" }),
   name: text("name").notNull(), // Elite, Pro, Batsmen, etc.
   basePoints: integer("base_points").default(100).notNull(),
+  minPlayersPerCategory: integer("min_players_per_category"),
+  maxPlayersPerCategory: integer("max_players_per_category"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

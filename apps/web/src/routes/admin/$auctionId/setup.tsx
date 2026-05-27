@@ -30,6 +30,8 @@ interface FormCategory {
   id?: string;
   name: string;
   basePoints: number;
+  minPlayersPerCategory?: number | null | "";
+  maxPlayersPerCategory?: number | null | "";
 }
 
 function SetupConsolePage() {
@@ -89,10 +91,14 @@ function SetupForm({ auction, auctionId }: SetupFormProps) {
       slug: slugPrefix,
       suffix: slugSuffix,
       budgetPerTeam: auction.budgetPerTeam,
+      minPlayersPerSquad: auction.minPlayersPerSquad ?? "",
+      maxPlayersPerSquad: auction.maxPlayersPerSquad ?? "",
       categories: (auction.categories || []).map((c: any) => ({
         id: c.id,
         name: c.name,
         basePoints: c.basePoints,
+        minPlayersPerCategory: c.minPlayersPerCategory ?? "",
+        maxPlayersPerCategory: c.maxPlayersPerCategory ?? "",
       })) as FormCategory[],
     },
     onSubmit: async ({ value }) => {
@@ -135,10 +141,14 @@ function SetupForm({ auction, auctionId }: SetupFormProps) {
         name: value.name.trim(),
         logoUrl: value.logoUrl ? value.logoUrl.trim() : null,
         budgetPerTeam: value.budgetPerTeam,
-        categories: value.categories.map((c) => ({
+        minPlayersPerSquad: value.minPlayersPerSquad ? Number(value.minPlayersPerSquad) : null,
+        maxPlayersPerSquad: value.maxPlayersPerSquad ? Number(value.maxPlayersPerSquad) : null,
+        categories: value.categories.map((c: any) => ({
           id: c.id,
           name: c.name.trim(),
           basePoints: Number(c.basePoints),
+          minPlayersPerCategory: c.minPlayersPerCategory ? Number(c.minPlayersPerCategory) : null,
+          maxPlayersPerCategory: c.maxPlayersPerCategory ? Number(c.maxPlayersPerCategory) : null,
         })),
       });
     },
@@ -268,6 +278,44 @@ function SetupForm({ auction, auctionId }: SetupFormProps) {
           />
 
           <form.Field
+            name="minPlayersPerSquad"
+            children={(field) => (
+              <div className="space-y-2">
+                <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
+                  Min Players Per Squad (Optional)
+                </Label>
+                <Input
+                  id={field.name}
+                  type="number"
+                  placeholder="e.g. 15"
+                  value={field.state.value as any}
+                  onChange={(e) => field.handleChange(e.target.value as any)}
+                  className="rounded-none border border-[#3c3c3c] bg-black text-xs text-white"
+                />
+              </div>
+            )}
+          />
+
+          <form.Field
+            name="maxPlayersPerSquad"
+            children={(field) => (
+              <div className="space-y-2">
+                <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
+                  Max Players Per Squad (Optional)
+                </Label>
+                <Input
+                  id={field.name}
+                  type="number"
+                  placeholder="e.g. 25"
+                  value={field.state.value as any}
+                  onChange={(e) => field.handleChange(e.target.value as any)}
+                  className="rounded-none border border-[#3c3c3c] bg-black text-xs text-white"
+                />
+              </div>
+            )}
+          />
+
+          <form.Field
             name="slug"
             children={(field) => (
               <div className="space-y-2 md:col-span-2">
@@ -334,8 +382,8 @@ function SetupForm({ auction, auctionId }: SetupFormProps) {
                   key={idx}
                   className="flex items-center space-x-4 rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-4"
                 >
-                  <div className="grid flex-1 grid-cols-1 gap-4 md:grid-cols-2">
-                    <div className="space-y-1.5">
+                  <div className="grid flex-1 grid-cols-1 gap-4 md:grid-cols-4">
+                    <div className="space-y-1.5 md:col-span-2">
                       <Label className="text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
                         Category Name
                       </Label>
@@ -350,7 +398,7 @@ function SetupForm({ auction, auctionId }: SetupFormProps) {
                         )}
                       </form.Field>
                     </div>
-                    <div className="space-y-1.5">
+                    <div className="space-y-1.5 md:col-span-2">
                       <Label className="text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
                         Base points value
                       </Label>
@@ -368,6 +416,38 @@ function SetupForm({ auction, auctionId }: SetupFormProps) {
                           )}
                         </form.Field>
                       </div>
+                    </div>
+                    <div className="space-y-1.5 md:col-span-2">
+                      <Label className="text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
+                        Min Players (Opt)
+                      </Label>
+                      <form.Field name={`categories[${idx}].minPlayersPerCategory`}>
+                        {(subField) => (
+                          <Input
+                            type="number"
+                            placeholder="e.g. 1"
+                            value={subField.state.value as any}
+                            onChange={(e) => subField.handleChange(e.target.value as any)}
+                            className="rounded-none border border-[#3c3c3c] bg-black text-xs text-white"
+                          />
+                        )}
+                      </form.Field>
+                    </div>
+                    <div className="space-y-1.5 md:col-span-2">
+                      <Label className="text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
+                        Max Players (Opt)
+                      </Label>
+                      <form.Field name={`categories[${idx}].maxPlayersPerCategory`}>
+                        {(subField) => (
+                          <Input
+                            type="number"
+                            placeholder="e.g. 5"
+                            value={subField.state.value as any}
+                            onChange={(e) => subField.handleChange(e.target.value as any)}
+                            className="rounded-none border border-[#3c3c3c] bg-black text-xs text-white"
+                          />
+                        )}
+                      </form.Field>
                     </div>
                   </div>
 
