@@ -177,8 +177,6 @@ function LiveTrackerPage() {
           </div>
         </header>
 
-        <AuctionHero auction={auction} subtitle="Live Broadcast Feed" />
-
         {/* Ticker marquee */}
         <div className="z-30 overflow-hidden border-b border-[#3c3c3c] bg-black py-3 select-none">
           <div className="flex items-center">
@@ -199,6 +197,8 @@ function LiveTrackerPage() {
             </div>
           </div>
         </div>
+
+        <AuctionHero auction={auction} subtitle="Live Broadcast Feed" />
 
         {/* Main Broadcast Layout */}
         <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col space-y-6 px-4 py-8 md:space-y-8 md:px-8 md:py-10">

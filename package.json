@@ -24,12 +24,14 @@
     "auth:secret": "vpx auth@latest secret",
     "auth:generate": "vp run --filter=@repo/db auth:generate",
     "skills": "vpx skills@latest",
-    "intent": "vpx @tanstack/intent@latest"
+    "intent": "vpx @tanstack/intent@latest",
+    "doctor": "npx react-doctor@latest"
   },
   "devDependencies": {
     "@tanstack/eslint-plugin-query": "catalog:",
     "@tanstack/eslint-plugin-router": "catalog:",
     "eslint-plugin-react-hooks": "catalog:",
+    "react-doctor": "catalog:",
     "vite-plus": "catalog:"
   },
   "engines": {

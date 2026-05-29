@@ -4,6 +4,7 @@ packages:
   - tooling/*
 allowBuilds:
   esbuild: true
+  msgpackr-extract: set this to true or false
   msw: false
   sharp: true
   workerd: true
@@ -79,6 +80,7 @@ catalog:
   papaparse: ^5.5.3
   "@types/papaparse": ^5.5.2
   "@tanstack/react-hotkeys": ^0.10.0
+  react-doctor: ^0.2.10
 
 catalogMode: prefer
 
