@@ -1,4 +1,5 @@
 import { Confetti } from "@repo/ui/components/confetti";
+import { Marquee } from "@repo/ui/components/marquee";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
@@ -17,6 +18,7 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import { useMemo, useState, useRef, useEffect } from "react";
 
+import { AuctionHero } from "#/components/auction-hero";
 import { ImageViewer } from "#/components/image-viewer";
 import { PublicAuctionGuard } from "#/components/public-auction-guard";
 import { useLiveAuction } from "#/hooks/use-live-auction";
@@ -150,33 +152,17 @@ function LiveTrackerPage() {
         >
           <div className="flex items-center space-x-4">
             <Link to="/">
-              <button className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-none border border-[#3c3c3c] bg-black text-[#bbbbbb] hover:bg-white hover:text-black">
+              <button className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] text-[#bbbbbb] hover:bg-white hover:text-black">
                 <ArrowLeftIcon className="h-4 w-4" />
               </button>
             </Link>
             <div className="flex items-center space-x-3">
-              <div className="flex items-center justify-center overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-2">
-                {auction.logoUrl ? (
-                  <ImageViewer
-                    src={auction.logoUrl}
-                    alt="Logo"
-                    className="h-12 w-12 object-cover"
-                  />
-                ) : (
-                  <TrophyIcon className="h-12 w-12 text-white" />
-                )}
+              <div className="flex h-9 w-9 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a]">
+                <TrophyIcon className="h-4.5 w-4.5 text-white" />
               </div>
               <div>
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm font-bold tracking-[1.5px] text-white uppercase">
-                    AUCTION-IT
-                  </span>
-                  <span className="text-[10px] font-bold text-[#bbbbbb]">|</span>
-                  <span className="text-xs font-bold text-[#bbbbbb]">{auction.name}</span>
-                </div>
-                <span className="flex items-center text-[8px] font-black tracking-[1.5px] text-white uppercase">
-                  <span className="mr-1 h-1 w-1 animate-ping rounded-none bg-white" />
-                  &nbsp;Live Broadcast Feed
+                <span className="text-sm font-bold tracking-[1.5px] text-white uppercase">
+                  AUCTION-IT
                 </span>
               </div>
             </div>
@@ -191,6 +177,8 @@ function LiveTrackerPage() {
           </div>
         </header>
 
+        <AuctionHero auction={auction} subtitle="Live Broadcast Feed" />
+
         {/* Ticker marquee */}
         <div className="z-30 overflow-hidden border-b border-[#3c3c3c] bg-black py-3 select-none">
           <div className="flex items-center">
@@ -198,8 +186,8 @@ function LiveTrackerPage() {
               <PlayIcon className="mr-1 h-3 w-3 fill-current" />
               Live Arena Stream
             </div>
-            <div className="relative flex w-full items-center">
-              <div className="flex animate-marquee space-x-12 px-6 text-xs font-semibold whitespace-nowrap text-[#bbbbbb] select-none">
+            <div className="relative flex w-full items-center overflow-hidden">
+              <Marquee className="text-xs font-semibold whitespace-nowrap text-[#bbbbbb] select-none [--duration:30s] [--gap:3rem]">
                 {displayLogs.slice(0, 5).map((log: any, idx: number) => (
                   <span key={idx} className="flex items-center space-x-2">
                     <span className="h-1.5 w-1.5 rounded-none bg-white" />
@@ -207,7 +195,7 @@ function LiveTrackerPage() {
                   </span>
                 ))}
                 {displayLogs.length === 0 && <span>Waiting for upcoming player bids...</span>}
-              </div>
+              </Marquee>
             </div>
           </div>
         </div>

@@ -39,6 +39,7 @@ const teamSearchSchema = z.object({
   teamId: z.string().optional(),
 });
 
+import { AuctionHero } from "#/components/auction-hero";
 import { useScrollDirection } from "#/hooks/use-scroll-direction";
 
 export const Route = createFileRoute("/team/$auctionId")({
@@ -420,27 +421,12 @@ function TeamStrategyDeckPage() {
       >
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a]">
+              <TrophyIcon className="h-4.5 w-4.5 text-white" />
+            </div>
             <div>
-              <div className="flex items-center space-x-2">
-                <h1 className="text-sm font-bold tracking-wide text-white">{team.name}</h1>
-                <span className="rounded-none border border-[#3c3c3c] bg-black px-2 py-0.5 text-[8px] font-black tracking-[1.5px] text-[#bbbbbb] uppercase">
-                  Strategy Deck
-                </span>
-              </div>
-              <span className="mt-2 flex items-center text-[10px] font-black tracking-[1.5px] text-[#bbbbbb] uppercase">
-                <div className="mr-2 flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-none border border-white bg-white p-1">
-                  {auction.logoUrl ? (
-                    <ImageViewer
-                      src={auction.logoUrl}
-                      alt="Logo"
-                      className="h-full w-full object-cover"
-                      triggerClassName="w-full h-full block"
-                    />
-                  ) : (
-                    <TrophyIcon className="h-5 w-5 text-black" />
-                  )}
-                </div>
-                <span>AUCTION-IT : {auction.name}</span>
+              <span className="text-sm font-bold tracking-[1.5px] text-white uppercase">
+                AUCTION-IT
               </span>
             </div>
           </div>
@@ -462,6 +448,8 @@ function TeamStrategyDeckPage() {
           </button>
         </div>
       </header>
+
+      <AuctionHero auction={auction} subtitle="Strategy Deck" />
 
       {/* Background Watermark for Team Strategy */}
       <div className="pointer-events-none fixed inset-0 z-0 flex items-center justify-center opacity-5">

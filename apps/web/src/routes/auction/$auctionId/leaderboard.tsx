@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 
+import { AuctionHero } from "#/components/auction-hero";
 import { ImageViewer } from "#/components/image-viewer";
 import { PublicAuctionGuard } from "#/components/public-auction-guard";
 import { useAuctionSubscription } from "#/hooks/use-auction-subscription";
@@ -87,28 +88,17 @@ function LeaderboardPage() {
         >
           <div className="flex items-center space-x-4">
             <Link to="/auction/$auctionId/live" params={{ auctionId }}>
-              <button className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] text-[#bbbbbb] hover:bg-white hover:text-black">
+              <button className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] text-[#bbbbbb] hover:bg-white hover:text-black">
                 <ArrowLeftIcon className="h-4 w-4" />
               </button>
             </Link>
             <div className="flex items-center space-x-3">
-              <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-none border border-[#3c3c3c] bg-black text-white">
-                {auction.logoUrl ? (
-                  <ImageViewer
-                    src={auction.logoUrl}
-                    alt="Logo"
-                    className="h-full w-full object-cover"
-                    triggerClassName="w-full h-full block"
-                  />
-                ) : (
-                  <TrophyIcon className="h-4 w-4" />
-                )}
+              <div className="flex h-9 w-9 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a]">
+                <TrophyIcon className="h-4.5 w-4.5 text-white" />
               </div>
               <div>
-                <h1 className="text-md font-bold tracking-wide text-white">{auction.name}</h1>
-                <span className="flex items-center text-[9px] font-semibold tracking-[1.5px] text-[#bbbbbb] uppercase">
-                  <ActivityIcon className="mr-1 h-3 w-3 animate-pulse text-white" />
-                  Live Arena Standings & Leaderboards
+                <span className="text-sm font-bold tracking-[1.5px] text-white uppercase">
+                  AUCTION-IT
                 </span>
               </div>
             </div>
@@ -120,6 +110,8 @@ function LeaderboardPage() {
             </button>
           </Link>
         </header>
+
+        <AuctionHero auction={auction} subtitle="Live Arena Standings & Leaderboards" />
 
         {/* Main Container */}
         <main className="relative z-10 mx-auto w-full max-w-7xl flex-1 space-y-12 px-4 py-8 md:px-6 md:py-10">

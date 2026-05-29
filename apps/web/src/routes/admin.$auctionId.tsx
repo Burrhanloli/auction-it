@@ -28,6 +28,7 @@ export const Route = createFileRoute("/admin/$auctionId")({
   component: AdminLayout,
 });
 
+import { AuctionHero } from "#/components/auction-hero";
 import { useScrollDirection } from "#/hooks/use-scroll-direction";
 
 function AdminLayout() {
@@ -110,15 +111,8 @@ function AdminLayout() {
               <TrophyIcon className="h-4.5 w-4.5 text-white" />
             </div>
             <div>
-              <div className="flex items-center space-x-2">
-                <span className="text-sm font-bold tracking-[1.5px] text-white uppercase">
-                  AUCTION-IT
-                </span>
-                <span className="text-[10px] font-bold text-[#bbbbbb]">|</span>
-                <span className="text-xs font-bold text-white uppercase">{auction.name}</span>
-              </div>
-              <span className="block text-[8px] font-black tracking-[1.5px] text-[#bbbbbb] uppercase">
-                Administrative Control Hub
+              <span className="text-sm font-bold tracking-[1.5px] text-white uppercase">
+                AUCTION-IT
               </span>
             </div>
           </div>
@@ -132,6 +126,8 @@ function AdminLayout() {
           </Link>
         </div>
       </header>
+
+      <AuctionHero auction={auction} subtitle="Administrative Control Hub" />
 
       {/* Tabs navigation */}
       <div className="no-scrollbar overflow-x-auto border-b border-[#3c3c3c] bg-[#1a1a1a] px-4 md:px-8">
