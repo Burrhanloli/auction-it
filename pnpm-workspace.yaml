@@ -78,6 +78,7 @@ catalog:
   wrangler: ^4.94.0
   papaparse: ^5.5.3
   "@types/papaparse": ^5.5.2
+  "@tanstack/react-hotkeys": ^0.10.0
 
 catalogMode: prefer
 

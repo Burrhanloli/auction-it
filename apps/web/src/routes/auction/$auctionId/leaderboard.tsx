@@ -409,7 +409,7 @@ function LeaderboardPage() {
                       </div>
 
                       {/* Owner & Captain Avatar Frames */}
-                      <div className="grid grid-cols-2 gap-3 rounded-none border border-[#3c3c3c] bg-black p-3">
+                      <div className="grid grid-cols-1 gap-3 rounded-none border border-[#3c3c3c] bg-black p-3 sm:grid-cols-2">
                         {/* Owner Column */}
                         <div className="flex items-center space-x-2.5">
                           {team.ownerImageUrl ? (

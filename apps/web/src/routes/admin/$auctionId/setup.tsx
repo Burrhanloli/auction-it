@@ -350,7 +350,7 @@ function SetupForm({ auction, auctionId }: SetupFormProps) {
       <form.Field name="categories" mode="array">
         {(field) => (
           <div className="relative overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8">
-            <div className="mb-8 flex items-center justify-between border-b border-[#3c3c3c] pb-5">
+            <div className="mb-8 flex flex-col items-start gap-4 border-b border-[#3c3c3c] pb-5 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
               <div className="flex items-center space-x-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-none border border-[#3c3c3c] bg-black text-white">
                   <TagIcon className="h-5 w-5" />
@@ -484,7 +484,7 @@ function SetupForm({ auction, auctionId }: SetupFormProps) {
       </form.Field>
 
       {/* Save Settings Block */}
-      <div className="flex items-center justify-between rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8">
+      <div className="flex flex-col items-start justify-between gap-6 rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8 md:flex-row md:items-center md:gap-0">
         <div className="flex items-center space-x-2">
           <ShieldAlertIcon className="h-4 w-4 text-white" />
           <span className="text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">

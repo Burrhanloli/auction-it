@@ -77,6 +77,7 @@ function LoginForm() {
                 readOnly={isPending}
                 className="h-12 rounded-none border-[#3c3c3c] bg-black text-white placeholder-[#7e7e7e] focus:border-white"
                 required
+                suppressHydrationWarning
               />
             </div>
             <div className="grid gap-2">
@@ -94,12 +95,14 @@ function LoginForm() {
                 readOnly={isPending}
                 className="h-12 rounded-none border-[#3c3c3c] bg-black text-white placeholder-[#7e7e7e] focus:border-white"
                 required
+                suppressHydrationWarning
               />
             </div>
             <Button
               type="submit"
               className="mt-4 h-12 w-full rounded-none border border-white bg-white font-bold tracking-[1.5px] text-black uppercase transition-colors hover:bg-black hover:text-white"
               disabled={isPending}
+              suppressHydrationWarning
             >
               {isPending && <LoaderCircleIcon className="mr-2 h-4 w-4 animate-spin" />}
               {isPending ? "Logging in..." : "Login"}

@@ -1,11 +1,13 @@
+import { Badge } from "@repo/ui/components/badge";
 import { Button } from "@repo/ui/components/button";
 import { Input } from "@repo/ui/components/input";
 import { Label } from "@repo/ui/components/label";
 import { useForm } from "@tanstack/react-form";
+import { useHotkeys, type UseHotkeyDefinition } from "@tanstack/react-hotkeys";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { PlayIcon, GavelIcon, XOctagonIcon, TagIcon, UsersIcon } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 import {
@@ -209,7 +211,7 @@ function AuctionControlPanel() {
               <Label className="text-xs font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
                 Select Category Deck
               </Label>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
                 {auction?.categories?.map((cat: any) => {
                   const isSelected = activeCategoryId === cat.id;
 
@@ -443,6 +445,13 @@ function BiddingFormConsole({
   categoryColor,
 }: BiddingFormConsoleProps) {
   const [lastIncrement, setLastIncrement] = useState<number | null>(100);
+  const hotkeyQueue = useRef<Promise<any>>(Promise.resolve());
+  const pendingBidAmountRef = useRef<number>(state.currentBidPoints);
+
+  const getHotkeyForIndex = (index: number) => {
+    if (index < 9) return (index + 1).toString();
+    return String.fromCharCode(97 + (index - 9)); // a, b, c...
+  };
 
   const bidForm = useForm({
     defaultValues: {
@@ -469,19 +478,61 @@ function BiddingFormConsole({
         return;
       }
 
-      placeBidMutation.mutate({
-        auctionId,
-        teamId: biddingTeamId,
-        bidPoints: value.customBidAmount,
-      });
+      const newBid = value.customBidAmount;
+      const increment = lastIncrement !== null ? lastIncrement : 100;
+
+      // Optimistically update
+      pendingBidAmountRef.current = newBid;
+      bidForm.setFieldValue("customBidAmount", newBid + increment);
+
+      hotkeyQueue.current = hotkeyQueue.current
+        .then(() => {
+          return placeBidMutation.mutateAsync({
+            auctionId,
+            teamId: biddingTeamId,
+            bidPoints: newBid,
+          });
+        })
+        .catch((err: any) => {
+          pendingBidAmountRef.current = state.currentBidPoints;
+          bidForm.setFieldValue("customBidAmount", state.currentBidPoints + increment);
+        });
     },
   });
 
   useEffect(() => {
-    if (lastIncrement !== null) {
+    // Only resync if the actual state passes our optimistic pending amount
+    if (state.currentBidPoints > pendingBidAmountRef.current) {
+      pendingBidAmountRef.current = state.currentBidPoints;
+      if (lastIncrement !== null) {
+        bidForm.setFieldValue("customBidAmount", state.currentBidPoints + lastIncrement);
+      }
+    } else if (lastIncrement !== null && pendingBidAmountRef.current === state.currentBidPoints) {
+      // Regular sync when not in middle of optimistic queued bids
       bidForm.setFieldValue("customBidAmount", state.currentBidPoints + lastIncrement);
     }
   }, [state.currentBidPoints]);
+
+  const hotkeyConfigs: UseHotkeyDefinition[] = [
+    {
+      hotkey: "Enter",
+      callback: (e: any) => {
+        if (e) e.preventDefault();
+        bidForm.handleSubmit();
+      },
+    },
+  ];
+
+  auction?.teams?.forEach((team: any, index: number) => {
+    hotkeyConfigs.push({
+      hotkey: getHotkeyForIndex(index) as any,
+      callback: () => {
+        bidForm.setFieldValue("biddingTeamId", team.id);
+      },
+    });
+  });
+
+  useHotkeys(hotkeyConfigs);
 
   const incrementShortcut = (amount: number) => {
     setLastIncrement(amount);
@@ -539,7 +590,7 @@ function BiddingFormConsole({
       </div>
 
       {/* Bidding high bidder log block */}
-      <div className="flex items-center justify-between rounded-none border border-[#3c3c3c] bg-black p-4 text-xs">
+      <div className="flex flex-col items-start justify-between gap-3 rounded-none border border-[#3c3c3c] bg-black p-4 text-xs md:flex-row md:items-center">
         <span className="font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
           Current Leading Bidder:
         </span>
@@ -580,8 +631,8 @@ function BiddingFormConsole({
                 <bidForm.Subscribe
                   selector={(state) => state.values.customBidAmount}
                   children={(customBidAmount) => (
-                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                      {auction?.teams?.map((t: any) => {
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
+                      {auction?.teams?.map((t: any, index: number) => {
                         const isSelected = (field.state.value || auction?.teams?.[0]?.id) === t.id;
                         const isInsufficient = t.remainingBudget < (customBidAmount || 0);
 
@@ -604,17 +655,25 @@ function BiddingFormConsole({
                                   : "border-[#3c3c3c] bg-black hover:border-white hover:text-white"
                             }`}
                           >
-                            {/* Top right status badge */}
-                            {isSelected && (
-                              <div className="absolute top-2 right-2 flex h-4 w-4 items-center justify-center rounded-none border border-[#3c3c3c] bg-black text-[10px] font-black text-white">
-                                ✓
-                              </div>
-                            )}
-                            {isInsufficient && (
-                              <div className="absolute top-2 right-2 rounded-none bg-[#1a1a1a] px-1 py-0.5 text-[8px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
-                                No Budget
-                              </div>
-                            )}
+                            <div className="absolute top-2 right-2 flex items-center space-x-1">
+                              <Badge
+                                variant="outline"
+                                className="h-4 rounded-none border-[#3c3c3c] bg-black px-1 py-0 text-[8px] font-black text-[#bbbbbb] uppercase"
+                              >
+                                {getHotkeyForIndex(index)}
+                              </Badge>
+                              {/* Top right status badge */}
+                              {isSelected && (
+                                <div className="flex h-4 w-4 items-center justify-center rounded-none border border-[#3c3c3c] bg-black text-[10px] font-black text-white">
+                                  ✓
+                                </div>
+                              )}
+                              {isInsufficient && (
+                                <div className="rounded-none bg-[#1a1a1a] px-1 py-0.5 text-[8px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
+                                  No Budget
+                                </div>
+                              )}
+                            </div>
 
                             <div className="flex w-full items-center space-x-2.5">
                               {t.logoUrl ? (
@@ -677,10 +736,10 @@ function BiddingFormConsole({
                       children={(isSubmitting) => (
                         <Button
                           type="submit"
-                          disabled={isSubmitting || placeBidMutation.isPending}
-                          className="rounded-none border border-white bg-white px-6 text-xs font-bold tracking-[1.5px] text-black uppercase hover:bg-black hover:text-white"
+                          disabled={isSubmitting}
+                          className="rounded-none border border-white bg-white px-6 text-xs font-bold tracking-[1.5px] text-black uppercase hover:bg-black hover:text-white disabled:opacity-50"
                         >
-                          {isSubmitting || placeBidMutation.isPending ? "Placing..." : "Place Bid"}
+                          {isSubmitting ? "Placing..." : "Place Bid"}
                         </Button>
                       )}
                     />
@@ -724,7 +783,7 @@ function BiddingFormConsole({
       </form>
 
       {/* Mark SOLD or UNSOLD panels */}
-      <div className="grid grid-cols-2 gap-4 border-t border-[#3c3c3c] pt-8">
+      <div className="grid grid-cols-1 gap-4 border-t border-[#3c3c3c] pt-8 sm:grid-cols-2">
         <Button
           onClick={() => markSoldMutation.mutate(auctionId)}
           disabled={markSoldMutation.isPending || !state.currentHighestBidderTeamId}

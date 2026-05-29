@@ -224,7 +224,7 @@ function TeamStrategyDeckPage() {
   if (!verifiedTeamId) {
     return (
       <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-black p-6 text-white">
-        <div className="relative w-full max-w-md rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8">
+        <div className="relative w-full max-w-3xl rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8">
           {/* Logo / Header */}
           <div className="mb-8 flex flex-col items-center space-y-4 text-center">
             <div className="flex h-12 w-12 items-center justify-center rounded-none border border-[#3c3c3c] bg-black text-white">
@@ -247,7 +247,7 @@ function TeamStrategyDeckPage() {
                 Select Franchise Team
               </Label>
               {auction.teams && auction.teams.length > 0 ? (
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   {auction.teams.map((t: any) => {
                     const isSelected = activeSelectedTeamId === t.id;
                     return (
@@ -281,10 +281,10 @@ function TeamStrategyDeckPage() {
                             </div>
                           )}
                           <div className="min-w-0 flex-1">
-                            <h5 className="truncate text-xs leading-tight font-black text-white">
+                            <h5 className="text-xs leading-tight font-black text-white">
                               {t.name}
                             </h5>
-                            <span className="mt-0.5 block truncate text-[10px] font-bold text-[#bbbbbb]">
+                            <span className="mt-0.5 block text-[10px] font-bold text-[#bbbbbb]">
                               Owner: {t.ownerName}
                             </span>
                           </div>
@@ -508,7 +508,7 @@ function TeamStrategyDeckPage() {
 
             <div className="space-y-6">
               {/* Spent vs Remaining numbers */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="rounded-none border border-[#3c3c3c] bg-black p-4">
                   <span className="block text-[8px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
                     Total Spent

@@ -51,7 +51,6 @@ function LiveTrackerPage() {
   const logsEndRef = useRef<HTMLDivElement>(null);
 
   const [isLogsOpen, setIsLogsOpen] = useState(true);
-  const [isTeamsOpen, setIsTeamsOpen] = useState(false);
 
   const activePlayer = state?.currentPlayer;
   const isBiddingActive = state?.stage === "bidding" && activePlayer;
@@ -191,6 +190,28 @@ function LiveTrackerPage() {
             </Link>
           </div>
         </header>
+
+        {/* Ticker marquee */}
+        <div className="z-30 overflow-hidden border-b border-[#3c3c3c] bg-black py-3 select-none">
+          <div className="flex items-center">
+            <div className="z-30 flex shrink-0 items-center border-r border-[#3c3c3c] bg-white px-4 py-1.5 text-[10px] font-bold tracking-[1.5px] text-black uppercase">
+              <PlayIcon className="mr-1 h-3 w-3 fill-current" />
+              Live Arena Stream
+            </div>
+            <div className="relative flex w-full items-center">
+              {/* We'll show a simple horizontal sliding marquee of the latest events */}
+              <div className="flex animate-[marquee_30s_linear_infinite] space-x-12 px-6 text-xs font-semibold whitespace-nowrap text-[#bbbbbb] select-none">
+                {displayLogs.slice(0, 5).map((log: any, idx: number) => (
+                  <span key={idx} className="flex items-center space-x-2">
+                    <span className="h-1.5 w-1.5 rounded-none bg-white" />
+                    <span>{log.message}</span>
+                  </span>
+                ))}
+                {displayLogs.length === 0 && <span>Waiting for upcoming player bids...</span>}
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Main Broadcast Layout */}
         <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col space-y-6 px-4 py-8 md:space-y-8 md:px-8 md:py-10">
@@ -632,109 +653,7 @@ function LiveTrackerPage() {
               </AnimatePresence>
             </div>
           </div>
-
-          {/* Bottom Section: Collapsible Team Standings */}
-          {!isCompleted && (
-            <div className="mx-auto flex w-full max-w-6xl flex-col">
-              <div className="flex flex-col rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-6 transition-all">
-                <button
-                  onClick={() => setIsTeamsOpen(!isTeamsOpen)}
-                  className="group flex w-full cursor-pointer items-center justify-between border-b border-[#3c3c3c] pb-3 hover:opacity-80"
-                >
-                  <div className="flex items-center space-x-3">
-                    <h3 className="text-xs font-black tracking-[1.5px] text-white uppercase">
-                      Registered Teams
-                    </h3>
-                    <span className="text-[10px] text-[#bbbbbb]">
-                      {auction.teams?.length ?? 0} total
-                    </span>
-                  </div>
-                  {isTeamsOpen ? (
-                    <ChevronUpIcon className="h-4 w-4 text-[#bbbbbb] transition-colors group-hover:text-white" />
-                  ) : (
-                    <ChevronDownIcon className="h-4 w-4 text-[#bbbbbb] transition-colors group-hover:text-white" />
-                  )}
-                </button>
-
-                <AnimatePresence>
-                  {isTeamsOpen && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      className="overflow-hidden"
-                    >
-                      <div className="mt-4 max-h-[60vh] space-y-4 overflow-y-auto pr-1">
-                        {auction.teams?.map((team: any) => (
-                          <div
-                            key={team.id}
-                            className="flex items-center justify-between rounded-none border border-[#3c3c3c] bg-black p-3 transition-colors hover:border-white"
-                          >
-                            <div className="flex items-center space-x-3">
-                              {team.logoUrl ? (
-                                <ImageViewer
-                                  src={team.logoUrl}
-                                  alt={team.name}
-                                  className="h-8 w-8 rounded-none border border-[#3c3c3c] bg-[#1a1a1a] object-cover"
-                                />
-                              ) : (
-                                <div className="flex h-8 w-8 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] text-xs font-bold text-white uppercase">
-                                  {team.name.slice(0, 2)}
-                                </div>
-                              )}
-                              <div>
-                                <span className="block text-xs font-bold text-white">
-                                  {team.name}
-                                </span>
-                                <span className="text-[9px] tracking-[1.5px] text-[#bbbbbb] uppercase">
-                                  Owner: {team.ownerName}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <span className="block text-[9px] font-semibold text-[#bbbbbb] uppercase">
-                                Budget Left
-                              </span>
-                              <span className="text-xs font-black text-white">
-                                {team.remainingBudget} pts
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                        {(!auction.teams || auction.teams.length === 0) && (
-                          <p className="py-6 text-center text-xs text-[#bbbbbb]">
-                            No teams registered yet.
-                          </p>
-                        )}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </div>
-          )}
         </div>
-        {/* Ticker marquee footer */}
-        <footer className="z-20 overflow-hidden border-t border-[#3c3c3c] bg-black py-3 select-none">
-          <div className="flex items-center">
-            <div className="z-30 flex shrink-0 items-center border-r border-[#3c3c3c] bg-white px-4 py-1.5 text-[10px] font-bold tracking-[1.5px] text-black uppercase">
-              <PlayIcon className="mr-1 h-3 w-3 fill-current" />
-              Live Arena Stream
-            </div>
-            <div className="relative flex w-full items-center">
-              {/* We'll show a simple horizontal sliding marquee of the latest events */}
-              <div className="flex animate-[marquee_30s_linear_infinite] space-x-12 px-6 text-xs font-semibold whitespace-nowrap text-[#bbbbbb] select-none">
-                {displayLogs.slice(0, 5).map((log: any, idx: number) => (
-                  <span key={idx} className="flex items-center space-x-2">
-                    <span className="h-1.5 w-1.5 rounded-none bg-white" />
-                    <span>{log.message}</span>
-                  </span>
-                ))}
-                {displayLogs.length === 0 && <span>Waiting for upcoming player bids...</span>}
-              </div>
-            </div>
-          </div>
-        </footer>
       </div>
     </PublicAuctionGuard>
   );

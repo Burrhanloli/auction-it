@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as GuestRouteRouteImport } from './routes/_guest/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuctionsIndexRouteImport } from './routes/auctions/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as TeamAuctionIdRouteImport } from './routes/team.$auctionId'
 import { Route as AdminAuctionIdRouteImport } from './routes/admin.$auctionId'
@@ -33,6 +34,11 @@ const GuestRouteRoute = GuestRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuctionsIndexRoute = AuctionsIndexRouteImport.update({
+  id: '/auctions/',
+  path: '/auctions/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -116,6 +122,7 @@ export interface FileRoutesByFullPath {
   '/admin/$auctionId': typeof AdminAuctionIdRouteWithChildren
   '/team/$auctionId': typeof TeamAuctionIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/auctions/': typeof AuctionsIndexRoute
   '/admin/$auctionId/control': typeof AdminAuctionIdControlRoute
   '/admin/$auctionId/players': typeof AdminAuctionIdPlayersRoute
   '/admin/$auctionId/setup': typeof AdminAuctionIdSetupRoute
@@ -133,6 +140,7 @@ export interface FileRoutesByTo {
   '/admin/$auctionId': typeof AdminAuctionIdRouteWithChildren
   '/team/$auctionId': typeof TeamAuctionIdRoute
   '/admin': typeof AdminIndexRoute
+  '/auctions': typeof AuctionsIndexRoute
   '/admin/$auctionId/control': typeof AdminAuctionIdControlRoute
   '/admin/$auctionId/players': typeof AdminAuctionIdPlayersRoute
   '/admin/$auctionId/setup': typeof AdminAuctionIdSetupRoute
@@ -152,6 +160,7 @@ export interface FileRoutesById {
   '/admin/$auctionId': typeof AdminAuctionIdRouteWithChildren
   '/team/$auctionId': typeof TeamAuctionIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/auctions/': typeof AuctionsIndexRoute
   '/admin/$auctionId/control': typeof AdminAuctionIdControlRoute
   '/admin/$auctionId/players': typeof AdminAuctionIdPlayersRoute
   '/admin/$auctionId/setup': typeof AdminAuctionIdSetupRoute
@@ -171,6 +180,7 @@ export interface FileRouteTypes {
     | '/admin/$auctionId'
     | '/team/$auctionId'
     | '/admin/'
+    | '/auctions/'
     | '/admin/$auctionId/control'
     | '/admin/$auctionId/players'
     | '/admin/$auctionId/setup'
@@ -188,6 +198,7 @@ export interface FileRouteTypes {
     | '/admin/$auctionId'
     | '/team/$auctionId'
     | '/admin'
+    | '/auctions'
     | '/admin/$auctionId/control'
     | '/admin/$auctionId/players'
     | '/admin/$auctionId/setup'
@@ -206,6 +217,7 @@ export interface FileRouteTypes {
     | '/admin/$auctionId'
     | '/team/$auctionId'
     | '/admin/'
+    | '/auctions/'
     | '/admin/$auctionId/control'
     | '/admin/$auctionId/players'
     | '/admin/$auctionId/setup'
@@ -223,6 +235,7 @@ export interface RootRouteChildren {
   AdminAuctionIdRoute: typeof AdminAuctionIdRouteWithChildren
   TeamAuctionIdRoute: typeof TeamAuctionIdRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  AuctionsIndexRoute: typeof AuctionsIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   AuctionAuctionIdFastLiveRoute: typeof AuctionAuctionIdFastLiveRoute
   AuctionAuctionIdLeaderboardRoute: typeof AuctionAuctionIdLeaderboardRoute
@@ -244,6 +257,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auctions/': {
+      id: '/auctions/'
+      path: '/auctions'
+      fullPath: '/auctions/'
+      preLoaderRoute: typeof AuctionsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {
@@ -385,6 +405,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminAuctionIdRoute: AdminAuctionIdRouteWithChildren,
   TeamAuctionIdRoute: TeamAuctionIdRoute,
   AdminIndexRoute: AdminIndexRoute,
+  AuctionsIndexRoute: AuctionsIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   AuctionAuctionIdFastLiveRoute: AuctionAuctionIdFastLiveRoute,
   AuctionAuctionIdLeaderboardRoute: AuctionAuctionIdLeaderboardRoute,

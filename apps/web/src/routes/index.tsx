@@ -36,10 +36,13 @@ function HomePage() {
 
   // Queries
   const { data: user } = useQuery(authQueryOptions());
-  const { data: auctions, isLoading } = useQuery({
-    queryKey: ["auctions"],
-    queryFn: () => $getAllAuctions(),
+  const { data: auctionsData, isLoading } = useQuery({
+    queryKey: ["auctions", "active", "index"],
+    queryFn: () => $getAllAuctions({ data: { status: "active", limit: 11 } }),
   });
+
+  const auctions = auctionsData?.slice(0, 10);
+  const hasMoreAuctions = (auctionsData?.length || 0) > 10;
 
   // State for creating a new auction
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -514,94 +517,106 @@ function HomePage() {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {auctions.map((auc) => (
-              <div
-                key={auc.id}
-                className="group relative flex flex-col justify-between overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] transition-all duration-300 hover:border-white"
-              >
-                <div className="p-8">
-                  <div className="mb-4 flex items-center justify-between">
-                    <div className="inline-flex items-center space-x-1.5 rounded-none border border-[#3c3c3c] bg-black px-2 py-0.5 text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#0fa336]" />
-                      <span>{auc.status}</span>
+          <>
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+              {auctions.map((auc) => (
+                <div
+                  key={auc.id}
+                  className="group relative flex flex-col justify-between overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] transition-all duration-300 hover:border-white"
+                >
+                  <div className="p-8">
+                    <div className="mb-4 flex items-center justify-between">
+                      <div className="inline-flex items-center space-x-1.5 rounded-none border border-[#3c3c3c] bg-black px-2 py-0.5 text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[#0fa336]" />
+                        <span>{auc.status}</span>
+                      </div>
+                      <span className="flex items-center text-[10px] text-[#bbbbbb]">
+                        <CalendarIcon className="mr-1 h-3.5 w-3.5" />
+                        {new Date(auc.createdAt).toLocaleDateString(undefined, {
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </span>
                     </div>
-                    <span className="flex items-center text-[10px] text-[#bbbbbb]">
-                      <CalendarIcon className="mr-1 h-3.5 w-3.5" />
-                      {new Date(auc.createdAt).toLocaleDateString(undefined, {
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </span>
+
+                    <h3 className="mb-2 text-xl font-bold text-white uppercase">{auc.name}</h3>
+
+                    <div className="mt-4 flex items-center space-x-4 rounded-none border border-[#3c3c3c] bg-black p-2.5 text-xs text-[#bbbbbb]">
+                      <div>
+                        <span className="block text-[10px] font-semibold tracking-[1.5px] text-[#bbbbbb] uppercase">
+                          Point Budget
+                        </span>
+                        <span className="font-bold text-white">{auc.budgetPerTeam} pts</span>
+                      </div>
+                      <div className="h-6 border-l border-[#3c3c3c]" />
+                      <div>
+                        <span className="block text-[10px] font-semibold tracking-[1.5px] text-[#bbbbbb] uppercase">
+                          Unique Key
+                        </span>
+                        <span className="block max-w-[120px] truncate font-mono text-[9px] text-[#bbbbbb]">
+                          {auc.id}
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
-                  <h3 className="mb-2 text-xl font-bold text-white uppercase">{auc.name}</h3>
+                  <div className="grid grid-cols-1 gap-3 border-t border-[#3c3c3c] bg-[#1a1a1a] px-8 py-5 sm:grid-cols-3">
+                    {auc.status !== "draft" ? (
+                      <>
+                        <Link
+                          to="/auction/$auctionId/live"
+                          params={{ auctionId: auc.slug! }}
+                          className="flex items-center justify-center space-x-1 rounded-none border border-[#3c3c3c] bg-black py-2 text-center text-xs font-bold tracking-[1.5px] text-white uppercase transition-colors hover:bg-white hover:text-black"
+                        >
+                          <span>Arena</span>
+                        </Link>
 
-                  <div className="mt-4 flex items-center space-x-4 rounded-none border border-[#3c3c3c] bg-black p-2.5 text-xs text-[#bbbbbb]">
-                    <div>
-                      <span className="block text-[10px] font-semibold tracking-[1.5px] text-[#bbbbbb] uppercase">
-                        Point Budget
-                      </span>
-                      <span className="font-bold text-white">{auc.budgetPerTeam} pts</span>
-                    </div>
-                    <div className="h-6 border-l border-[#3c3c3c]" />
-                    <div>
-                      <span className="block text-[10px] font-semibold tracking-[1.5px] text-[#bbbbbb] uppercase">
-                        Unique Key
-                      </span>
-                      <span className="block max-w-[120px] truncate font-mono text-[9px] text-[#bbbbbb]">
-                        {auc.id}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+                        <Link
+                          to="/auction/$auctionId/leaderboard"
+                          params={{ auctionId: auc.slug! }}
+                          className="flex items-center justify-center space-x-1 rounded-none border border-[#3c3c3c] bg-black py-2 text-center text-xs font-bold tracking-[1.5px] text-white uppercase transition-colors hover:bg-white hover:text-black"
+                        >
+                          <span>Stats</span>
+                        </Link>
+                      </>
+                    ) : (
+                      <div className="col-span-2 flex items-center justify-center rounded-none border border-[#3c3c3c] bg-black py-2 text-center text-xs font-bold tracking-[1.5px] text-[#7e7e7e] uppercase">
+                        <span>Draft Mode (Locked)</span>
+                      </div>
+                    )}
 
-                <div className="grid grid-cols-3 gap-3 border-t border-[#3c3c3c] bg-[#1a1a1a] px-8 py-5">
-                  {auc.status !== "draft" ? (
-                    <>
-                      <Link
-                        to="/auction/$auctionId/live"
-                        params={{ auctionId: auc.slug! }}
-                        className="flex items-center justify-center space-x-1 rounded-none border border-[#3c3c3c] bg-black py-2 text-center text-xs font-bold tracking-[1.5px] text-white uppercase transition-colors hover:bg-white hover:text-black"
-                      >
-                        <span>Arena</span>
-                      </Link>
-
-                      <Link
-                        to="/auction/$auctionId/leaderboard"
-                        params={{ auctionId: auc.slug! }}
-                        className="flex items-center justify-center space-x-1 rounded-none border border-[#3c3c3c] bg-black py-2 text-center text-xs font-bold tracking-[1.5px] text-white uppercase transition-colors hover:bg-white hover:text-black"
-                      >
-                        <span>Stats</span>
-                      </Link>
-                    </>
-                  ) : (
-                    <div className="col-span-2 flex items-center justify-center rounded-none border border-[#3c3c3c] bg-black py-2 text-center text-xs font-bold tracking-[1.5px] text-[#7e7e7e] uppercase">
-                      <span>Draft Mode (Locked)</span>
-                    </div>
-                  )}
-
-                  <Link
-                    to="/team/$auctionId"
-                    params={{ auctionId: auc.slug! }}
-                    className="flex items-center justify-center space-x-1 rounded-none border border-[#3c3c3c] bg-black py-2 text-center text-xs font-bold tracking-[1.5px] text-white uppercase transition-colors hover:bg-white hover:text-black"
-                  >
-                    <span>Strategy</span>
-                  </Link>
-
-                  {user && auc.userId === user.id && (
                     <Link
-                      to="/admin/$auctionId/control"
+                      to="/team/$auctionId"
                       params={{ auctionId: auc.slug! }}
-                      className="col-span-3 mt-2 flex items-center justify-center rounded-none border border-[#3c3c3c] bg-black py-1.5 text-center text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase transition-all hover:bg-white hover:text-black"
+                      className="flex items-center justify-center space-x-1 rounded-none border border-[#3c3c3c] bg-black py-2 text-center text-xs font-bold tracking-[1.5px] text-white uppercase transition-colors hover:bg-white hover:text-black"
                     >
-                      <span>Go To Panel 🔧</span>
+                      <span>Strategy</span>
                     </Link>
-                  )}
+
+                    {user && auc.userId === user.id && (
+                      <Link
+                        to="/admin/$auctionId/control"
+                        params={{ auctionId: auc.slug! }}
+                        className="col-span-3 mt-2 flex items-center justify-center rounded-none border border-[#3c3c3c] bg-black py-1.5 text-center text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase transition-all hover:bg-white hover:text-black"
+                      >
+                        <span>Go To Panel 🔧</span>
+                      </Link>
+                    )}
+                  </div>
                 </div>
+              ))}
+            </div>
+
+            {hasMoreAuctions && (
+              <div className="mt-12 flex justify-center">
+                <Link to="/auctions">
+                  <Button className="rounded-none border border-[#3c3c3c] bg-[#1a1a1a] px-8 py-6 font-bold tracking-[1.5px] text-white uppercase transition-colors hover:border-white hover:bg-white hover:text-black">
+                    View All Active Arenas
+                  </Button>
+                </Link>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         )}
       </main>
     </div>

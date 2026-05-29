@@ -280,7 +280,7 @@ function PlayerDirectoryPage() {
           className={`lg:block ${showMobileForm ? "block" : "hidden"} w-full space-y-6 lg:col-span-1`}
         >
           {/* Statistics Grid */}
-          <div className="grid w-full grid-cols-3 gap-3 sm:gap-4">
+          <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
             <div className="rounded-none border border-[#3c3c3c] bg-black p-3 text-center sm:p-4">
               <span className="block text-[8px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
                 Total Roster

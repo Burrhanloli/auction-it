@@ -360,7 +360,7 @@ Best of luck with building your team! 🏆`;
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <addTeamForm.Field
                 name="ownerName"
                 children={(field) => (
@@ -783,7 +783,7 @@ Best of luck with building your team! 🏆`;
                 )}
               />
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <editTeamForm.Field
                   name="ownerName"
                   children={(field) => (
@@ -831,7 +831,7 @@ Best of luck with building your team! 🏆`;
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <editTeamForm.Field
                   name="totalBudget"
                   children={(field) => (

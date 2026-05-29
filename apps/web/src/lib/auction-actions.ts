@@ -2,7 +2,7 @@ import { authMiddleware } from "@repo/auth/tanstack/middleware";
 import { db } from "@repo/db";
 import * as schema from "@repo/db/schema";
 import { createServerFn } from "@tanstack/react-start";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, ilike } from "drizzle-orm";
 
 import { resolveAuctionId, resolveTeamId } from "./auction-helpers.server";
 import { publishAuctionUpdate } from "./broadcast";
@@ -1040,10 +1040,40 @@ export const $getAuctionsByUser = createServerFn({ method: "GET" })
   });
 
 // Query: Fetch all auctions for public dashboard listing
-export const $getAllAuctions = createServerFn({ method: "GET" }).handler(async () => {
-  const list = await db.select().from(schema.auctions).orderBy(desc(schema.auctions.createdAt));
-  return list;
-});
+export const $getAllAuctions = createServerFn({ method: "GET" })
+  .inputValidator(
+    (data?: {
+      status?: "active" | "completed" | "draft" | "all";
+      limit?: number;
+      search?: string;
+    }) => data,
+  )
+  .handler(async ({ data }) => {
+    let query = db.select().from(schema.auctions).$dynamic();
+
+    const conditions = [];
+
+    if (data?.status && data.status !== "all") {
+      conditions.push(eq(schema.auctions.status, data.status));
+    }
+
+    if (data?.search) {
+      conditions.push(ilike(schema.auctions.name, `%${data.search}%`));
+    }
+
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+
+    query = query.orderBy(desc(schema.auctions.createdAt));
+
+    if (data?.limit) {
+      query = query.limit(data.limit);
+    }
+
+    const list = await query;
+    return list;
+  });
 
 // Mutation: Roster Manager - Create multiple teams from CSV
 export const $addTeamsBulk = createServerFn({ method: "POST" })

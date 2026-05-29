@@ -272,7 +272,7 @@ function AdminDashboardPage() {
         </div>
 
         {/* Stats Row */}
-        <div className="mb-10 grid grid-cols-2 gap-6 md:grid-cols-4">
+        <div className="mb-10 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-4">
           <div className="relative overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-6">
             <span className="block text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
               Total Auctions
@@ -337,7 +337,7 @@ function AdminDashboardPage() {
 
             {/* Draft Auctions Section */}
             <section>
-              <div className="mb-6 flex items-center justify-between">
+              <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
                 <div className="flex items-center space-x-3">
                   <div className="flex h-9 w-9 items-center justify-center rounded-none border border-[#3c3c3c] bg-black">
                     <FileEditIcon className="h-4 w-4 text-[#bbbbbb]" />
@@ -624,7 +624,7 @@ function AuctionCard({ auction, badge }: { auction: any; badge: "live" | "draft"
         <h3 className="mb-2 text-lg font-black text-white uppercase">{auction.name}</h3>
 
         {/* Quick stats */}
-        <div className="mt-4 grid grid-cols-2 gap-3">
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="rounded-none border border-[#3c3c3c] bg-black p-3">
             <span className="block text-[10px] font-bold tracking-widest text-[#bbbbbb] uppercase">
               Budget / Team
@@ -648,7 +648,7 @@ function AuctionCard({ auction, badge }: { auction: any; badge: "live" | "draft"
       {/* Action buttons footer */}
       <div className="border-t border-[#3c3c3c] bg-[#1a1a1a] px-6 py-4">
         {isLive ? (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Link
               to="/admin/$auctionId/control"
               params={{ auctionId: auction.slug }}
@@ -667,7 +667,7 @@ function AuctionCard({ auction, badge }: { auction: any; badge: "live" | "draft"
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Link
               to="/admin/$auctionId/setup"
               params={{ auctionId: auction.slug }}
