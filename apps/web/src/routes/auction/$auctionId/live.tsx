@@ -199,8 +199,7 @@ function LiveTrackerPage() {
               Live Arena Stream
             </div>
             <div className="relative flex w-full items-center">
-              {/* We'll show a simple horizontal sliding marquee of the latest events */}
-              <div className="flex animate-[marquee_30s_linear_infinite] space-x-12 px-6 text-xs font-semibold whitespace-nowrap text-[#bbbbbb] select-none">
+              <div className="flex animate-marquee space-x-12 px-6 text-xs font-semibold whitespace-nowrap text-[#bbbbbb] select-none">
                 {displayLogs.slice(0, 5).map((log: any, idx: number) => (
                   <span key={idx} className="flex items-center space-x-2">
                     <span className="h-1.5 w-1.5 rounded-none bg-white" />
