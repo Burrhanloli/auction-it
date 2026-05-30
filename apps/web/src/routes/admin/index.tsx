@@ -3,6 +3,7 @@ import { authQueryOptions } from "@repo/auth/tanstack/queries";
 import { Button } from "@repo/ui/components/button";
 import { Input } from "@repo/ui/components/input";
 import { Label } from "@repo/ui/components/label";
+import { MStripeDivider } from "@repo/ui/components/m-stripe-divider";
 import { useForm } from "@tanstack/react-form";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
@@ -29,6 +30,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { ImageViewer } from "#/components/image-viewer";
+import { Logo } from "#/components/logo";
 import { useScrollDirection } from "#/hooks/use-scroll-direction";
 import { $getAuctionsByUser, $createAuction, $updateAuctionStatus } from "#/lib/auction-actions";
 
@@ -139,16 +141,17 @@ function AdminDashboardPage() {
     <div className="relative min-h-screen overflow-hidden bg-black font-sans text-white">
       {/* Header */}
       <header
-        className={`sticky top-0 z-50 border-b border-[#3c3c3c] bg-black px-4 py-4 transition-transform duration-300 ease-in-out md:px-8 md:py-5 ${
+        className={`relative sticky top-0 z-50 border-b border-[#3c3c3c] bg-black px-4 py-4 transition-transform duration-300 ease-in-out md:px-8 md:py-5 ${
           scrollDirection === "down" ? "-translate-y-full" : "translate-y-0"
         }`}
       >
+        <MStripeDivider className="absolute right-0 bottom-0 left-0" />
         <div className="mx-auto flex max-w-7xl items-center justify-between">
           <div className="flex items-center space-x-4">
             <Link to="/">
               <div className="flex cursor-pointer items-center space-x-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a]">
-                  <TrophyIcon className="h-5 w-5 text-white" />
+                  <Logo className="h-5 w-5" />
                 </div>
                 <div>
                   <span className="text-xl font-bold tracking-[1.5px] text-white uppercase">
@@ -205,7 +208,7 @@ function AdminDashboardPage() {
           <div className="flex items-center justify-between border-b border-[#3c3c3c] p-4">
             <div className="flex items-center space-x-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a]">
-                <TrophyIcon className="h-5 w-5 text-white" />
+                <Logo className="h-5 w-5" />
               </div>
               <span className="text-xl font-bold tracking-[1.5px] text-white uppercase">Admin</span>
             </div>
@@ -254,9 +257,12 @@ function AdminDashboardPage() {
           </div>
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
-              <h1 className="text-4xl font-black tracking-tight text-white uppercase">
-                Welcome back, <span className="text-white">{user?.name?.split(" ")[0]}</span>
-              </h1>
+              <div className="inline-flex flex-col">
+                <MStripeDivider className="mb-2 w-full" />
+                <h1 className="text-4xl font-black tracking-tight text-white uppercase">
+                  Welcome back, <span className="text-[#bbbbbb]">{user.name}</span>
+                </h1>
+              </div>
               <p className="mt-2 text-[#bbbbbb]">
                 Manage your auctions, configure teams and players, and run live bidding sessions.
               </p>
@@ -323,7 +329,10 @@ function AdminDashboardPage() {
                     <ActivityIcon className="h-4 w-4 text-white" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-black text-white uppercase">Live Auctions</h2>
+                    <div className="mb-4 inline-flex flex-col">
+                      <MStripeDivider className="mb-2 w-full" />
+                      <h2 className="text-xl font-black text-white uppercase">Live Auctions</h2>
+                    </div>
                     <p className="text-xs text-[#bbbbbb]">Currently active — bidding in progress</p>
                   </div>
                 </div>
@@ -343,7 +352,10 @@ function AdminDashboardPage() {
                     <FileEditIcon className="h-4 w-4 text-[#bbbbbb]" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-black text-white uppercase">Draft Auctions</h2>
+                    <div className="mb-4 inline-flex flex-col">
+                      <MStripeDivider className="mb-2 w-full" />
+                      <h2 className="text-xl font-black text-white uppercase">Draft Auctions</h2>
+                    </div>
                     <p className="text-xs text-[#bbbbbb]">
                       Configure teams, players, and settings before going live
                     </p>
@@ -392,10 +404,13 @@ function AdminDashboardPage() {
           <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8">
             <div className="mb-8 flex items-center justify-between">
               <div>
-                <h2 className="flex items-center text-2xl font-black text-white uppercase">
-                  <SparklesIcon className="mr-3 h-6 w-6 text-white" />
-                  New Auction
-                </h2>
+                <div className="flex items-center">
+                  <SparklesIcon className="mr-4 h-6 w-6 text-white" />
+                  <div className="inline-flex flex-col">
+                    <MStripeDivider className="mb-2 w-full" />
+                    <h2 className="text-2xl font-black text-white uppercase">New Auction</h2>
+                  </div>
+                </div>
                 <p className="mt-1 text-sm text-[#bbbbbb]">
                   Configure your auction event before going live
                 </p>

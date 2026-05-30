@@ -2,14 +2,29 @@ import { Badge } from "@repo/ui/components/badge";
 import { Button } from "@repo/ui/components/button";
 import { Input } from "@repo/ui/components/input";
 import { Label } from "@repo/ui/components/label";
+import { LazyImage } from "@repo/ui/components/lazy-image";
+import { MStripeDivider } from "@repo/ui/components/m-stripe-divider";
 import { useForm } from "@tanstack/react-form";
 import { useHotkeys, type UseHotkeyDefinition } from "@tanstack/react-hotkeys";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
-import { PlayIcon, GavelIcon, XOctagonIcon, TagIcon, UsersIcon } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  PlayIcon,
+  GavelIcon,
+  XOctagonIcon,
+  TagIcon,
+  UsersIcon,
+  TrophyIcon,
+  XIcon,
+  DownloadIcon,
+  Loader2Icon,
+  ImageIcon,
+} from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 
+import { PlayerSoldCard } from "#/components/player-sold-card";
+import { TeamRosterCard } from "#/components/team-roster-card";
 import {
   $getAuction,
   $getAuctionState,
@@ -28,6 +43,79 @@ export const Route = createFileRoute("/admin/$auctionId/control")({
 function AuctionControlPanel() {
   const { auctionId } = Route.useParams();
   const queryClient = useQueryClient();
+
+  const [activeRosterTeam, setActiveRosterTeam] = useState<any>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const modalCardRef = useRef<HTMLDivElement>(null);
+
+  const [activeSoldPlayerPreview, setActiveSoldPlayerPreview] = useState<{
+    player: any;
+    team: any;
+  } | null>(null);
+  const [isDownloadingSoldCard, setIsDownloadingSoldCard] = useState(false);
+  const modalSoldCardRef = useRef<HTMLDivElement>(null);
+
+  const handleDownloadRoster = async () => {
+    if (!activeRosterTeam || !modalCardRef.current) return;
+    setIsDownloading(true);
+    toast.info(`Preparing roster image for ${activeRosterTeam.name}...`);
+    try {
+      const { toPng } = await import("html-to-image");
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      const dataUrl = await toPng(modalCardRef.current, {
+        cacheBust: true,
+        pixelRatio: 2,
+        width: 1080,
+        height: 1080,
+      });
+
+      const link = document.createElement("a");
+      link.download = `${activeRosterTeam.name.toLowerCase().replace(/\s+/g, "-")}-roster.png`;
+      link.href = dataUrl;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success(`Successfully exported ${activeRosterTeam.name}!`);
+    } catch (err) {
+      console.error("Roster export failed:", err);
+      toast.error(`Failed to export roster.`);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const handleDownloadSoldCard = async () => {
+    if (!activeSoldPlayerPreview || !modalSoldCardRef.current) return;
+    setIsDownloadingSoldCard(true);
+    toast.info(`Preparing sold card for ${activeSoldPlayerPreview.player.name}...`);
+    try {
+      const { toPng } = await import("html-to-image");
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      const dataUrl = await toPng(modalSoldCardRef.current, {
+        cacheBust: true,
+        pixelRatio: 2,
+        width: 1080,
+        height: 1080,
+      });
+
+      const link = document.createElement("a");
+      link.download = `${activeSoldPlayerPreview.player.name.toLowerCase().replace(/\s+/g, "-")}-sold.png`;
+      link.href = dataUrl;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success(`Successfully exported player card!`);
+    } catch (err) {
+      console.error("Card export failed:", err);
+      toast.error(`Failed to export card.`);
+    } finally {
+      setIsDownloadingSoldCard(false);
+    }
+  };
 
   // Queries
   const { data: auction } = useQuery({
@@ -152,10 +240,15 @@ function AuctionControlPanel() {
           <div className="rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8">
             <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
               <div>
-                <h3 className="flex items-center text-base font-bold tracking-[1.5px] text-white uppercase">
-                  <PlayIcon className="mr-2 h-5 w-5 text-white" />
-                  Auction is in Draft Mode
-                </h3>
+                <div className="flex items-center">
+                  <PlayIcon className="mr-3 h-5 w-5 text-white" />
+                  <div className="inline-flex flex-col">
+                    <MStripeDivider className="mb-1 w-full" />
+                    <h3 className="text-base font-bold tracking-[1.5px] text-white uppercase">
+                      Auction is in Draft Mode
+                    </h3>
+                  </div>
+                </div>
                 <p className="mt-1 text-xs text-[#bbbbbb]">
                   Launch the auction to move it to the Live Arena.
                 </p>
@@ -176,10 +269,15 @@ function AuctionControlPanel() {
           <div className="rounded-none border border-[#e22718]/30 bg-[#1a1a1a] p-8">
             <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
               <div>
-                <h3 className="flex items-center text-base font-bold tracking-[1.5px] text-white uppercase">
-                  <XOctagonIcon className="mr-2 h-5 w-5 text-[#e22718]" />
-                  End Auction Session
-                </h3>
+                <div className="flex items-center">
+                  <XOctagonIcon className="mr-3 h-5 w-5 text-[#e22718]" />
+                  <div className="inline-flex flex-col">
+                    <MStripeDivider className="mb-1 w-full" />
+                    <h3 className="text-base font-bold tracking-[1.5px] text-white uppercase">
+                      End Auction Session
+                    </h3>
+                  </div>
+                </div>
                 <p className="mt-1 text-xs text-[#bbbbbb]">
                   Close the auction. This will hide the live bidding view and lock all team rosters.
                 </p>
@@ -199,12 +297,48 @@ function AuctionControlPanel() {
           </div>
         )}
 
+        {/* Auction Completed - Generate Roster CTA */}
+        {auction?.status === "completed" && (
+          <div className="rounded-none border border-[#1c69d4]/30 bg-[#1a1a1a] p-8">
+            <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+              <div>
+                <div className="flex items-center">
+                  <TrophyIcon className="mr-3 h-5 w-5 text-[#1c69d4]" />
+                  <div className="inline-flex flex-col">
+                    <MStripeDivider className="mb-1 w-full" />
+                    <h3 className="text-base font-bold tracking-[1.5px] text-white uppercase">
+                      Auction Completed!
+                    </h3>
+                  </div>
+                </div>
+                <p className="mt-1 text-xs text-[#bbbbbb]">
+                  Generate and download premium team roster social graphics for Instagram/Twitter.
+                </p>
+              </div>
+              <Button
+                onClick={() => {
+                  const el = document.getElementById("acquired-squads-section");
+                  if (el) el.scrollIntoView({ behavior: "smooth" });
+                }}
+                className="rounded-none border border-[#1c69d4] bg-[#1c69d4] px-8 py-3.5 font-bold tracking-[1.5px] text-white uppercase hover:bg-black hover:text-[#1c69d4]"
+              >
+                Generate Roster Cards
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Draw Player Console */}
         <div className="rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8">
-          <h3 className="mb-6 flex items-center text-base font-bold tracking-[1.5px] text-white uppercase">
-            <PlayIcon className="mr-2 h-5 w-5 text-white" />
-            Roster Draw Deck
-          </h3>
+          <div className="mb-6 flex items-center">
+            <PlayIcon className="mr-3 h-5 w-5 text-white" />
+            <div className="inline-flex flex-col">
+              <MStripeDivider className="mb-2 w-full" />
+              <h3 className="text-base font-bold tracking-[1.5px] text-white uppercase">
+                Roster Draw Deck
+              </h3>
+            </div>
+          </div>
 
           <div className="space-y-6">
             <div className="space-y-3">
@@ -280,10 +414,15 @@ function AuctionControlPanel() {
 
         {/* Active Bidding Desk */}
         <div className="relative overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8">
-          <h3 className="mb-8 flex items-center text-base font-bold tracking-[1.5px] text-white uppercase">
+          <div className="mb-8 flex items-center">
             <GavelIcon className="mr-3 h-5 w-5 text-white" />
-            Live Bidding Arena
-          </h3>
+            <div className="inline-flex flex-col">
+              <MStripeDivider className="mb-2 w-full" />
+              <h3 className="text-base font-bold tracking-[1.5px] text-white uppercase">
+                Live Bidding Arena
+              </h3>
+            </div>
+          </div>
 
           {isBidding ? (
             <BiddingFormConsole
@@ -355,59 +494,97 @@ function AuctionControlPanel() {
       </div>
 
       {/* Acquired Squads Section */}
-      <div className="col-span-1 mt-6 rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8 lg:col-span-3">
-        <h3 className="mb-6 flex items-center text-base font-bold tracking-[1.5px] text-white uppercase">
+      <div
+        id="acquired-squads-section"
+        className="col-span-1 mt-6 rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8 lg:col-span-3"
+      >
+        <div className="mb-6 flex items-center">
           <UsersIcon className="mr-3 h-5 w-5 text-white" />
-          Acquired Squads & Reversions
-        </h3>
+          <div className="inline-flex flex-col">
+            <MStripeDivider className="mb-2 w-full" />
+            <h3 className="text-base font-bold tracking-[1.5px] text-white uppercase">
+              Acquired Squads & Reversions
+            </h3>
+          </div>
+        </div>
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
           {auction?.teams?.map((team: any) => {
             const squad = auction.players?.filter((p: any) => p.soldToTeamId === team.id) || [];
 
             return (
-              <div key={team.id} className="rounded-none border border-[#3c3c3c] bg-black p-4">
-                <div className="mb-4 flex items-center justify-between border-b border-[#3c3c3c] pb-2">
-                  <h4 className="text-sm font-bold tracking-[1px] text-white uppercase">
-                    {team.name}
-                  </h4>
-                  <span className="text-[10px] font-bold text-[#bbbbbb]">
-                    {team.remainingBudget} pts
-                  </span>
-                </div>
-                {squad.length > 0 ? (
-                  <div className="max-h-[300px] space-y-3 overflow-y-auto pr-2">
-                    {squad.map((player: any) => (
-                      <div
-                        key={player.id}
-                        className="flex items-center justify-between rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-2"
-                      >
-                        <div>
-                          <p className="text-xs font-bold text-white uppercase">{player.name}</p>
-                          <p className="text-[10px] text-[#bbbbbb]">
-                            {player.soldPoints} pts {player.status === "captain" ? "(Captain)" : ""}
-                          </p>
-                        </div>
-                        {player.status !== "captain" && (
-                          <Button
-                            onClick={() => {
-                              if (
-                                window.confirm(`Are you sure you want to revert ${player.name}?`)
-                              ) {
-                                revertPlayerMutation.mutate({ auctionId, playerId: player.id });
-                              }
-                            }}
-                            disabled={revertPlayerMutation.isPending}
-                            className="h-6 cursor-pointer rounded-none border border-[#e22718] bg-transparent px-2 text-[8px] font-bold tracking-[1px] text-[#e22718] uppercase hover:bg-[#e22718] hover:text-white disabled:opacity-50"
-                          >
-                            Revert
-                          </Button>
-                        )}
-                      </div>
-                    ))}
+              <div
+                key={team.id}
+                className="flex flex-col justify-between rounded-none border border-[#3c3c3c] bg-black p-4"
+              >
+                <div>
+                  <div className="mb-4 flex items-center justify-between border-b border-[#3c3c3c] pb-2">
+                    <h4 className="text-sm font-bold tracking-[1px] text-white uppercase">
+                      {team.name}
+                    </h4>
+                    <span className="text-[10px] font-bold text-[#bbbbbb]">
+                      {team.remainingBudget} pts
+                    </span>
                   </div>
-                ) : (
-                  <p className="text-xs text-[#bbbbbb] italic">No players acquired yet.</p>
-                )}
+                  {squad.length > 0 ? (
+                    <div className="max-h-[300px] space-y-3 overflow-y-auto pr-2">
+                      {squad.map((player: any) => (
+                        <div
+                          key={player.id}
+                          className="flex items-center justify-between rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-2"
+                        >
+                          <div>
+                            <p className="text-xs font-bold text-white uppercase">{player.name}</p>
+                            <p className="text-[10px] text-[#bbbbbb]">
+                              {player.soldPoints} pts{" "}
+                              {player.status === "captain" ? "(Captain)" : ""}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              onClick={() => setActiveSoldPlayerPreview({ player, team })}
+                              className="h-6 cursor-pointer rounded-none border border-white bg-transparent px-2 text-[8px] font-bold tracking-[1px] text-white uppercase hover:bg-white hover:text-black"
+                              title="Generate Post"
+                            >
+                              <ImageIcon className="mr-1 h-3 w-3" />
+                              Post
+                            </Button>
+                            {player.status !== "captain" && (
+                              <Button
+                                onClick={() => {
+                                  if (
+                                    window.confirm(
+                                      `Are you sure you want to revert ${player.name}?`,
+                                    )
+                                  ) {
+                                    revertPlayerMutation.mutate({
+                                      auctionId,
+                                      playerId: player.id,
+                                    });
+                                  }
+                                }}
+                                disabled={revertPlayerMutation.isPending}
+                                className="h-6 cursor-pointer rounded-none border border-[#e22718] bg-transparent px-2 text-[8px] font-bold tracking-[1px] text-[#e22718] uppercase hover:bg-[#e22718] hover:text-white disabled:opacity-50"
+                              >
+                                Revert
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-[#bbbbbb] italic">No players acquired yet.</p>
+                  )}
+                </div>
+
+                <div className="mt-4 flex justify-end border-t border-[#3c3c3c] pt-3">
+                  <Button
+                    onClick={() => setActiveRosterTeam(team)}
+                    className="h-7 cursor-pointer rounded-none border border-white bg-transparent px-3 text-[10px] font-bold tracking-[1px] text-white uppercase hover:bg-white hover:text-black"
+                  >
+                    View Roster
+                  </Button>
+                </div>
               </div>
             );
           })}
@@ -419,6 +596,137 @@ function AuctionControlPanel() {
           )}
         </div>
       </div>
+
+      {/* Roster Preview Modal Dialog Overlay */}
+      {auction && activeRosterTeam && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm">
+          <div className="relative flex max-h-[95vh] w-full max-w-2xl flex-col items-center overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-6 shadow-2xl">
+            {/* Modal Header */}
+            <div className="mb-6 flex w-full items-center justify-between border-b border-[#3c3c3c] pb-4">
+              <h3 className="text-sm font-bold tracking-[1.5px] text-white uppercase">
+                FRANCHISE ROSTER PREVIEW
+              </h3>
+              <button
+                onClick={() => setActiveRosterTeam(null)}
+                className="cursor-pointer text-[#bbbbbb] hover:text-white"
+              >
+                <XIcon className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Scaled Roster Card container */}
+            <div className="relative flex aspect-square w-full max-w-[440px] items-center justify-center overflow-hidden border border-neutral-900 bg-black">
+              {/* Outer scaling wrapper */}
+              <div className="absolute top-0 left-0 h-[1080px] w-[1080px] origin-top-left scale-[0.407]">
+                {/* Captured element */}
+                <div ref={modalCardRef} className="h-[1080px] w-[1080px]">
+                  <TeamRosterCard
+                    team={activeRosterTeam}
+                    players={(auction.players ?? []).filter(
+                      (p: any) =>
+                        p.soldToTeamId === activeRosterTeam.id ||
+                        (p.status === "captain" && activeRosterTeam.captainPlayerId === p.id),
+                    )}
+                    categories={auction.categories ?? []}
+                    auction={auction as any}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="mt-6 flex w-full gap-4 border-t border-[#3c3c3c] pt-4">
+              <Button
+                onClick={() => setActiveRosterTeam(null)}
+                variant="outline"
+                className="flex-1 rounded-none border-[#3c3c3c] bg-transparent text-xs font-bold tracking-[1px] text-[#bbbbbb] uppercase hover:bg-[#1a1a1a] hover:text-white"
+              >
+                Close Preview
+              </Button>
+              <Button
+                onClick={handleDownloadRoster}
+                disabled={isDownloading}
+                className="flex-1 rounded-none border border-white bg-white text-xs font-black tracking-[1px] text-black uppercase hover:bg-black hover:text-white"
+              >
+                {isDownloading ? (
+                  <>
+                    <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
+                    Generating PNG...
+                  </>
+                ) : (
+                  <>
+                    <DownloadIcon className="mr-2 h-4 w-4" />
+                    Download Image
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sold Player Preview Modal Dialog Overlay */}
+      {auction && activeSoldPlayerPreview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm">
+          <div className="relative flex max-h-[95vh] w-full max-w-2xl flex-col items-center overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-6 shadow-2xl">
+            {/* Modal Header */}
+            <div className="mb-6 flex w-full items-center justify-between border-b border-[#3c3c3c] pb-4">
+              <h3 className="text-sm font-bold tracking-[1.5px] text-white uppercase">
+                PLAYER SOLD PREVIEW
+              </h3>
+              <button
+                onClick={() => setActiveSoldPlayerPreview(null)}
+                className="cursor-pointer text-[#bbbbbb] hover:text-white"
+              >
+                <XIcon className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Scaled Sold Card container */}
+            <div className="relative flex aspect-square w-full max-w-[440px] items-center justify-center overflow-hidden border border-neutral-900 bg-black">
+              {/* Outer scaling wrapper */}
+              <div className="absolute top-0 left-0 h-[1080px] w-[1080px] origin-top-left scale-[0.407]">
+                {/* Captured element */}
+                <div ref={modalSoldCardRef} className="h-[1080px] w-[1080px]">
+                  <PlayerSoldCard
+                    player={activeSoldPlayerPreview.player}
+                    team={activeSoldPlayerPreview.team}
+                    auction={auction as any}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="mt-6 flex w-full gap-4 border-t border-[#3c3c3c] pt-4">
+              <Button
+                onClick={() => setActiveSoldPlayerPreview(null)}
+                variant="outline"
+                className="flex-1 rounded-none border-[#3c3c3c] bg-transparent text-xs font-bold tracking-[1px] text-[#bbbbbb] uppercase hover:bg-[#1a1a1a] hover:text-white"
+              >
+                Close Preview
+              </Button>
+              <Button
+                onClick={handleDownloadSoldCard}
+                disabled={isDownloadingSoldCard}
+                className="flex-1 rounded-none border border-white bg-white text-xs font-black tracking-[1px] text-black uppercase hover:bg-black hover:text-white"
+              >
+                {isDownloadingSoldCard ? (
+                  <>
+                    <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
+                    Generating PNG...
+                  </>
+                ) : (
+                  <>
+                    <DownloadIcon className="mr-2 h-4 w-4" />
+                    Download Image
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -547,9 +855,11 @@ function BiddingFormConsole({
       <div className="flex flex-col items-center justify-between gap-4 rounded-none border border-[#3c3c3c] bg-black p-4 md:flex-row">
         <div className="flex items-center space-x-4">
           {activePlayer.imageUrl ? (
-            <img
+            <LazyImage
               src={activePlayer.imageUrl}
               alt={activePlayer.name}
+              priority
+              fallbackText={activePlayer.name}
               className="h-24 w-16 rounded-none border border-[#3c3c3c] bg-black object-cover"
             />
           ) : (
@@ -677,9 +987,11 @@ function BiddingFormConsole({
 
                             <div className="flex w-full items-center space-x-2.5">
                               {t.logoUrl ? (
-                                <img
+                                <LazyImage
                                   src={t.logoUrl}
                                   alt={t.name}
+                                  priority
+                                  fallbackText={t.name}
                                   className="h-7 w-7 rounded-none border border-[#3c3c3c] bg-black object-cover"
                                 />
                               ) : (

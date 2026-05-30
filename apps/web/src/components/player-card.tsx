@@ -1,3 +1,5 @@
+import { LazyImage } from "@repo/ui/components/lazy-image";
+import { MStripeDivider } from "@repo/ui/components/m-stripe-divider";
 import { StarIcon } from "lucide-react";
 import React from "react";
 
@@ -46,9 +48,10 @@ export function PlayerCard({
       {/* Top Section: Compact Full Bleed Image */}
       <div className="relative aspect-[3/4] max-h-64 w-full shrink-0 bg-black">
         {player.imageUrl ? (
-          <img
+          <LazyImage
             src={player.imageUrl}
             alt={player.name}
+            fallbackText={player.name}
             className="absolute inset-0 h-full w-full object-contain"
           />
         ) : (
@@ -93,9 +96,10 @@ export function PlayerCard({
                   ⭐
                 </span>
                 {w.team?.logoUrl ? (
-                  <img
+                  <LazyImage
                     src={w.team.logoUrl}
                     alt={w.team.name}
+                    fallbackText={w.team.name}
                     className="h-4 w-4 rounded-full object-cover"
                   />
                 ) : (
@@ -125,7 +129,7 @@ export function PlayerCard({
         )}
 
         {/* M-Stripe Divider */}
-        <div className="absolute right-0 bottom-0 left-0 h-1 bg-gradient-to-r from-[#0066b1] via-[#1c69d4] to-[#e22718]" />
+        <MStripeDivider className="absolute right-0 bottom-0 left-0" />
       </div>
 
       {/* Content Section */}

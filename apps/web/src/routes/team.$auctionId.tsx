@@ -2,6 +2,8 @@ import { Button } from "@repo/ui/components/button";
 import { Input } from "@repo/ui/components/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@repo/ui/components/input-otp";
 import { Label } from "@repo/ui/components/label";
+import { LazyImage } from "@repo/ui/components/lazy-image";
+import { MStripeDivider } from "@repo/ui/components/m-stripe-divider";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
@@ -9,7 +11,6 @@ import {
   CoinsIcon,
   StarIcon,
   SearchIcon,
-  TrophyIcon,
   ArrowLeftIcon,
   LockIcon,
   LogOutIcon,
@@ -23,6 +24,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { ImageViewer } from "#/components/image-viewer";
+import { Logo } from "#/components/logo";
 import { PlayerCard } from "#/components/player-card";
 import { useAuctionSubscription } from "#/hooks/use-auction-subscription";
 import { useTeamSession } from "#/hooks/use-team-session";
@@ -232,9 +234,12 @@ function TeamStrategyDeckPage() {
               <LockIcon className="h-5 w-5 animate-pulse" />
             </div>
             <div>
-              <h2 className="text-lg font-black tracking-[1.5px] text-white uppercase">
-                Strategy Deck Gate
-              </h2>
+              <div className="mb-1 inline-flex flex-col">
+                <MStripeDivider className="mb-2 w-full" />
+                <h2 className="text-lg font-black tracking-[1.5px] text-white uppercase">
+                  Strategy Deck Gate
+                </h2>
+              </div>
               <p className="mt-1 max-w-xs text-[11px] leading-relaxed text-[#bbbbbb]">
                 Authenticate with your team credential keys to access private wishlists and bid
                 panels.
@@ -271,9 +276,11 @@ function TeamStrategyDeckPage() {
 
                         <div className="flex w-full items-center space-x-2.5">
                           {t.logoUrl ? (
-                            <img
+                            <LazyImage
                               src={t.logoUrl}
                               alt={t.name}
+                              priority
+                              fallbackText={t.name}
                               className="h-8 w-8 rounded-none border border-[#3c3c3c] bg-black object-cover"
                             />
                           ) : (
@@ -415,14 +422,15 @@ function TeamStrategyDeckPage() {
     <div className="flex min-h-screen flex-col bg-black pb-12 font-sans text-white">
       {/* Header bar */}
       <header
-        className={`sticky top-0 z-50 flex flex-col justify-between gap-4 border-b border-[#3c3c3c] bg-black px-4 py-4 transition-transform duration-300 ease-in-out md:flex-row md:items-center md:gap-0 md:px-8 md:py-5 ${
+        className={`relative sticky top-0 z-50 flex flex-col justify-between gap-4 border-b border-[#3c3c3c] bg-black px-4 py-4 transition-transform duration-300 ease-in-out md:flex-row md:items-center md:gap-0 md:px-8 md:py-5 ${
           scrollDirection === "down" ? "-translate-y-full" : "translate-y-0"
         }`}
       >
+        <MStripeDivider className="absolute right-0 bottom-0 left-0" />
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a]">
-              <TrophyIcon className="h-4.5 w-4.5 text-white" />
+              <Logo className="h-[18px] w-[18px]" />
             </div>
             <div>
               <span className="text-sm font-bold tracking-[1.5px] text-white uppercase">
@@ -454,9 +462,10 @@ function TeamStrategyDeckPage() {
       {/* Background Watermark for Team Strategy */}
       <div className="pointer-events-none fixed inset-0 z-0 flex items-center justify-center opacity-5">
         {team.logoUrl ? (
-          <img
+          <LazyImage
             src={team.logoUrl}
             alt="Watermark"
+            priority
             className="max-h-[80vh] max-w-[80vw] object-contain blur-[2px]"
           />
         ) : null}
@@ -479,9 +488,12 @@ function TeamStrategyDeckPage() {
                 {team.name.slice(0, 2)}
               </div>
             )}
-            <h2 className="text-xl font-black tracking-[1.5px] text-white uppercase">
-              {team.name}
-            </h2>
+            <div className="inline-flex flex-col">
+              <MStripeDivider className="mb-2 w-full" />
+              <h2 className="text-xl font-black tracking-[1.5px] text-white uppercase">
+                {team.name}
+              </h2>
+            </div>
             <p className="mt-1 text-[10px] font-bold text-[#bbbbbb] uppercase">
               Official Strategy Deck
             </p>
@@ -654,9 +666,11 @@ function TeamStrategyDeckPage() {
               <div className="flex items-center justify-between rounded-none border border-[#3c3c3c] bg-black p-3.5">
                 <div className="flex items-center space-x-3">
                   {team.captainPlayer?.imageUrl ? (
-                    <img
+                    <LazyImage
                       src={team.captainPlayer?.imageUrl}
                       alt={team.captainPlayer?.name}
+                      priority
+                      fallbackText={team.captainPlayer?.name}
                       className="h-10 w-10 rounded-none border border-[#3c3c3c] bg-[#1a1a1a] object-cover"
                     />
                   ) : (
@@ -700,9 +714,10 @@ function TeamStrategyDeckPage() {
                   >
                     <div className="flex items-center space-x-3">
                       {player.imageUrl ? (
-                        <img
+                        <LazyImage
                           src={player.imageUrl}
                           alt={player.name}
+                          fallbackText={player.name}
                           className="h-8 w-8 rounded-none border border-[#3c3c3c] bg-[#1a1a1a] object-cover"
                         />
                       ) : (
@@ -792,9 +807,10 @@ function TeamStrategyDeckPage() {
                     <div className="flex items-center space-x-3">
                       {player.imageUrl ? (
                         <div className="relative shrink-0">
-                          <img
+                          <LazyImage
                             src={player.imageUrl}
                             alt={player.name}
+                            fallbackText={player.name}
                             className={`h-9 w-9 rounded-none border border-[#3c3c3c] bg-[#1a1a1a] object-cover transition-all ${
                               player.status === "sold" || player.status === "captain"
                                 ? "brightness-50 contrast-125 grayscale"
@@ -931,18 +947,35 @@ function TeamStrategyDeckPage() {
                 />
               </div>
 
-              <select
-                value={selectedCategoryTab}
-                onChange={(e) => setSelectedCategoryTab(e.target.value)}
-                className="rounded-none border border-[#3c3c3c] bg-black p-2.5 text-xs text-white outline-none focus:border-white"
-              >
-                <option value="all">All Category Decks</option>
-                {auction.categories?.map((cat: any) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name} Deck
-                  </option>
+              <div className="no-scrollbar flex w-full items-center space-x-6 overflow-x-auto border-b border-[#3c3c3c] sm:w-auto">
+                <button
+                  onClick={() => setSelectedCategoryTab("all")}
+                  className={`group relative shrink-0 py-3 text-[14px] font-bold tracking-[1.5px] uppercase transition-colors ${selectedCategoryTab === "all" ? "text-white" : "text-[#bbbbbb] hover:text-white"}`}
+                >
+                  ALL SESSIONS
+                  {selectedCategoryTab === "all" && (
+                    <div className="absolute right-0 bottom-[-1px] left-0 h-[2px] bg-white" />
+                  )}
+                  {selectedCategoryTab !== "all" && (
+                    <MStripeDivider className="absolute right-0 bottom-[-1px] left-0 hidden group-hover:block" />
+                  )}
+                </button>
+                {auction.categories?.map((c: any) => (
+                  <button
+                    key={c.id}
+                    onClick={() => setSelectedCategoryTab(c.id)}
+                    className={`group relative shrink-0 py-3 text-[14px] font-bold tracking-[1.5px] uppercase transition-colors ${selectedCategoryTab === c.id ? "text-white" : "text-[#bbbbbb] hover:text-white"}`}
+                  >
+                    {c.name}
+                    {selectedCategoryTab === c.id && (
+                      <div className="absolute right-0 bottom-[-1px] left-0 h-[2px] bg-white" />
+                    )}
+                    {selectedCategoryTab !== c.id && (
+                      <MStripeDivider className="absolute right-0 bottom-[-1px] left-0 hidden group-hover:block" />
+                    )}
+                  </button>
                 ))}
-              </select>
+              </div>
             </div>
 
             {/* List */}

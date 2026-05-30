@@ -4,8 +4,10 @@ import { Input } from "@repo/ui/components/input";
 import { Label } from "@repo/ui/components/label";
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { TrophyIcon, LoaderCircleIcon } from "lucide-react";
+import { LoaderCircleIcon } from "lucide-react";
 import { toast } from "sonner";
+
+import { Logo } from "#/components/logo";
 
 export const Route = createFileRoute("/_guest/login")({
   component: LoginForm,
@@ -49,7 +51,7 @@ function LoginForm() {
           <div className="flex flex-col items-center gap-4 text-center">
             <Link to="/" className="flex flex-col items-center gap-2 font-medium">
               <div className="flex h-12 w-12 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-0.5">
-                <TrophyIcon className="h-6 w-6 text-white" />
+                <Logo className="h-6 w-6" />
               </div>
             </Link>
             <div>

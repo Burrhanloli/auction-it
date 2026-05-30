@@ -1,6 +1,7 @@
 import { authQueryOptions } from "@repo/auth/tanstack/queries";
 import { Button } from "@repo/ui/components/button";
 import { Input } from "@repo/ui/components/input";
+import { MStripeDivider } from "@repo/ui/components/m-stripe-divider";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { TrophyIcon, ShieldAlertIcon, CalendarIcon, SearchIcon, UserIcon } from "lucide-react";
@@ -32,7 +33,7 @@ function AuctionsPage() {
     queryFn: () => $getAllAuctions({ data: { status, search: q } }),
   });
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     navigate({ search: { status, q: searchInput } });
   };
@@ -44,7 +45,8 @@ function AuctionsPage() {
   return (
     <div className="relative min-h-screen bg-black font-sans text-white">
       {/* Header (Simplified) */}
-      <header className="sticky top-0 z-50 border-b border-[#3c3c3c] bg-black px-4 py-4 md:px-8 md:py-5">
+      <header className="relative sticky top-0 z-50 border-b border-[#3c3c3c] bg-black px-4 py-4 md:px-8 md:py-5">
+        <MStripeDivider className="absolute right-0 bottom-0 left-0" />
         <div className="mx-auto flex max-w-7xl items-center justify-between">
           <Link to="/" className="flex items-center space-x-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-0.5">
@@ -90,9 +92,12 @@ function AuctionsPage() {
 
       <main className="mx-auto max-w-7xl px-4 py-12 md:px-8">
         <div className="mb-10 text-center">
-          <h1 className="text-4xl font-black tracking-tight text-white uppercase md:text-5xl">
-            Arena Directory
-          </h1>
+          <div className="inline-flex flex-col">
+            <MStripeDivider className="mb-2 w-full" />
+            <h1 className="text-4xl font-black tracking-tight text-white uppercase md:text-5xl">
+              Arena Directory
+            </h1>
+          </div>
           <p className="mx-auto mt-4 max-w-2xl text-[#bbbbbb]">
             Browse active bidding wars or explore completed auctions to view final squad rosters and
             player prices.
@@ -119,18 +124,30 @@ function AuctionsPage() {
             </Button>
           </form>
 
-          <div className="flex items-center space-x-2 rounded-none border border-[#3c3c3c] bg-black p-1">
+          <div className="flex items-center space-x-6 border-b border-[#3c3c3c]">
             <button
               onClick={() => handleTabChange("active")}
-              className={`px-6 py-2 text-xs font-bold tracking-[1.5px] uppercase transition-colors ${status === "active" ? "bg-white text-black" : "text-[#bbbbbb] hover:text-white"}`}
+              className={`group relative py-3 text-[14px] font-bold tracking-[1.5px] uppercase transition-colors ${status === "active" ? "text-white" : "text-[#bbbbbb] hover:text-white"}`}
             >
               Active
+              {status === "active" && (
+                <div className="absolute right-0 bottom-[-1px] left-0 h-[2px] bg-white" />
+              )}
+              {status !== "active" && (
+                <MStripeDivider className="absolute right-0 bottom-[-1px] left-0 hidden group-hover:block" />
+              )}
             </button>
             <button
               onClick={() => handleTabChange("completed")}
-              className={`px-6 py-2 text-xs font-bold tracking-[1.5px] uppercase transition-colors ${status === "completed" ? "bg-white text-black" : "text-[#bbbbbb] hover:text-white"}`}
+              className={`group relative py-3 text-[14px] font-bold tracking-[1.5px] uppercase transition-colors ${status === "completed" ? "text-white" : "text-[#bbbbbb] hover:text-white"}`}
             >
               Completed
+              {status === "completed" && (
+                <div className="absolute right-0 bottom-[-1px] left-0 h-[2px] bg-white" />
+              )}
+              {status !== "completed" && (
+                <MStripeDivider className="absolute right-0 bottom-[-1px] left-0 hidden group-hover:block" />
+              )}
             </button>
           </div>
         </div>

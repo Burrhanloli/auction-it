@@ -1,9 +1,10 @@
 import { Confetti } from "@repo/ui/components/confetti";
+import { LazyImage } from "@repo/ui/components/lazy-image";
+import { MStripeDivider } from "@repo/ui/components/m-stripe-divider";
 import { Marquee } from "@repo/ui/components/marquee";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
-  TrophyIcon,
   ActivityIcon,
   PlayIcon,
   FlameIcon,
@@ -20,6 +21,7 @@ import { useMemo, useState, useRef, useEffect } from "react";
 
 import { AuctionHero } from "#/components/auction-hero";
 import { ImageViewer } from "#/components/image-viewer";
+import { Logo } from "#/components/logo";
 import { PublicAuctionGuard } from "#/components/public-auction-guard";
 import { useLiveAuction } from "#/hooks/use-live-auction";
 import { useScrollDirection } from "#/hooks/use-scroll-direction";
@@ -146,10 +148,11 @@ function LiveTrackerPage() {
       <div className="relative flex min-h-screen flex-col overflow-hidden bg-black font-sans text-white">
         {/* Header bar */}
         <header
-          className={`sticky top-0 z-40 flex flex-col justify-between gap-4 border-b border-[#3c3c3c] bg-black px-4 py-4 transition-transform duration-300 ease-in-out md:flex-row md:items-center md:gap-0 md:px-8 md:py-5 ${
+          className={`relative sticky top-0 z-40 flex flex-col justify-between gap-4 border-b border-[#3c3c3c] bg-black px-4 py-4 transition-transform duration-300 ease-in-out md:flex-row md:items-center md:gap-0 md:px-8 md:py-5 ${
             scrollDirection === "down" ? "-translate-y-full" : "translate-y-0"
           }`}
         >
+          <MStripeDivider className="absolute right-0 bottom-0 left-0" />
           <div className="flex items-center space-x-4">
             <Link to="/">
               <button className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] text-[#bbbbbb] hover:bg-white hover:text-black">
@@ -158,7 +161,7 @@ function LiveTrackerPage() {
             </Link>
             <div className="flex items-center space-x-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a]">
-                <TrophyIcon className="h-4.5 w-4.5 text-white" />
+                <Logo className="h-[18px] w-[18px]" />
               </div>
               <div>
                 <span className="text-sm font-bold tracking-[1.5px] text-white uppercase">
@@ -204,18 +207,19 @@ function LiveTrackerPage() {
         <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col space-y-6 px-4 py-8 md:space-y-8 md:px-8 md:py-10">
           {/* Top Section: Active bidding card viewport */}
           {!isCompleted ? (
-            <div className="mx-auto flex w-full max-w-6xl flex-col space-y-6">
-              <div className="relative flex min-h-120 flex-1 flex-col items-center justify-center overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-4 md:p-6">
+            <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col space-y-6">
+              <div className="relative flex min-h-[80vh] flex-1 flex-col items-center justify-center overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-4 md:p-6">
                 {/* Background Watermark */}
                 <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center opacity-10">
                   {auction.logoUrl ? (
-                    <img
+                    <LazyImage
                       src={auction.logoUrl}
                       alt="Watermark"
+                      priority
                       className="max-h-full max-w-full object-contain p-12 blur-[2px]"
                     />
                   ) : (
-                    <TrophyIcon className="h-96 w-96 text-white blur-[2px]" />
+                    <Logo className="h-96 w-96 blur-[2px]" />
                   )}
                 </div>
 
@@ -266,23 +270,29 @@ function LiveTrackerPage() {
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.95 }}
-                        className="flex w-full flex-col items-center justify-center gap-6 md:flex-row md:items-start md:gap-8"
+                        className="flex w-full flex-col items-center justify-center gap-8 md:flex-row md:items-center md:justify-center md:gap-16"
                       >
                         {/* Left Column: Player Image */}
                         <div className="flex flex-col items-center">
-                          <div className="group relative">
+                          <motion.div
+                            animate={{ y: [0, -15, 0] }}
+                            transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
+                            className="group relative"
+                          >
                             {activePlayer.imageUrl ? (
-                              <img
+                              <LazyImage
                                 src={activePlayer.imageUrl}
                                 alt={activePlayer.name}
-                                className="relative h-96 w-72 rounded-none border border-[#3c3c3c] bg-black object-cover"
+                                priority
+                                fallbackText={activePlayer.name}
+                                className="relative h-[28rem] w-[21rem] rounded-none border border-[#3c3c3c] bg-black object-cover md:h-[36rem] md:w-[27rem]"
                               />
                             ) : (
-                              <div className="relative flex h-96 w-72 items-center justify-center rounded-none border border-[#3c3c3c] bg-black text-4xl font-black text-[#bbbbbb] uppercase">
+                              <div className="relative flex h-[28rem] w-[21rem] items-center justify-center rounded-none border border-[#3c3c3c] bg-black text-5xl font-black text-[#bbbbbb] uppercase md:h-[36rem] md:w-[27rem] md:text-7xl">
                                 {activePlayer.name.slice(0, 2)}
                               </div>
                             )}
-                          </div>
+                          </motion.div>
                         </div>
 
                         {/* Right Column: Player Details */}
@@ -295,10 +305,10 @@ function LiveTrackerPage() {
 
                           {/* Name and skills */}
                           <div>
-                            <h2 className="mb-2 text-4xl font-black tracking-tight text-white">
+                            <h2 className="mb-2 text-5xl font-black tracking-tight text-white md:text-6xl">
                               {activePlayer.name}
                             </h2>
-                            <span className="inline-block rounded-none border border-[#3c3c3c] bg-[#1a1a1a] px-3 py-1 text-xs font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
+                            <span className="inline-block rounded-none border border-[#3c3c3c] bg-[#1a1a1a] px-4 py-2 text-sm font-bold tracking-[1.5px] text-[#bbbbbb] uppercase md:text-base">
                               Skills: {activePlayer.skills}
                             </span>
                           </div>
@@ -306,19 +316,19 @@ function LiveTrackerPage() {
                           {/* Bidding values layout */}
                           <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2">
                             {/* Left: Base Points */}
-                            <div className="flex flex-col items-center justify-center rounded-none border border-[#3c3c3c] bg-black p-4">
-                              <span className="text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
+                            <div className="flex flex-col items-center justify-center rounded-none border border-[#3c3c3c] bg-black p-6">
+                              <span className="text-xs font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
                                 Base Price
                               </span>
-                              <span className="mt-1 text-lg font-bold text-white">
+                              <span className="mt-2 text-2xl font-bold text-white">
                                 {activePlayer.category?.basePoints} pts
                               </span>
                             </div>
 
                             {/* Right: Current High Bid */}
-                            <div className="flex flex-col items-center justify-center rounded-none border border-white bg-white p-4 text-black">
-                              <span className="flex items-center text-[10px] font-black tracking-[1.5px] text-black uppercase">
-                                <span className="mr-1 h-1.5 w-1.5 animate-ping rounded-none bg-black" />
+                            <div className="flex flex-col items-center justify-center rounded-none border border-white bg-white p-6 text-black">
+                              <span className="flex items-center text-xs font-black tracking-[1.5px] text-black uppercase">
+                                <span className="mr-2 h-2 w-2 animate-ping rounded-none bg-black" />
                                 Current Bid
                               </span>
                               <motion.span
@@ -326,7 +336,7 @@ function LiveTrackerPage() {
                                 initial={{ scale: 1.5, color: "#eab308" }}
                                 animate={{ scale: 1, color: "#000000" }}
                                 transition={{ type: "spring", stiffness: 300, damping: 15 }}
-                                className="mt-1 inline-block text-2xl font-black text-black"
+                                className="mt-2 inline-block text-4xl font-black text-black"
                               >
                                 {state.currentBidPoints} pts
                               </motion.span>
@@ -334,40 +344,40 @@ function LiveTrackerPage() {
                           </div>
 
                           {/* Winning Bidder Team Box */}
-                          <div className="flex w-full items-center justify-between rounded-none border border-[#3c3c3c] bg-black p-4">
-                            <div className="flex items-center space-x-3">
+                          <div className="flex w-full items-center justify-between rounded-none border border-[#3c3c3c] bg-black p-6">
+                            <div className="flex items-center space-x-4">
                               {state.currentHighestBidderTeam ? (
                                 <>
                                   {state.currentHighestBidderTeam.logoUrl ? (
                                     <ImageViewer
                                       src={state.currentHighestBidderTeam.logoUrl}
                                       alt={state.currentHighestBidderTeam.name}
-                                      className="h-10 w-10 rounded-none border border-[#3c3c3c] bg-[#1a1a1a] object-cover"
+                                      className="h-14 w-14 rounded-none border border-[#3c3c3c] bg-[#1a1a1a] object-cover"
                                     />
                                   ) : (
-                                    <div className="flex h-10 w-10 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] text-xs font-bold text-white uppercase">
+                                    <div className="flex h-14 w-14 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] text-lg font-bold text-white uppercase">
                                       {state.currentHighestBidderTeam.name.slice(0, 2)}
                                     </div>
                                   )}
                                   <div className="text-left">
-                                    <span className="block text-[9px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
+                                    <span className="block text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
                                       Leading Bidder
                                     </span>
-                                    <span className="text-sm font-black text-white">
+                                    <span className="text-xl font-black text-white md:text-2xl">
                                       {state.currentHighestBidderTeam.name}
                                     </span>
                                   </div>
                                 </>
                               ) : (
-                                <div className="flex items-center space-x-2.5 text-left">
-                                  <div className="flex h-8 w-8 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] text-[#bbbbbb]">
+                                <div className="flex items-center space-x-4 text-left">
+                                  <div className="flex h-12 w-12 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] text-xl text-[#bbbbbb]">
                                     👤
                                   </div>
                                   <div>
-                                    <span className="block text-[9px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
+                                    <span className="block text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
                                       Leading Bidder
                                     </span>
-                                    <span className="text-xs font-semibold text-[#bbbbbb]">
+                                    <span className="text-sm font-semibold text-[#bbbbbb] md:text-base">
                                       Waiting for opening bid...
                                     </span>
                                   </div>
@@ -375,8 +385,8 @@ function LiveTrackerPage() {
                               )}
                             </div>
 
-                            <div className="flex h-8 w-8 items-center justify-center rounded-none border border-white bg-white text-black">
-                              <Volume2Icon className="h-4 w-4 animate-bounce" />
+                            <div className="flex h-12 w-12 items-center justify-center rounded-none border border-white bg-white text-black">
+                              <Volume2Icon className="h-6 w-6 animate-bounce" />
                             </div>
                           </div>
                         </div>
@@ -424,9 +434,11 @@ function LiveTrackerPage() {
                         </div>
 
                         {activePlayer.imageUrl ? (
-                          <img
+                          <LazyImage
                             src={activePlayer.imageUrl}
                             alt={activePlayer.name}
+                            priority
+                            fallbackText={activePlayer.name}
                             className="mt-2 h-56 w-40 rounded-none border border-white bg-black object-cover"
                           />
                         ) : (
@@ -471,9 +483,11 @@ function LiveTrackerPage() {
                         </span>
 
                         {activePlayer.imageUrl ? (
-                          <img
+                          <LazyImage
                             src={activePlayer.imageUrl}
                             alt={activePlayer.name}
+                            priority
+                            fallbackText={activePlayer.name}
                             className="mt-2 h-56 w-40 rounded-none border border-[#3c3c3c] bg-black object-cover opacity-50"
                           />
                         ) : (
@@ -524,10 +538,13 @@ function LiveTrackerPage() {
           ) : (
             <div className="mx-auto flex w-full max-w-6xl flex-col space-y-6">
               <div className="relative flex flex-1 flex-col items-center justify-center overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-12 text-center">
-                <TrophyIcon className="mb-4 h-16 w-16 text-[#eab308]" />
-                <h2 className="mb-2 text-3xl font-black tracking-[1.5px] text-white uppercase">
-                  Auction Event Concluded
-                </h2>
+                <Logo className="mb-4 h-16 w-16" />
+                <div className="inline-flex flex-col">
+                  <MStripeDivider className="mb-2 w-full" />
+                  <h2 className="mb-2 text-3xl font-black tracking-[1.5px] text-white uppercase">
+                    Auction Event Concluded
+                  </h2>
+                </div>
                 <p className="mx-auto max-w-md text-sm leading-relaxed text-[#bbbbbb]">
                   The bidding session has officially ended. All rosters are locked and finalized.
                   You can review the historical events in the logs below.

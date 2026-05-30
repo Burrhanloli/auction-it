@@ -1,6 +1,7 @@
 import { Button } from "@repo/ui/components/button";
 import { Input } from "@repo/ui/components/input";
 import { Label } from "@repo/ui/components/label";
+import { MStripeDivider } from "@repo/ui/components/m-stripe-divider";
 import { useForm } from "@tanstack/react-form";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
@@ -10,7 +11,6 @@ import {
   PlusIcon,
   TrashIcon,
   CoinsIcon,
-  TrophyIcon,
   ShieldAlertIcon,
   TagIcon,
   Loader2Icon,
@@ -19,6 +19,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { ImageViewer } from "#/components/image-viewer";
+import { Logo } from "#/components/logo";
 import { $getAuction, $updateAuction } from "#/lib/auction-actions";
 import { slugify } from "#/lib/slug";
 
@@ -196,13 +197,16 @@ function SetupForm({ auction, auctionId }: SetupFormProps) {
       {/* Basic Settings Card */}
       <div className="relative overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8">
         <div className="mb-8 flex items-center space-x-3 border-b border-[#3c3c3c] pb-5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-none border border-[#3c3c3c] bg-black text-white">
-            <TrophyIcon className="h-5 w-5" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-none border border-[#3c3c3c] bg-black text-white">
+            <Logo src={auction.logoUrl} className="h-[18px] w-[18px]" />
           </div>
           <div>
-            <h3 className="text-base font-bold tracking-[1.5px] text-white uppercase">
-              Event Configuration
-            </h3>
+            <div className="inline-flex flex-col">
+              <MStripeDivider className="mb-1 w-full" />
+              <h3 className="text-base font-bold tracking-[1.5px] text-white uppercase">
+                Event Configuration
+              </h3>
+            </div>
             <p className="mt-0.5 text-xs text-[#bbbbbb]">Core settings for name and team budgets</p>
           </div>
         </div>
@@ -352,13 +356,16 @@ function SetupForm({ auction, auctionId }: SetupFormProps) {
           <div className="relative overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8">
             <div className="mb-8 flex flex-col items-start gap-4 border-b border-[#3c3c3c] pb-5 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
               <div className="flex items-center space-x-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-none border border-[#3c3c3c] bg-black text-white">
-                  <TagIcon className="h-5 w-5" />
+                <div className="flex h-9 w-9 items-center justify-center rounded-none border border-[#3c3c3c] bg-black text-white">
+                  <TagIcon className="h-[18px] w-[18px]" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold tracking-[1.5px] text-white uppercase">
-                    Category Roster Decks
-                  </h3>
+                  <div className="inline-flex flex-col">
+                    <MStripeDivider className="mb-1 w-full" />
+                    <h3 className="text-base font-bold tracking-[1.5px] text-white uppercase">
+                      Category Roster Decks
+                    </h3>
+                  </div>
                   <p className="mt-0.5 text-xs text-[#bbbbbb]">
                     Group players into bid buckets with individual base price tags
                   </p>

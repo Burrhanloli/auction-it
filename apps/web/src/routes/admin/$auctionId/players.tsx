@@ -1,6 +1,7 @@
 import { Button } from "@repo/ui/components/button";
 import { Input } from "@repo/ui/components/input";
 import { Label } from "@repo/ui/components/label";
+import { MStripeDivider } from "@repo/ui/components/m-stripe-divider";
 import { useForm } from "@tanstack/react-form";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
@@ -309,10 +310,15 @@ function PlayerDirectoryPage() {
 
           {/* Add Player Form Card */}
           <div className="relative w-full overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-6 sm:p-8">
-            <h3 className="mb-6 flex items-center text-sm font-bold tracking-[1.5px] text-white uppercase sm:text-base">
-              <UserPlusIcon className="mr-2 h-5 w-5 text-white" />
-              Register Roster Player
-            </h3>
+            <div className="mb-6 flex items-center">
+              <UserPlusIcon className="mr-3 h-5 w-5 text-white" />
+              <div className="inline-flex flex-col">
+                <MStripeDivider className="mb-2 w-full" />
+                <h3 className="text-sm font-bold tracking-[1.5px] text-white uppercase sm:text-base">
+                  Register Roster Player
+                </h3>
+              </div>
+            </div>
 
             <form
               onSubmit={(e) => {
@@ -427,10 +433,15 @@ function PlayerDirectoryPage() {
           </div>
 
           <div className="relative overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-6 sm:p-8">
-            <h3 className="mb-6 flex items-center text-sm font-bold tracking-[1.5px] text-white uppercase sm:text-base">
-              <PlusIcon className="mr-2 h-5 w-5 text-white" />
-              Bulk Upload Players
-            </h3>
+            <div className="mb-6 flex items-center">
+              <PlusIcon className="mr-3 h-5 w-5 text-white" />
+              <div className="inline-flex flex-col">
+                <MStripeDivider className="mb-2 w-full" />
+                <h3 className="text-sm font-bold tracking-[1.5px] text-white uppercase sm:text-base">
+                  Bulk Upload Players
+                </h3>
+              </div>
+            </div>
             <div className="space-y-4">
               <div className="space-y-1.5">
                 <Label htmlFor="player-csv-upload" className="text-xs text-[#bbbbbb]">
@@ -463,9 +474,12 @@ function PlayerDirectoryPage() {
             <div className="mb-6 w-full space-y-4 border-b border-[#3c3c3c] pb-6">
               <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                 <div>
-                  <h3 className="text-sm font-bold tracking-[1.5px] text-white uppercase sm:text-base">
-                    Roster Registry
-                  </h3>
+                  <div className="inline-flex flex-col">
+                    <MStripeDivider className="mb-1 w-full" />
+                    <h3 className="text-sm font-bold tracking-[1.5px] text-white uppercase sm:text-base">
+                      Roster Registry
+                    </h3>
+                  </div>
                   <p className="mt-1 text-[10px] text-[#bbbbbb]">
                     Search, filter, and track player draft allocations
                   </p>

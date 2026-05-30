@@ -2,6 +2,7 @@ import { authQueryOptions } from "@repo/auth/tanstack/queries";
 import { Button } from "@repo/ui/components/button";
 import { Input } from "@repo/ui/components/input";
 import { Label } from "@repo/ui/components/label";
+import { MStripeDivider } from "@repo/ui/components/m-stripe-divider";
 import { useForm } from "@tanstack/react-form";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
@@ -97,10 +98,11 @@ function HomePage() {
     <div className="relative min-h-screen overflow-hidden bg-black font-sans text-white">
       {/* Top Header Navbar */}
       <header
-        className={`sticky top-0 z-50 border-b border-[#3c3c3c] bg-black px-4 py-4 transition-transform duration-300 ease-in-out md:px-8 md:py-5 ${
+        className={`relative sticky top-0 z-50 border-b border-[#3c3c3c] bg-black px-4 py-4 transition-transform duration-300 ease-in-out md:px-8 md:py-5 ${
           scrollDirection === "down" ? "-translate-y-full" : "translate-y-0"
         }`}
       >
+        <MStripeDivider className="absolute right-0 bottom-0 left-0" />
         <div className="mx-auto flex max-w-7xl items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-0.5">
@@ -226,9 +228,12 @@ function HomePage() {
             Real-Time State Synchronization Enabled
           </span>
         </div>
-        <h1 className="mx-auto mb-8 max-w-7xl text-4xl leading-tight font-black tracking-tight text-white uppercase md:text-6xl">
-          The Ultimate Premium <span className="text-white">Player Auction</span> Broadcast Hub
-        </h1>
+        <div className="mx-auto mb-8 inline-flex max-w-7xl flex-col">
+          <MStripeDivider className="mb-4 w-full" />
+          <h1 className="text-4xl leading-tight font-black tracking-tight text-white uppercase md:text-6xl">
+            The Ultimate Premium <span className="text-white">Player Auction</span> Broadcast Hub
+          </h1>
+        </div>
         <p className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-[#bbbbbb]">
           Create, coordinate, and broadcast high-stakes player auctions with zero manual refreshes.
           Full support for Admins, Team Owners, and dynamic Public Viewers.
@@ -466,10 +471,13 @@ function HomePage() {
       >
         <div className="mb-10 flex flex-col justify-between md:flex-row md:items-center">
           <div>
-            <h2 className="flex items-center text-2xl font-black text-white uppercase">
-              <PlayIcon className="mr-2 h-5 w-5 text-white" />
-              Active Auction Events
-            </h2>
+            <div className="inline-flex flex-col">
+              <MStripeDivider className="mb-2 w-full" />
+              <h2 className="flex items-center text-2xl font-black text-white uppercase">
+                <PlayIcon className="mr-2 h-5 w-5 text-white" />
+                Active Auction Events
+              </h2>
+            </div>
             <p className="mt-1 text-xs text-slate-400">
               Select an active event from our live dashboard database below
             </p>

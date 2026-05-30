@@ -1,3 +1,4 @@
+import { LazyImage } from "@repo/ui/components/lazy-image";
 import { XIcon, ZoomInIcon } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -38,7 +39,7 @@ export function ImageViewer({
         className={`group relative cursor-pointer ${triggerClassName || ""}`}
         onClick={() => setIsOpen(true)}
       >
-        <img src={src} alt={alt} className={className} {...props} />
+        <LazyImage src={src} alt={alt} className={className} {...props} />
         {!hideOverlay && (
           <div className="absolute inset-0 flex items-center justify-center rounded-none bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
             <ZoomInIcon className="h-4 w-4 text-white md:h-6 md:w-6" />
@@ -63,9 +64,10 @@ export function ImageViewer({
             <XIcon className="h-6 w-6" />
           </button>
 
-          <img
+          <LazyImage
             src={src}
             alt={alt}
+            priority
             className="max-h-[90vh] max-w-full cursor-zoom-out border border-[#3c3c3c] bg-[#1a1a1a] object-contain"
             onClick={(e) => {
               e.stopPropagation();

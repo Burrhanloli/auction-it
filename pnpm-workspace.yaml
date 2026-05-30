@@ -81,6 +81,7 @@ catalog:
   "@types/papaparse": ^5.5.2
   "@tanstack/react-hotkeys": ^0.10.0
   react-doctor: ^0.2.10
+  html-to-image: ^1.11.11
 
 catalogMode: prefer
 

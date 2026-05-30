@@ -1,6 +1,8 @@
 import { Button } from "@repo/ui/components/button";
 import { Input } from "@repo/ui/components/input";
 import { Label } from "@repo/ui/components/label";
+import { LazyImage } from "@repo/ui/components/lazy-image";
+import { MStripeDivider } from "@repo/ui/components/m-stripe-divider";
 import { useForm } from "@tanstack/react-form";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
@@ -301,10 +303,15 @@ Best of luck with building your team! 🏆`;
       {/* Form Area: 1/3 width */}
       <div className="space-y-6 lg:col-span-1">
         <div className="relative overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8">
-          <h3 className="mb-8 flex items-center text-base font-bold tracking-[1.5px] text-white uppercase">
-            <UsersIcon className="mr-2 h-5 w-5 text-white" />
-            Add Franchise Team
-          </h3>
+          <div className="mb-8 flex items-center">
+            <UsersIcon className="mr-3 h-5 w-5 text-white" />
+            <div className="inline-flex flex-col">
+              <MStripeDivider className="mb-2 w-full" />
+              <h3 className="text-base font-bold tracking-[1.5px] text-white uppercase">
+                Add Franchise Team
+              </h3>
+            </div>
+          </div>
 
           <form
             onSubmit={(e) => {
@@ -486,10 +493,15 @@ Best of luck with building your team! 🏆`;
         </div>
 
         <div className="relative overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8">
-          <h3 className="mb-6 flex items-center text-sm font-bold tracking-[1.5px] text-white uppercase sm:text-base">
-            <PlusIcon className="mr-2 h-5 w-5 text-white" />
-            Bulk Upload Teams
-          </h3>
+          <div className="mb-6 flex items-center">
+            <PlusIcon className="mr-3 h-5 w-5 text-white" />
+            <div className="inline-flex flex-col">
+              <MStripeDivider className="mb-2 w-full" />
+              <h3 className="text-sm font-bold tracking-[1.5px] text-white uppercase sm:text-base">
+                Bulk Upload Teams
+              </h3>
+            </div>
+          </div>
           <div className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="team-csv-upload" className="text-xs text-[#bbbbbb]">
@@ -519,9 +531,12 @@ Best of luck with building your team! 🏆`;
         <div className="flex flex-col rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8">
           <div className="mb-8 flex items-center justify-between border-b border-[#3c3c3c] pb-5">
             <div>
-              <h3 className="text-sm font-bold tracking-[1.5px] text-white uppercase">
-                Registered Roster Teams
-              </h3>
+              <div className="inline-flex flex-col">
+                <MStripeDivider className="mb-1 w-full" />
+                <h3 className="text-sm font-bold tracking-[1.5px] text-white uppercase">
+                  Registered Roster Teams
+                </h3>
+              </div>
               <p className="mt-1 text-[10px] text-[#bbbbbb]">
                 Configure, review franchise slots and share passcode keys
               </p>
@@ -552,7 +567,7 @@ Best of luck with building your team! 🏆`;
                     </div>
                   )}
                   {/* M-Stripe Divider */}
-                  <div className="absolute right-0 bottom-0 left-0 h-1 bg-gradient-to-r from-[#0066b1] via-[#1c69d4] to-[#e22718]" />
+                  <MStripeDivider className="absolute right-0 bottom-0 left-0" />
                 </div>
 
                 {/* Content Section */}
@@ -577,9 +592,10 @@ Best of luck with building your team! 🏆`;
                       </span>
                       <div className="flex items-center gap-1.5">
                         {team.ownerImageUrl ? (
-                          <img
+                          <LazyImage
                             src={team.ownerImageUrl}
                             alt={team.ownerName}
+                            fallbackText={team.ownerName}
                             className="h-5 w-5 rounded-none object-cover grayscale"
                           />
                         ) : (
