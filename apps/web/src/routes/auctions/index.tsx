@@ -33,24 +33,15 @@ function AuctionsPage() {
     queryFn: () => $getAllAuctions({ data: { status, search: q } }),
   });
 
-  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    navigate({ search: { status, q: searchInput } });
-  };
-
-  const handleTabChange = (newStatus: "active" | "completed") => {
-    navigate({ search: { status: newStatus, q } });
-  };
-
   return (
-    <div className="relative min-h-screen bg-black font-sans text-white">
-      {/* Header (Simplified) */}
-      <header className="relative sticky top-0 z-50 border-b border-[#3c3c3c] bg-black px-4 py-4 md:px-8 md:py-5">
+    <div className="relative min-h-screen bg-neutral-950 font-sans text-white">
+      {/* Header bar */}
+      <header className="relative sticky top-0 z-40 border-b border-[#3c3c3c] bg-neutral-950 px-4 py-4 md:px-8 md:py-5">
         <MStripeDivider className="absolute right-0 bottom-0 left-0" />
         <div className="mx-auto flex max-w-7xl items-center justify-between">
-          <Link to="/" className="flex items-center space-x-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-0.5">
-              <TrophyIcon className="h-5 w-5 text-white" />
+          <Link to="/" className="flex items-center gap-x-3">
+            <div className="flex size-10 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-0.5">
+              <TrophyIcon className="size-5 text-white" />
             </div>
             <div>
               <span className="text-xl font-bold tracking-[1.5px] text-white uppercase">
@@ -58,11 +49,11 @@ function AuctionsPage() {
               </span>
             </div>
           </Link>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center gap-x-4">
             {user ? (
-              <div className="flex items-center space-x-3">
-                <div className="flex hidden items-center space-x-2 rounded-none border border-[#3c3c3c] bg-[#1a1a1a] px-3 py-1.5 md:flex">
-                  <UserIcon className="h-4 w-4 text-white" />
+              <div className="flex items-center gap-x-3">
+                <div className="flex hidden items-center gap-x-2 rounded-none border border-[#3c3c3c] bg-[#1a1a1a] px-3 py-1.5 md:flex">
+                  <UserIcon className="size-4 text-white" />
                   <span className="text-sm font-medium text-[#bbbbbb]">{user.name}</span>
                 </div>
                 <Link to="/admin">
@@ -106,47 +97,56 @@ function AuctionsPage() {
 
         {/* Search and Filters */}
         <div className="mb-12 flex flex-col items-center justify-between gap-6 border border-[#3c3c3c] bg-[#1a1a1a] p-4 md:flex-row">
-          <form onSubmit={handleSearch} className="flex w-full max-w-md items-center space-x-2">
+          {/* react-doctor-disable-next-line react-doctor/no-prevent-default */}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              navigate({ search: { status, q: searchInput } });
+            }}
+            className="flex w-full max-w-md items-center gap-x-2"
+          >
             <div className="relative w-full">
-              <SearchIcon className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <SearchIcon className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-400" />
               <Input
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="Search arenas by name..."
-                className="w-full rounded-none border-[#3c3c3c] bg-black pl-10 text-white placeholder:text-slate-500 focus:border-white"
+                placeholder="Search arenas by name…"
+                className="w-full rounded-none border-[#3c3c3c] bg-neutral-950 pl-10 text-white placeholder:text-slate-500 focus:border-white"
               />
             </div>
             <Button
               type="submit"
-              className="rounded-none border border-[#3c3c3c] bg-black tracking-[1.5px] text-white uppercase hover:border-white hover:bg-white hover:text-black"
+              className="rounded-none border border-[#3c3c3c] bg-neutral-950 tracking-[1.5px] text-white uppercase hover:border-white hover:bg-white hover:text-black"
             >
               Search
             </Button>
           </form>
 
-          <div className="flex items-center space-x-6 border-b border-[#3c3c3c]">
+          <div className="flex items-center gap-x-6 border-b border-[#3c3c3c]">
             <button
-              onClick={() => handleTabChange("active")}
-              className={`group relative py-3 text-[14px] font-bold tracking-[1.5px] uppercase transition-colors ${status === "active" ? "text-white" : "text-[#bbbbbb] hover:text-white"}`}
+              type="button"
+              onClick={() => navigate({ search: { status: "active", q } })}
+              className={`group relative py-3 text-body-sm font-bold tracking-[1.5px] uppercase transition-colors ${status === "active" ? "text-white" : "text-[#bbbbbb] hover:text-white"}`}
             >
               Active
               {status === "active" && (
-                <div className="absolute right-0 bottom-[-1px] left-0 h-[2px] bg-white" />
+                <div className="absolute right-0 -bottom-px left-0 h-0.5 bg-white" />
               )}
               {status !== "active" && (
-                <MStripeDivider className="absolute right-0 bottom-[-1px] left-0 hidden group-hover:block" />
+                <MStripeDivider className="absolute right-0 -bottom-px left-0 hidden group-hover:block" />
               )}
             </button>
             <button
-              onClick={() => handleTabChange("completed")}
-              className={`group relative py-3 text-[14px] font-bold tracking-[1.5px] uppercase transition-colors ${status === "completed" ? "text-white" : "text-[#bbbbbb] hover:text-white"}`}
+              type="button"
+              onClick={() => navigate({ search: { status: "completed", q } })}
+              className={`group relative py-3 text-body-sm font-bold tracking-[1.5px] uppercase transition-colors ${status === "completed" ? "text-white" : "text-[#bbbbbb] hover:text-white"}`}
             >
               Completed
               {status === "completed" && (
-                <div className="absolute right-0 bottom-[-1px] left-0 h-[2px] bg-white" />
+                <div className="absolute right-0 -bottom-px left-0 h-0.5 bg-white" />
               )}
               {status !== "completed" && (
-                <MStripeDivider className="absolute right-0 bottom-[-1px] left-0 hidden group-hover:block" />
+                <MStripeDivider className="absolute right-0 -bottom-px left-0 hidden group-hover:block" />
               )}
             </button>
           </div>
@@ -155,12 +155,12 @@ function AuctionsPage() {
         {/* Results Grid */}
         {isLoading ? (
           <div className="py-16 text-center">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-white border-r-transparent align-[-0.125em]" />
-            <p className="mt-4 text-[#bbbbbb]">Loading arenas...</p>
+            <div className="inline-block size-8 animate-spin rounded-full border-4 border-solid border-white border-r-transparent align-[-0.125em]" />
+            <p className="mt-4 text-[#bbbbbb]">Loading arenas…</p>
           </div>
         ) : !auctions || auctions.length === 0 ? (
           <div className="rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-16 text-center">
-            <ShieldAlertIcon className="mx-auto mb-4 h-12 w-12 text-[#bbbbbb]" />
+            <ShieldAlertIcon className="mx-auto mb-4 size-12 text-[#bbbbbb]" />
             <h3 className="mb-2 text-lg font-bold text-white uppercase">No Arenas Found</h3>
             <p className="mx-auto max-w-md text-sm text-[#bbbbbb]">
               We couldn't find any {status} arenas matching your search criteria.
@@ -175,14 +175,14 @@ function AuctionsPage() {
               >
                 <div className="p-8">
                   <div className="mb-4 flex items-center justify-between">
-                    <div className="inline-flex items-center space-x-1.5 rounded-none border border-[#3c3c3c] bg-black px-2 py-0.5 text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
+                    <div className="inline-flex items-center gap-x-1.5 rounded-none border border-[#3c3c3c] bg-neutral-950 px-2 py-0.5 text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
                       <span
-                        className={`h-1.5 w-1.5 rounded-full ${auc.status === "active" ? "bg-[#0fa336]" : "bg-[#a30f0f]"}`}
+                        className={`size-1.5 rounded-full ${auc.status === "active" ? "bg-[#0fa336]" : "bg-[#a30f0f]"}`}
                       />
                       <span>{auc.status}</span>
                     </div>
                     <span className="flex items-center text-[10px] text-[#bbbbbb]">
-                      <CalendarIcon className="mr-1 h-3.5 w-3.5" />
+                      <CalendarIcon className="mr-1 size-3.5" />
                       {new Date(auc.createdAt).toLocaleDateString(undefined, {
                         month: "short",
                         day: "numeric",
@@ -193,7 +193,7 @@ function AuctionsPage() {
 
                   <h3 className="mb-2 text-xl font-bold text-white uppercase">{auc.name}</h3>
 
-                  <div className="mt-4 flex items-center space-x-4 rounded-none border border-[#3c3c3c] bg-black p-2.5 text-xs text-[#bbbbbb]">
+                  <div className="mt-4 flex items-center gap-x-4 rounded-none border border-[#3c3c3c] bg-neutral-950 p-2.5 text-xs text-[#bbbbbb]">
                     <div>
                       <span className="block text-[10px] font-semibold tracking-[1.5px] text-[#bbbbbb] uppercase">
                         Point Budget
@@ -205,7 +205,7 @@ function AuctionsPage() {
                       <span className="block text-[10px] font-semibold tracking-[1.5px] text-[#bbbbbb] uppercase">
                         Unique Key
                       </span>
-                      <span className="block max-w-[120px] truncate font-mono text-[9px] text-[#bbbbbb]">
+                      <span className="block max-w-30 truncate font-mono text-[9px] text-[#bbbbbb]">
                         {auc.id}
                       </span>
                     </div>
@@ -216,7 +216,7 @@ function AuctionsPage() {
                   <Link
                     to="/auction/$auctionId/live"
                     params={{ auctionId: auc.slug! }}
-                    className="flex items-center justify-center space-x-1 rounded-none border border-[#3c3c3c] bg-black py-2 text-center text-xs font-bold tracking-[1.5px] text-white uppercase transition-colors hover:bg-white hover:text-black"
+                    className="flex items-center justify-center gap-x-1 rounded-none border border-[#3c3c3c] bg-neutral-950 py-2 text-center text-xs font-bold tracking-[1.5px] text-white uppercase transition-colors hover:bg-white hover:text-black"
                   >
                     <span>Arena</span>
                   </Link>
@@ -224,7 +224,7 @@ function AuctionsPage() {
                   <Link
                     to="/auction/$auctionId/leaderboard"
                     params={{ auctionId: auc.slug! }}
-                    className="flex items-center justify-center space-x-1 rounded-none border border-[#3c3c3c] bg-black py-2 text-center text-xs font-bold tracking-[1.5px] text-white uppercase transition-colors hover:bg-white hover:text-black"
+                    className="flex items-center justify-center gap-x-1 rounded-none border border-[#3c3c3c] bg-neutral-950 py-2 text-center text-xs font-bold tracking-[1.5px] text-white uppercase transition-colors hover:bg-white hover:text-black"
                   >
                     <span>Stats</span>
                   </Link>
@@ -232,7 +232,7 @@ function AuctionsPage() {
                   <Link
                     to="/team/$auctionId"
                     params={{ auctionId: auc.slug! }}
-                    className="col-span-2 flex items-center justify-center space-x-1 rounded-none border border-[#3c3c3c] bg-black py-2 text-center text-xs font-bold tracking-[1.5px] text-white uppercase transition-colors hover:bg-white hover:text-black"
+                    className="col-span-2 flex items-center justify-center gap-x-1 rounded-none border border-[#3c3c3c] bg-neutral-950 py-2 text-center text-xs font-bold tracking-[1.5px] text-white uppercase transition-colors hover:bg-white hover:text-black"
                   >
                     <span>Team Strategy</span>
                   </Link>

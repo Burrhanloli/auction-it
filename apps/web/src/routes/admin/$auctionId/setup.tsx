@@ -18,10 +18,13 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { ImageUpload } from "#/components/image-upload";
 import { ImageViewer } from "#/components/image-viewer";
 import { Logo } from "#/components/logo";
 import { $getAuction, $updateAuction } from "#/lib/auction-actions";
 import { slugify } from "#/lib/slug";
+
+const generateId = () => `new-${crypto.randomUUID()}`;
 
 export const Route = createFileRoute("/admin/$auctionId/setup")({
   component: SetupConsolePage,
@@ -47,8 +50,8 @@ function SetupConsolePage() {
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-[#bbbbbb]">
-        <Loader2Icon className="mb-4 h-8 w-8 animate-spin text-white" />
-        <span className="text-xs font-bold tracking-[1.5px] uppercase">Syncing Setup Data...</span>
+        <Loader2Icon className="mb-4 size-8 animate-spin text-white" />
+        <span className="text-xs font-bold tracking-[1.5px] uppercase">Syncing Setup Data…</span>
       </div>
     );
   }
@@ -56,7 +59,7 @@ function SetupConsolePage() {
   if (!auction) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-[#bbbbbb]">
-        <ShieldAlertIcon className="mb-4 h-8 w-8 text-white" />
+        <ShieldAlertIcon className="mb-4 size-8 text-white" />
         <span className="text-sm font-bold tracking-[1.5px] uppercase">
           Failed to load setup configuration.
         </span>
@@ -72,7 +75,7 @@ interface SetupFormProps {
   auctionId: string;
 }
 
-function SetupForm({ auction, auctionId }: SetupFormProps) {
+export function SetupForm({ auction, auctionId }: SetupFormProps) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -158,10 +161,11 @@ function SetupForm({ auction, auctionId }: SetupFormProps) {
   // Mutation
   const updateAuctionMutation = useMutation({
     mutationFn: (vars: any) => $updateAuction({ data: vars }),
-    onSuccess: (res: any) => {
-      toast.success("Auction settings saved successfully!");
+    onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ["auction", auctionId] });
+      toast.success("Auction settings saved successfully!");
       if (res.slug && res.slug !== auctionId) {
+        // react-doctor-disable-next-line react-doctor/tanstack-start-no-navigate-in-render
         navigate({ to: `/admin/${res.slug}/setup` });
       }
     },
@@ -186,19 +190,54 @@ function SetupForm({ auction, auctionId }: SetupFormProps) {
   };
 
   return (
+    // react-doctor-disable-next-line react-doctor/no-prevent-default
     <form
       onSubmit={(e) => {
         e.preventDefault();
         e.stopPropagation();
         form.handleSubmit();
       }}
-      className="mx-auto max-w-6xl space-y-8"
+      className="gap-y- mx-auto max-w-6xl"
     >
+      <BasicSettingsCard form={form} auction={auction} />
+      <CategoryDecksCard form={form} handleRemoveCategory={handleRemoveCategory} />
+      {/* Save Settings Block */}
+      <div className="flex flex-col items-start justify-between gap-6 rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8 md:flex-row md:items-center md:gap-0">
+        <div className="flex items-center gap-x-2">
+          <ShieldAlertIcon className="size-4 text-white" />
+          <span className="text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
+            Review changes carefully. Categories with active roster assignments cannot be removed.
+          </span>
+        </div>
+
+        <form.Subscribe
+          selector={(state: any) => state.isSubmitting}
+          children={(isSubmitting) => (
+            <Button
+              type="submit"
+              disabled={isSubmitting || updateAuctionMutation.isPending}
+              className="flex cursor-pointer items-center gap-x-2 rounded-none border border-white bg-white px-8 py-3 font-black tracking-[1.5px] text-black uppercase hover:bg-neutral-950 hover:text-white"
+            >
+              <SaveIcon className="size-4" />
+              <span>
+                {isSubmitting || updateAuctionMutation.isPending ? "Saving…" : "Save Configuration"}
+              </span>
+            </Button>
+          )}
+        />
+      </div>
+    </form>
+  );
+}
+
+export function BasicSettingsCard({ form, auction }: { form: any; auction: any }) {
+  return (
+    <>
       {/* Basic Settings Card */}
       <div className="relative overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8">
-        <div className="mb-8 flex items-center space-x-3 border-b border-[#3c3c3c] pb-5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-none border border-[#3c3c3c] bg-black text-white">
-            <Logo src={auction.logoUrl} className="h-[18px] w-[18px]" />
+        <div className="mb-8 flex items-center gap-x-3 border-b border-[#3c3c3c] pb-5">
+          <div className="flex size-9 items-center justify-center rounded-none border border-[#3c3c3c] bg-neutral-950 text-white">
+            <Logo src={auction.logoUrl} className="size-[18px]" />
           </div>
           <div>
             <div className="inline-flex flex-col">
@@ -214,8 +253,8 @@ function SetupForm({ auction, auctionId }: SetupFormProps) {
         <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
           <form.Field
             name="name"
-            children={(field) => (
-              <div className="space-y-2">
+            children={(field: any) => (
+              <div className="gap-y-">
                 <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
                   Auction Tournament Name *
                 </Label>
@@ -224,7 +263,7 @@ function SetupForm({ auction, auctionId }: SetupFormProps) {
                   placeholder="e.g. Premier League Season 4"
                   value={field.state.value}
                   onChange={(e) => field.handleChange(e.target.value)}
-                  className="rounded-none border border-[#3c3c3c] bg-black text-xs text-white"
+                  className="rounded-none border border-[#3c3c3c] bg-neutral-950 text-xs text-white"
                   required
                 />
               </div>
@@ -233,47 +272,37 @@ function SetupForm({ auction, auctionId }: SetupFormProps) {
 
           <form.Field
             name="logoUrl"
-            children={(field) => (
-              <div className="space-y-2 md:col-span-2">
+            children={(field: any) => (
+              <div className="gap-y- md:col-span-2">
                 <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
-                  Auction Logo URL (Optional)
+                  Auction Logo (Auto-converts to WebP)
                 </Label>
-                <div className="flex items-center gap-3">
-                  {field.state.value && (
-                    <ImageViewer
-                      src={field.state.value}
-                      alt="Logo preview"
-                      className="h-12 w-12 rounded-none border border-[#3c3c3c] bg-black object-cover"
-                    />
-                  )}
-                  <Input
-                    id={field.name}
-                    placeholder="https://example.com/logo.png"
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    className="flex-1 rounded-none border border-[#3c3c3c] bg-black text-xs text-white"
-                  />
-                </div>
+                <ImageUpload
+                  id={field.name}
+                  value={field.state.value}
+                  onChange={(url) => field.handleChange(url)}
+                  className="mt-2"
+                />
               </div>
             )}
           />
 
           <form.Field
             name="budgetPerTeam"
-            children={(field) => (
-              <div className="space-y-2">
+            children={(field: any) => (
+              <div className="gap-y-">
                 <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
                   Default Points Budget Per Team *
                 </Label>
                 <div className="relative">
-                  <CoinsIcon className="absolute top-2.5 left-3 h-4 w-4 text-[#bbbbbb]" />
+                  <CoinsIcon className="absolute top-2.5 left-3 size-4 text-[#bbbbbb]" />
                   <Input
                     id={field.name}
                     type="number"
                     placeholder="1000"
                     value={field.state.value}
                     onChange={(e) => field.handleChange(Number(e.target.value))}
-                    className="rounded-none border border-[#3c3c3c] bg-black pl-9 text-xs text-white"
+                    className="rounded-none border border-[#3c3c3c] bg-neutral-950 pl-9 text-xs text-white"
                     required
                   />
                 </div>
@@ -283,8 +312,8 @@ function SetupForm({ auction, auctionId }: SetupFormProps) {
 
           <form.Field
             name="minPlayersPerSquad"
-            children={(field) => (
-              <div className="space-y-2">
+            children={(field: any) => (
+              <div className="gap-y-">
                 <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
                   Min Players Per Squad (Optional)
                 </Label>
@@ -294,7 +323,7 @@ function SetupForm({ auction, auctionId }: SetupFormProps) {
                   placeholder="e.g. 15"
                   value={field.state.value as any}
                   onChange={(e) => field.handleChange(e.target.value as any)}
-                  className="rounded-none border border-[#3c3c3c] bg-black text-xs text-white"
+                  className="rounded-none border border-[#3c3c3c] bg-neutral-950 text-xs text-white"
                 />
               </div>
             )}
@@ -302,8 +331,8 @@ function SetupForm({ auction, auctionId }: SetupFormProps) {
 
           <form.Field
             name="maxPlayersPerSquad"
-            children={(field) => (
-              <div className="space-y-2">
+            children={(field: any) => (
+              <div className="gap-y-">
                 <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
                   Max Players Per Squad (Optional)
                 </Label>
@@ -313,7 +342,7 @@ function SetupForm({ auction, auctionId }: SetupFormProps) {
                   placeholder="e.g. 25"
                   value={field.state.value as any}
                   onChange={(e) => field.handleChange(e.target.value as any)}
-                  className="rounded-none border border-[#3c3c3c] bg-black text-xs text-white"
+                  className="rounded-none border border-[#3c3c3c] bg-neutral-950 text-xs text-white"
                 />
               </div>
             )}
@@ -321,24 +350,24 @@ function SetupForm({ auction, auctionId }: SetupFormProps) {
 
           <form.Field
             name="slug"
-            children={(field) => (
-              <div className="space-y-2 md:col-span-2">
+            children={(field: any) => (
+              <div className="gap-y- md:col-span-2">
                 <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
                   Auction URL Slug Prefix * (suffix is read-only)
                 </Label>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center gap-x-2">
                   <Input
                     id={field.name}
                     placeholder="e.g. premier-league"
                     value={field.state.value}
                     onChange={(e) => field.handleChange(slugify(e.target.value))}
-                    className="flex-1 rounded-none border border-[#3c3c3c] bg-black text-xs text-white"
+                    className="flex-1 rounded-none border border-[#3c3c3c] bg-neutral-950 text-xs text-white"
                     required
                   />
                   <form.Subscribe
-                    selector={(state) => state.values.suffix}
-                    children={(suffixValue) => (
-                      <span className="rounded-none border border-[#3c3c3c] bg-black px-3 py-2 font-mono text-xs text-[#bbbbbb] select-none">
+                    selector={(state: any) => state.values.suffix}
+                    children={(suffixValue: any) => (
+                      <span className="rounded-none border border-[#3c3c3c] bg-neutral-950 px-3 py-2 font-mono text-xs text-[#bbbbbb] select-none">
                         -{suffixValue || "xxxxx"}
                       </span>
                     )}
@@ -349,15 +378,27 @@ function SetupForm({ auction, auctionId }: SetupFormProps) {
           />
         </div>
       </div>
+    </>
+  );
+}
 
+export function CategoryDecksCard({
+  form,
+  handleRemoveCategory,
+}: {
+  form: any;
+  handleRemoveCategory: any;
+}) {
+  return (
+    <>
       {/* Category Decks Card */}
       <form.Field name="categories" mode="array">
-        {(field) => (
+        {(field: any) => (
           <div className="relative overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8">
             <div className="mb-8 flex flex-col items-start gap-4 border-b border-[#3c3c3c] pb-5 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
-              <div className="flex items-center space-x-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-none border border-[#3c3c3c] bg-black text-white">
-                  <TagIcon className="h-[18px] w-[18px]" />
+              <div className="flex items-center gap-x-3">
+                <div className="flex size-9 items-center justify-center rounded-none border border-[#3c3c3c] bg-neutral-950 text-white">
+                  <TagIcon className="size-[18px]" />
                 </div>
                 <div>
                   <div className="inline-flex flex-col">
@@ -374,84 +415,84 @@ function SetupForm({ auction, auctionId }: SetupFormProps) {
 
               <Button
                 type="button"
-                onClick={() => field.pushValue({ name: "", basePoints: 100 })}
-                className="flex cursor-pointer items-center space-x-1.5 rounded-none border border-[#3c3c3c] bg-black px-3 py-1.5 text-xs font-bold tracking-[1.5px] text-[#bbbbbb] uppercase hover:bg-white hover:text-black"
+                onClick={() => field.pushValue({ id: generateId(), name: "", basePoints: 100 })}
+                className="flex cursor-pointer items-center gap-x-1.5 rounded-none border border-[#3c3c3c] bg-neutral-950 px-3 py-1.5 text-xs font-bold tracking-[1.5px] text-[#bbbbbb] uppercase hover:bg-white hover:text-black"
               >
-                <PlusIcon className="h-3.5 w-3.5 text-[currentcolor]" />
+                <PlusIcon className="size-3.5 text-[currentcolor]" />
                 <span>Add Category</span>
               </Button>
             </div>
 
             {/* Dynamic categories inputs table */}
-            <div className="space-y-4">
-              {field.state.value.map((cat, idx) => (
+            <div className="gap-y-">
+              {field.state.value.map((cat: any, idx: any) => (
                 <div
-                  key={idx}
-                  className="flex items-center space-x-4 rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-4"
+                  key={cat.id}
+                  className="flex items-center gap-x-4 rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-4"
                 >
                   <div className="grid flex-1 grid-cols-1 gap-4 md:grid-cols-4">
-                    <div className="space-y-1.5 md:col-span-2">
+                    <div className="gap-y- md:col-span-2">
                       <Label className="text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
                         Category Name
                       </Label>
                       <form.Field name={`categories[${idx}].name`}>
-                        {(subField) => (
+                        {(subField: any) => (
                           <Input
                             placeholder="e.g. Elite Players, Batsmen, All-rounders"
                             value={subField.state.value}
                             onChange={(e) => subField.handleChange(e.target.value)}
-                            className="rounded-none border border-[#3c3c3c] bg-black text-xs text-white"
+                            className="rounded-none border border-[#3c3c3c] bg-neutral-950 text-xs text-white"
                           />
                         )}
                       </form.Field>
                     </div>
-                    <div className="space-y-1.5 md:col-span-2">
+                    <div className="gap-y- md:col-span-2">
                       <Label className="text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
                         Base points value
                       </Label>
                       <div className="relative">
-                        <CoinsIcon className="absolute top-2.5 left-3 h-4 w-4 text-[#bbbbbb]" />
+                        <CoinsIcon className="absolute top-2.5 left-3 size-4 text-[#bbbbbb]" />
                         <form.Field name={`categories[${idx}].basePoints`}>
-                          {(subField) => (
+                          {(subField: any) => (
                             <Input
                               type="number"
                               placeholder="100"
                               value={subField.state.value}
                               onChange={(e) => subField.handleChange(Number(e.target.value))}
-                              className="rounded-none border border-[#3c3c3c] bg-black pl-9 text-xs text-white"
+                              className="rounded-none border border-[#3c3c3c] bg-neutral-950 pl-9 text-xs text-white"
                             />
                           )}
                         </form.Field>
                       </div>
                     </div>
-                    <div className="space-y-1.5 md:col-span-2">
+                    <div className="gap-y- md:col-span-2">
                       <Label className="text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
                         Min Players (Opt)
                       </Label>
                       <form.Field name={`categories[${idx}].minPlayersPerCategory`}>
-                        {(subField) => (
+                        {(subField: any) => (
                           <Input
                             type="number"
                             placeholder="e.g. 1"
                             value={subField.state.value as any}
                             onChange={(e) => subField.handleChange(e.target.value as any)}
-                            className="rounded-none border border-[#3c3c3c] bg-black text-xs text-white"
+                            className="rounded-none border border-[#3c3c3c] bg-neutral-950 text-xs text-white"
                           />
                         )}
                       </form.Field>
                     </div>
-                    <div className="space-y-1.5 md:col-span-2">
+                    <div className="gap-y- md:col-span-2">
                       <Label className="text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
                         Max Players (Opt)
                       </Label>
                       <form.Field name={`categories[${idx}].maxPlayersPerCategory`}>
-                        {(subField) => (
+                        {(subField: any) => (
                           <Input
                             type="number"
                             placeholder="e.g. 5"
                             value={subField.state.value as any}
                             onChange={(e) => subField.handleChange(e.target.value as any)}
-                            className="rounded-none border border-[#3c3c3c] bg-black text-xs text-white"
+                            className="rounded-none border border-[#3c3c3c] bg-neutral-950 text-xs text-white"
                           />
                         )}
                       </form.Field>
@@ -461,17 +502,17 @@ function SetupForm({ auction, auctionId }: SetupFormProps) {
                   <button
                     type="button"
                     onClick={() => handleRemoveCategory(field, idx, cat.id)}
-                    className="mb-1 flex h-9 w-9 cursor-pointer items-center justify-center self-end rounded-none border border-[#3c3c3c] bg-black text-[#bbbbbb] hover:bg-white hover:text-black"
+                    className="mb-1 flex size-9 cursor-pointer items-center justify-center self-end rounded-none border border-[#3c3c3c] bg-neutral-950 text-[#bbbbbb] hover:bg-white hover:text-black"
                     title="Remove Category"
                   >
-                    <TrashIcon className="h-4 w-4" />
+                    <TrashIcon className="size-4" />
                   </button>
                 </div>
               ))}
 
               {field.state.value.length === 0 && (
-                <div className="flex flex-col items-center justify-center space-y-4 rounded-none border border-dashed border-[#3c3c3c] bg-black py-12 text-center">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] text-lg text-white">
+                <div className="flex flex-col items-center justify-center gap-y-4 rounded-none border border-dashed border-[#3c3c3c] bg-neutral-950 py-12 text-center">
+                  <div className="flex size-12 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] text-lg text-white">
                     ⚠️
                   </div>
                   <div>
@@ -489,34 +530,6 @@ function SetupForm({ auction, auctionId }: SetupFormProps) {
           </div>
         )}
       </form.Field>
-
-      {/* Save Settings Block */}
-      <div className="flex flex-col items-start justify-between gap-6 rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8 md:flex-row md:items-center md:gap-0">
-        <div className="flex items-center space-x-2">
-          <ShieldAlertIcon className="h-4 w-4 text-white" />
-          <span className="text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
-            Review changes carefully. Categories with active roster assignments cannot be removed.
-          </span>
-        </div>
-
-        <form.Subscribe
-          selector={(state) => state.isSubmitting}
-          children={(isSubmitting) => (
-            <Button
-              type="submit"
-              disabled={isSubmitting || updateAuctionMutation.isPending}
-              className="flex cursor-pointer items-center space-x-2 rounded-none border border-white bg-white px-8 py-3 font-black tracking-[1.5px] text-black uppercase hover:bg-black hover:text-white"
-            >
-              <SaveIcon className="h-4 w-4" />
-              <span>
-                {isSubmitting || updateAuctionMutation.isPending
-                  ? "Saving..."
-                  : "Save Configuration"}
-              </span>
-            </Button>
-          )}
-        />
-      </div>
-    </form>
+    </>
   );
 }

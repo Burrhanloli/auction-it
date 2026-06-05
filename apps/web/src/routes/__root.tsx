@@ -78,11 +78,11 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       { rel: "stylesheet", href: appCss },
     ],
   }),
-  shellComponent: RootDocument,
+  shellComponent: RootComponent,
 });
 import { useScrollDirection } from "#/hooks/use-scroll-direction";
 
-function RootDocument({ children }: { readonly children: React.ReactNode }) {
+export function RootComponent({ children }: { readonly children: React.ReactNode }) {
   const { scrollDirection } = useScrollDirection();
 
   return (
@@ -95,15 +95,15 @@ function RootDocument({ children }: { readonly children: React.ReactNode }) {
         <div className="flex min-h-screen flex-col">
           <div className="flex grow flex-col">{children}</div>
           <footer
-            className={`sticky bottom-0 z-50 w-full bg-black px-6 py-4 transition-transform duration-300 ease-in-out ${
+            className={`sticky bottom-0 z-40 w-full bg-neutral-950 px-6 py-4 transition-transform duration-300 ease-in-out ${
               scrollDirection === "down" ? "translate-y-full" : "translate-y-0"
             }`}
           >
             <MStripeDivider className="absolute top-0 right-0 left-0" />
             <div className="mx-auto mt-1 flex max-w-7xl flex-col items-center justify-between gap-4 md:flex-row md:gap-0">
-              <div className="flex items-center space-x-3">
-                <div className="flex h-6 w-6 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-0.5">
-                  <Logo className="h-3.5 w-3.5" />
+              <div className="flex items-center gap-x-2">
+                <div className="flex size-6 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-0.5">
+                  <Logo className="size-3.5" />
                 </div>
                 <span className="text-xs font-bold tracking-[1.5px] text-white uppercase">
                   AUCTION-IT

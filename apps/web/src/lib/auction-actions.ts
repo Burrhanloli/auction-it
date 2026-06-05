@@ -43,30 +43,31 @@ export const $getAuctionState = createServerFn({ method: "GET" })
   .inputValidator((id: string) => id)
   .handler(async ({ data: auctionId }) => {
     const resolvedId = await resolveAuctionId(auctionId);
-    const state = await db.query.auctionState.findFirst({
-      where: {
-        auctionId: resolvedId,
-      },
-      with: {
-        currentPlayer: {
-          with: {
-            category: true,
-          },
+    const [state, logs] = await Promise.all([
+      db.query.auctionState.findFirst({
+        where: {
+          auctionId: resolvedId,
         },
-        currentHighestBidderTeam: true,
-      },
-    });
-
-    const logs = await db.query.auctionLogs.findMany({
-      where: {
-        auctionId: resolvedId,
-      },
-      with: {
-        team: true,
-      },
-      orderBy: (auctionLogs, { desc }) => [desc(auctionLogs.createdAt)],
-      limit: 100,
-    });
+        with: {
+          currentPlayer: {
+            with: {
+              category: true,
+            },
+          },
+          currentHighestBidderTeam: true,
+        },
+      }),
+      db.query.auctionLogs.findMany({
+        where: {
+          auctionId: resolvedId,
+        },
+        with: {
+          team: true,
+        },
+        orderBy: (auctionLogs, { desc }) => [desc(auctionLogs.createdAt)],
+        limit: 100,
+      }),
+    ]);
 
     return { state, logs };
   });
@@ -196,45 +197,49 @@ export const $updateAuction = createServerFn({ method: "POST" })
         .from(schema.categories)
         .where(eq(schema.categories.auctionId, resolvedId));
 
-      const inputCatIds = data.categories.map((c) => c.id).filter(Boolean) as string[];
+      const inputCatIds = new Set(data.categories.flatMap((c) => (c.id ? [c.id] : [])));
 
-      // Delete categories that are omitted from the new configuration
-      for (const exc of existingCats) {
-        if (!inputCatIds.includes(exc.id)) {
-          await db.delete(schema.categories).where(eq(schema.categories.id, exc.id));
-        }
-      }
-
-      // Upsert current configuration
-      for (const inputCat of data.categories) {
-        if (inputCat.id) {
-          // Update
-          await db
-            .update(schema.categories)
-            .set({
-              name: inputCat.name,
-              basePoints: inputCat.basePoints,
-              minPlayersPerCategory: inputCat.minPlayersPerCategory,
-              maxPlayersPerCategory: inputCat.maxPlayersPerCategory,
-            })
-            .where(eq(schema.categories.id, inputCat.id));
-        } else {
-          // Insert
-          await db.insert(schema.categories).values({
-            auctionId: resolvedId,
-            name: inputCat.name,
-            basePoints: inputCat.basePoints,
-            minPlayersPerCategory: inputCat.minPlayersPerCategory,
-            maxPlayersPerCategory: inputCat.maxPlayersPerCategory,
-          });
-        }
-      }
-
-      // Log setup update
-      await db.insert(schema.auctionLogs).values({
-        auctionId: resolvedId,
-        message: `Auction setup was updated (Budget: ${data.budgetPerTeam} pts).`,
-      });
+      await Promise.all([
+        // Delete categories that are omitted from the new configuration
+        Promise.all(
+          existingCats.flatMap((exc) =>
+            !inputCatIds.has(exc.id)
+              ? [db.delete(schema.categories).where(eq(schema.categories.id, exc.id))]
+              : [],
+          ),
+        ),
+        // Upsert current configuration
+        Promise.all(
+          data.categories.map((inputCat) => {
+            if (inputCat.id) {
+              // Update
+              return db
+                .update(schema.categories)
+                .set({
+                  name: inputCat.name,
+                  basePoints: inputCat.basePoints,
+                  minPlayersPerCategory: inputCat.minPlayersPerCategory,
+                  maxPlayersPerCategory: inputCat.maxPlayersPerCategory,
+                })
+                .where(eq(schema.categories.id, inputCat.id));
+            } else {
+              // Insert
+              return db.insert(schema.categories).values({
+                auctionId: resolvedId,
+                name: inputCat.name,
+                basePoints: inputCat.basePoints,
+                minPlayersPerCategory: inputCat.minPlayersPerCategory,
+                maxPlayersPerCategory: inputCat.maxPlayersPerCategory,
+              });
+            }
+          }),
+        ),
+        // Log setup update
+        db.insert(schema.auctionLogs).values({
+          auctionId: resolvedId,
+          message: `Auction setup was updated (Budget: ${data.budgetPerTeam} pts).`,
+        }),
+      ]);
 
       return { newSlug };
     })();
@@ -250,15 +255,16 @@ export const $updateAuctionStatus = createServerFn({ method: "POST" })
   .inputValidator((data: { auctionId: string; status: "draft" | "active" | "completed" }) => data)
   .handler(async ({ data }) => {
     const resolvedId = await resolveAuctionId(data.auctionId);
-    await db
-      .update(schema.auctions)
-      .set({ status: data.status })
-      .where(eq(schema.auctions.id, resolvedId));
-
-    await db.insert(schema.auctionLogs).values({
-      auctionId: resolvedId,
-      message: `Auction status updated to ${data.status.toUpperCase()}.`,
-    });
+    await Promise.all([
+      db
+        .update(schema.auctions)
+        .set({ status: data.status })
+        .where(eq(schema.auctions.id, resolvedId)),
+      db.insert(schema.auctionLogs).values({
+        auctionId: resolvedId,
+        message: `Auction status updated to ${data.status.toUpperCase()}.`,
+      }),
+    ]);
 
     publishAuctionUpdate(resolvedId, "state", { status: data.status });
     return { success: true };
@@ -502,11 +508,20 @@ export const $deletePlayer = createServerFn({ method: "POST" })
 // Mutation: Auctioneer Panel - Draw a random player from category and put up for bid
 export const $drawPlayer = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
-  .inputValidator((data: { auctionId: string; categoryId: string }) => data)
+  .inputValidator((data: { auctionId: string; categoryId: string; playerId?: string }) => data)
   .handler(async ({ data }) => {
     const resolvedId = await resolveAuctionId(data.auctionId);
     const result = await (async () => {
-      // 1. Get unsold players in category
+      // 1. Concurrency Check
+      const currentState = await db.query.auctionState.findFirst({
+        where: { auctionId: resolvedId },
+      });
+
+      if (currentState?.stage === "bidding" && currentState.currentPlayerId) {
+        throw new Error("Cannot draw a new player while one is actively on the block!");
+      }
+
+      // 2. Get unsold players in category
       const unsoldPlayers = await db
         .select()
         .from(schema.players)
@@ -522,11 +537,22 @@ export const $drawPlayer = createServerFn({ method: "POST" })
         throw new Error("No unsold players left in this category!");
       }
 
-      // 2. Select random player
-      const randomIndex = Math.floor(Math.random() * unsoldPlayers.length);
-      const chosenPlayer = unsoldPlayers[randomIndex];
+      // 3. Prioritized selection
+      let chosenPlayer;
+      if (data.playerId) {
+        chosenPlayer = unsoldPlayers.find((p) => p.id === data.playerId);
+        if (!chosenPlayer) {
+          throw new Error("Selected player is not available in this category or is already sold!");
+        }
+      } else {
+        const minDrawCount = Math.min(...unsoldPlayers.map((p) => p.drawCount ?? 0));
+        const eligiblePlayers = unsoldPlayers.filter((p) => (p.drawCount ?? 0) === minDrawCount);
 
-      // 3. Get category base points
+        const randomIndex = Math.floor(Math.random() * eligiblePlayers.length);
+        chosenPlayer = eligiblePlayers[randomIndex];
+      }
+
+      // 4. Get category base points
       const [category] = await db
         .select()
         .from(schema.categories)
@@ -534,13 +560,13 @@ export const $drawPlayer = createServerFn({ method: "POST" })
 
       const basePoints = category?.basePoints ?? 100;
 
-      // 4. Update player status to 'bidding' to prevent double extraction
+      // 5. Update drawCount for the drawn player
       await db
         .update(schema.players)
-        .set({ status: "bidding" })
+        .set({ drawCount: (chosenPlayer.drawCount ?? 0) + 1 })
         .where(eq(schema.players.id, chosenPlayer.id));
 
-      // 5. Reset and configure active state
+      // 6. Reset and configure active state
       await db
         .update(schema.auctionState)
         .set({
@@ -574,8 +600,10 @@ export const $incrementBid = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .inputValidator((data: { auctionId: string; teamId: string; bidPoints: number }) => data)
   .handler(async ({ data }) => {
-    const resolvedAuctionId = await resolveAuctionId(data.auctionId);
-    const resolvedTeamId = await resolveTeamId(data.teamId);
+    const [resolvedAuctionId, resolvedTeamId] = await Promise.all([
+      resolveAuctionId(data.auctionId),
+      resolveTeamId(data.teamId),
+    ]);
     const result = await (async () => {
       // 1. Get current active state
       const state = await db.query.auctionState.findFirst({
@@ -833,8 +861,10 @@ export const $revertPlayer = createServerFn({ method: "POST" })
 export const $verifyTeamPasscode = createServerFn({ method: "POST" })
   .inputValidator((data: { auctionId: string; teamId: string; passcode: string }) => data)
   .handler(async ({ data }: { data: { auctionId: string; teamId: string; passcode: string } }) => {
-    const resolvedAuctionId = await resolveAuctionId(data.auctionId);
-    const resolvedTeamId = await resolveTeamId(data.teamId);
+    const [resolvedAuctionId, resolvedTeamId] = await Promise.all([
+      resolveAuctionId(data.auctionId),
+      resolveTeamId(data.teamId),
+    ]);
     const team = await db.query.teams.findFirst({
       where: {
         auctionId: resolvedAuctionId,
@@ -861,8 +891,10 @@ export const $verifyTeamPasscode = createServerFn({ method: "POST" })
 export const $getTeamStrategyDeck = createServerFn({ method: "GET" })
   .inputValidator((data: { auctionId: string; teamId: string }) => data)
   .handler(async ({ data }: { data: { auctionId: string; teamId: string } }) => {
-    const resolvedAuctionId = await resolveAuctionId(data.auctionId);
-    const resolvedTeamId = await resolveTeamId(data.teamId);
+    const [resolvedAuctionId, resolvedTeamId] = await Promise.all([
+      resolveAuctionId(data.auctionId),
+      resolveTeamId(data.teamId),
+    ]);
     const team = await db.query.teams.findFirst({
       where: {
         auctionId: resolvedAuctionId,
@@ -1092,9 +1124,9 @@ export const $addTeamsBulk = createServerFn({ method: "POST" })
     }) => data,
   )
   .handler(async ({ data }) => {
-    const resolvedAuctionId = await resolveAuctionId(data.auctionId);
-
     if (data.teams.length === 0) return { success: true };
+
+    const resolvedAuctionId = await resolveAuctionId(data.auctionId);
 
     const teamsToInsert = data.teams.map((team) => {
       const slugBase = slugify(team.name);
@@ -1139,9 +1171,9 @@ export const $addPlayersBulk = createServerFn({ method: "POST" })
     }) => data,
   )
   .handler(async ({ data }) => {
-    const resolvedId = await resolveAuctionId(data.auctionId);
-
     if (data.players.length === 0) return { success: true };
+
+    const resolvedId = await resolveAuctionId(data.auctionId);
 
     const playersToInsert = data.players.map((player) => ({
       auctionId: resolvedId,

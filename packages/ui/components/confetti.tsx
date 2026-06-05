@@ -8,7 +8,6 @@ import confetti from "canvas-confetti";
 import type { ReactNode } from "react";
 import React, {
   createContext,
-  forwardRef,
   useCallback,
   useEffect,
   useImperativeHandle,
@@ -20,7 +19,7 @@ type Api = {
   fire: (options?: ConfettiOptions) => void;
 };
 
-type Props = React.ComponentPropsWithRef<"canvas"> & {
+type Props = Omit<React.ComponentPropsWithRef<"canvas">, "ref"> & {
   options?: ConfettiOptions;
   globalOptions?: ConfettiGlobalOptions;
   manualstart?: boolean;
@@ -32,12 +31,13 @@ export type ConfettiRef = Api | null;
 const ConfettiContext = createContext<Api>({} as Api);
 
 // Define component first
-const ConfettiComponent = forwardRef<ConfettiRef, Props>((props, ref) => {
+const ConfettiComponent = (props: Props & { ref?: React.Ref<ConfettiRef> }) => {
   const {
     options,
     globalOptions = { resize: true, useWorker: true },
     manualstart = false,
     children,
+    ref,
     ...rest
   } = props;
   const instanceRef = useRef<ConfettiInstance | null>(null);
@@ -98,7 +98,7 @@ const ConfettiComponent = forwardRef<ConfettiRef, Props>((props, ref) => {
       {children}
     </ConfettiContext.Provider>
   );
-});
+};
 
 // Set display name immediately
 ConfettiComponent.displayName = "Confetti";

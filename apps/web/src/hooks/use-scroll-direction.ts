@@ -35,7 +35,7 @@ export function useScrollDirection(threshold = 50) {
       }
     };
 
-    window.addEventListener("scroll", onScroll);
+    window.addEventListener("scroll", onScroll, { passive: true });
 
     return () => window.removeEventListener("scroll", onScroll);
   }, [threshold]);

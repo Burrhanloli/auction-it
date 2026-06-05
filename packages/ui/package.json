@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "main": "./index.ts",
   "exports": {
     "./*": "./*.ts",
     "./styles/base.css": "./styles/base.css",
@@ -13,8 +14,6 @@
   },
   "dependencies": {
     "@base-ui/react": "catalog:",
-    "@icons-pack/react-simple-icons": "catalog:",
-    "@tanstack/react-form-start": "catalog:",
     "@types/canvas-confetti": "catalog:",
     "canvas-confetti": "catalog:",
     "class-variance-authority": "catalog:",
@@ -22,12 +21,10 @@
     "date-fns": "catalog:",
     "input-otp": "catalog:",
     "lucide-react": "catalog:",
-    "motion": "catalog:",
     "shadcn": "catalog:",
     "sonner": "catalog:",
     "tailwind-merge": "catalog:",
-    "tw-animate-css": "catalog:",
-    "zod": "catalog:"
+    "tw-animate-css": "catalog:"
   },
   "devDependencies": {
     "@repo/tsconfig": "workspace:*",

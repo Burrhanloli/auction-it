@@ -3,8 +3,10 @@ import { useEffect } from "react";
 
 export function useAuctionSubscription(auctionId: string, additionalKeys: string[][] = []) {
   const queryClient = useQueryClient();
+  const serializedKeys = JSON.stringify(additionalKeys);
 
   useEffect(() => {
+    const keys = JSON.parse(serializedKeys);
     // In Cloudflare Workers, in-memory EventEmitter doesn't work across multiple instances.
     // Use short polling as a robust fallback for realtime updates.
     const intervalId = setInterval(() => {
@@ -12,7 +14,7 @@ export function useAuctionSubscription(auctionId: string, additionalKeys: string
       queryClient.invalidateQueries({ queryKey: ["auction", auctionId] });
 
       // Invalidate additional query keys passed in
-      for (const key of additionalKeys) {
+      for (const key of keys) {
         queryClient.invalidateQueries({ queryKey: key });
       }
     }, 5000); // Poll every 5 seconds
@@ -20,5 +22,5 @@ export function useAuctionSubscription(auctionId: string, additionalKeys: string
     return () => {
       clearInterval(intervalId);
     };
-  }, [auctionId, queryClient, JSON.stringify(additionalKeys)]);
+  }, [auctionId, queryClient, serializedKeys]);
 }

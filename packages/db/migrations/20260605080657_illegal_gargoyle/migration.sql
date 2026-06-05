@@ -1,0 +1,1 @@
+ALTER TABLE "players" ADD COLUMN "draw_count" integer DEFAULT 0 NOT NULL;

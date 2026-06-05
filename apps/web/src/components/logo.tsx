@@ -11,7 +11,7 @@ export interface LogoProps {
 
 export function Logo({ src, className, iconClassName, alt = "Logo" }: LogoProps) {
   if (src) {
-    return <LazyImage src={src} alt={alt} priority className={cn("object-cover", className)} />;
+    return <LazyImage src={src} alt={alt} priority className={cn("object-contain", className)} />;
   }
 
   return <TrophyIcon className={cn("text-white", className, iconClassName)} />;

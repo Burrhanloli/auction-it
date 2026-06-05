@@ -12,19 +12,19 @@ export function AuctionHero({
   subtitle: string;
 }) {
   return (
-    <div className="relative w-full overflow-hidden bg-black px-4 py-16 md:px-8">
+    <div className="relative w-full overflow-hidden bg-neutral-950 px-4 py-16 md:px-8">
       <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-end opacity-10">
         <Logo
           src={auction.logoUrl}
-          className="h-[200%] w-[200%] object-cover object-bottom-right opacity-50 mix-blend-screen blur-sm md:h-[150%] md:w-[150%]"
-          iconClassName="h-96 w-96 translate-x-1/4 -translate-y-1/4 blur-[2px]"
+          className="size-[200%] object-cover object-bottom-right opacity-50 mix-blend-screen blur-sm md:h-[150%] md:w-[150%]"
+          iconClassName="size-96 translate-x-1/4 -translate-y-1/4 blur-[2px]"
         />
       </div>
 
       {/* Content */}
       <div className="relative z-10 mx-auto max-w-7xl">
-        <div className="mb-6 flex h-16 w-16 items-center justify-center overflow-hidden border border-[#3c3c3c] bg-[#1a1a1a] p-2">
-          <Logo src={auction.logoUrl} className="h-full w-full" iconClassName="h-8 w-8" />
+        <div className="mb-6 flex size-16 items-center justify-center overflow-hidden border border-[#3c3c3c] bg-[#1a1a1a] p-2">
+          <Logo src={auction.logoUrl} className="size-full" iconClassName="size-8" />
         </div>
 
         <div className="inline-flex flex-col">

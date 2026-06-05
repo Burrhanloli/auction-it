@@ -35,33 +35,41 @@ export function ImageViewer({
   return (
     <>
       {/* Trigger */}
-      <div
-        className={`group relative cursor-pointer ${triggerClassName || ""}`}
+      <button
+        type="button"
+        className={`group relative block cursor-pointer appearance-none border-none bg-transparent p-0 text-left ${triggerClassName || ""}`}
         onClick={() => setIsOpen(true)}
       >
         <LazyImage src={src} alt={alt} className={className} {...props} />
         {!hideOverlay && (
-          <div className="absolute inset-0 flex items-center justify-center rounded-none bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
-            <ZoomInIcon className="h-4 w-4 text-white md:h-6 md:w-6" />
+          <div className="absolute inset-0 flex items-center justify-center rounded-none bg-neutral-950/40 opacity-0 transition-opacity group-hover:opacity-100">
+            <ZoomInIcon className="size-4 text-white md:h-6 md:w-6" />
           </div>
         )}
-      </div>
+      </button>
 
       {/* Lightbox Modal */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4 backdrop-blur-sm md:p-8"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-neutral-950/90 p-4 backdrop-blur-sm md:p-8"
           onClick={() => setIsOpen(false)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " " || e.key === "Escape") {
+              setIsOpen(false);
+            }
+          }}
+          tabIndex={-1}
+          role="presentation"
         >
           <button
             type="button"
-            className="absolute top-4 right-4 cursor-pointer border border-[#3c3c3c] bg-black/50 p-2 text-[#bbbbbb] transition-colors hover:text-white"
+            className="absolute top-4 right-4 cursor-pointer border border-[#3c3c3c] bg-neutral-950/50 p-2 text-[#bbbbbb] transition-colors hover:text-white"
             onClick={(e) => {
               e.stopPropagation();
               setIsOpen(false);
             }}
           >
-            <XIcon className="h-6 w-6" />
+            <XIcon className="size-6" />
           </button>
 
           <LazyImage

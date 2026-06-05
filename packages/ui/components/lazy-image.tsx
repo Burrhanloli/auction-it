@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useReducer, useEffect, useRef } from "react";
 
 export interface LazyImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src: string;
@@ -7,6 +7,24 @@ export interface LazyImageProps extends React.ImgHTMLAttributes<HTMLImageElement
   priority?: boolean;
   threshold?: number;
   rootMargin?: string;
+}
+
+type State = { loaded: boolean; error: boolean; hasIntersected: boolean };
+type Action = { type: "RESET" } | { type: "INTERSECT" } | { type: "LOAD" } | { type: "ERROR" };
+
+function reducer(state: State, action: Action): State {
+  switch (action.type) {
+    case "RESET":
+      return { loaded: false, error: false, hasIntersected: false };
+    case "INTERSECT":
+      return { ...state, hasIntersected: true };
+    case "LOAD":
+      return { ...state, loaded: true };
+    case "ERROR":
+      return { ...state, error: true };
+    default:
+      return state;
+  }
 }
 
 export function LazyImage({
@@ -20,18 +38,20 @@ export function LazyImage({
   style,
   ...props
 }: LazyImageProps) {
-  const [inView, setInView] = useState(priority);
-  const [loaded, setLoaded] = useState(false);
-  const [error, setError] = useState(false);
-  const [prevSrc, setPrevSrc] = useState(src);
-  const imgRef = useRef<HTMLImageElement>(null);
+  const [state, dispatch] = useReducer(reducer, {
+    loaded: false,
+    error: false,
+    hasIntersected: false,
+  });
+  const prevSrcRef = useRef(src);
+  const imgRef = useRef<HTMLImageElement | null>(null);
 
-  if (src !== prevSrc) {
-    setPrevSrc(src);
-    setLoaded(false);
-    setError(false);
-    setInView(priority);
+  if (src !== prevSrcRef.current) {
+    prevSrcRef.current = src;
+    dispatch({ type: "RESET" });
   }
+
+  const currentInView = priority || state.hasIntersected;
 
   useEffect(() => {
     if (priority) {
@@ -39,7 +59,7 @@ export function LazyImage({
     }
 
     if (typeof window === "undefined" || !("IntersectionObserver" in window)) {
-      const timer = setTimeout(() => setInView(true), 0);
+      const timer = setTimeout(() => dispatch({ type: "INTERSECT" }), 0);
       return () => clearTimeout(timer);
     }
 
@@ -47,7 +67,7 @@ export function LazyImage({
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            setInView(true);
+            dispatch({ type: "INTERSECT" });
             observer.disconnect();
           }
         });
@@ -65,12 +85,12 @@ export function LazyImage({
     };
   }, [src, priority, threshold, rootMargin]);
 
-  // Handle cached images immediately
-  useEffect(() => {
-    if (inView && imgRef.current && imgRef.current.complete) {
-      setLoaded(true);
+  const setImgRef = React.useCallback((node: HTMLImageElement | null) => {
+    imgRef.current = node;
+    if (node?.complete && !node.src.startsWith("data:image/gif")) {
+      dispatch({ type: "LOAD" });
     }
-  }, [inView, src]);
+  }, []);
 
   // Handle fallback initials
   const initials = React.useMemo(() => {
@@ -84,20 +104,21 @@ export function LazyImage({
   }, [fallbackText, alt]);
 
   const handleLoad = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    setLoaded(true);
+    if (e.currentTarget.src.startsWith("data:image/gif")) return;
+    dispatch({ type: "LOAD" });
     if (props.onLoad) {
       props.onLoad(e);
     }
   };
 
   const handleError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    setError(true);
+    dispatch({ type: "ERROR" });
     if (props.onError) {
       props.onError(e);
     }
   };
 
-  if (!src || error) {
+  if (!src || state.error) {
     return (
       <div
         className={`relative flex items-center justify-center border border-[#3c3c3c] bg-linear-to-b from-neutral-900 to-black select-none ${className}`}
@@ -115,16 +136,16 @@ export function LazyImage({
   // 1x1 transparent placeholder GIF before intersecting
   const placeholderSrc =
     "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
-  const currentSrc = inView ? src : placeholderSrc;
+  const currentSrc = currentInView ? src : placeholderSrc;
 
   // Pulse skeleton background when not loaded yet
-  const loadingClasses = !loaded
+  const loadingClasses = !state.loaded
     ? "animate-pulse bg-neutral-900 border border-[#3c3c3c]"
     : "transition-opacity duration-300 opacity-100";
 
   return (
     <img
-      ref={imgRef}
+      ref={setImgRef}
       src={currentSrc}
       alt={alt}
       onLoad={handleLoad}

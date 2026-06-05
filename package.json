@@ -25,7 +25,7 @@
     "auth:generate": "vp run --filter=@repo/db auth:generate",
     "skills": "vpx skills@latest",
     "intent": "vpx @tanstack/intent@latest",
-    "doctor": "npx react-doctor@latest"
+    "doctor": "npx react-doctor@latest --json"
   },
   "devDependencies": {
     "@tanstack/eslint-plugin-query": "catalog:",

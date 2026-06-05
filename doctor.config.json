@@ -1,0 +1,6 @@
+{
+  "entries": ["apps/web/src/routes/**/*.tsx", "apps/web/src/routes/**/*.ts"],
+  "ignore": {
+    "rules": ["react-doctor/only-export-components", "react-doctor/no-children-prop"]
+  }
+}

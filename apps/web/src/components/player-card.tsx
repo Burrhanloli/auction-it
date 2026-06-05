@@ -15,6 +15,7 @@ export function PlayerCard({
   isWishlisted,
   onToggleWishlist,
   onMakeCaptain,
+  isActiveBid,
 }: {
   player: any;
   variant: "admin" | "strategyLobby";
@@ -25,17 +26,18 @@ export function PlayerCard({
   isWishlisted?: boolean;
   onToggleWishlist?: (playerId: string, isWishlisted: boolean) => void;
   onMakeCaptain?: (playerId: string) => void;
+  isActiveBid?: boolean;
 }) {
   const categoryName = player.category?.name ?? "Player Pool";
   const isElite = categoryName.toLowerCase() === "elite";
   const isPro = categoryName.toLowerCase() === "pro";
 
-  const glowClass = "border-[#3c3c3c] hover:border-white bg-black";
+  const glowClass = "border-[#3c3c3c] hover:border-white bg-neutral-950";
   const badgeColor = isElite
     ? "border-white text-black bg-white"
     : isPro
       ? "border-[#3c3c3c] text-white bg-[#1a1a1a]"
-      : "border-[#3c3c3c] text-[#bbbbbb] bg-black";
+      : "border-[#3c3c3c] text-[#bbbbbb] bg-neutral-950";
 
   return (
     <div
@@ -46,16 +48,16 @@ export function PlayerCard({
       }`}
     >
       {/* Top Section: Compact Full Bleed Image */}
-      <div className="relative aspect-[3/4] max-h-64 w-full shrink-0 bg-black">
+      <div className="relative aspect-[3/4] max-h-64 w-full shrink-0 bg-neutral-950">
         {player.imageUrl ? (
           <LazyImage
             src={player.imageUrl}
             alt={player.name}
             fallbackText={player.name}
-            className="absolute inset-0 h-full w-full object-contain"
+            className="absolute inset-0 size-full object-contain"
           />
         ) : (
-          <div className="absolute inset-0 flex h-full w-full items-center justify-center bg-black text-[48px] font-bold tracking-tight text-white uppercase">
+          <div className="absolute inset-0 flex size-full items-center justify-center bg-neutral-950 text-[48px] font-bold tracking-tight text-white uppercase">
             {player.name.slice(0, 2)}
           </div>
         )}
@@ -75,9 +77,9 @@ export function PlayerCard({
             <span className="inline-flex w-fit items-center rounded-none border border-white bg-white px-2 py-0.5 text-[10px] font-bold tracking-[1px] text-black uppercase shadow-lg">
               CAPTAIN: {player.soldToTeam?.name}
             </span>
-          ) : player.status === "bidding" ? (
-            <span className="inline-flex w-fit animate-pulse items-center rounded-none border border-[#3c3c3c] bg-black px-2 py-0.5 text-[10px] font-bold tracking-[1px] text-white uppercase shadow-lg">
-              <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-[#0fa336]" />
+          ) : isActiveBid ? (
+            <span className="inline-flex w-fit animate-pulse items-center rounded-none border border-[#3c3c3c] bg-neutral-950 px-2 py-0.5 text-[10px] font-bold tracking-[1px] text-white uppercase shadow-lg">
+              <span className="mr-1.5 size-1.5 rounded-full bg-[#0fa336]" />
               ACTIVE BID
             </span>
           ) : null}
@@ -89,7 +91,7 @@ export function PlayerCard({
             {player.wishlists.map((w: any) => (
               <div
                 key={w.id}
-                className="flex items-center space-x-1.5 rounded-none border border-[#3c3c3c] bg-black/80 px-2 py-0.5 shadow-lg backdrop-blur-sm"
+                className="flex items-center gap-x-2 rounded-none border border-[#3c3c3c] bg-neutral-950/80 px-2 py-0.5 shadow-lg backdrop-blur-sm"
                 title={`Wishlisted by ${w.team?.name}`}
               >
                 <span className="text-[10px] font-black tracking-[1px] text-yellow-400 uppercase">
@@ -100,7 +102,7 @@ export function PlayerCard({
                     src={w.team.logoUrl}
                     alt={w.team.name}
                     fallbackText={w.team.name}
-                    className="h-4 w-4 rounded-full object-cover"
+                    className="size-4 rounded-full object-contain"
                   />
                 ) : (
                   <span className="text-[10px] font-bold text-white uppercase">
@@ -115,15 +117,16 @@ export function PlayerCard({
         {variant === "strategyLobby" && onToggleWishlist && (
           <div className="absolute top-3 right-3 z-10 flex flex-col gap-2">
             <button
+              type="button"
               onClick={() => onToggleWishlist(player.id, isWishlisted ?? false)}
-              className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border transition-all ${
+              className={`flex size-10 cursor-pointer items-center justify-center rounded-full border transition-all ${
                 isWishlisted
                   ? "border-white bg-white text-black shadow-lg shadow-black/50"
-                  : "border-[#3c3c3c] bg-black/80 text-[#bbbbbb] backdrop-blur-sm hover:border-white hover:bg-black hover:text-white"
+                  : "border-[#3c3c3c] bg-neutral-950/80 text-[#bbbbbb] backdrop-blur-sm hover:border-white hover:bg-neutral-950 hover:text-white"
               }`}
               title={isWishlisted ? "Remove Wishlist Star" : "Add Wishlist Star"}
             >
-              <StarIcon className={`h-4 w-4 ${isWishlisted ? "fill-current" : ""}`} />
+              <StarIcon className={`size-4 ${isWishlisted ? "fill-current" : ""}`} />
             </button>
           </div>
         )}
@@ -147,6 +150,7 @@ export function PlayerCard({
           {variant === "admin" && auctionStatus === "draft" && (
             <div className="flex gap-2 border-t border-[#3c3c3c] pt-2">
               <button
+                type="button"
                 onClick={() => onEdit?.(player)}
                 className="flex h-[28px] flex-1 items-center justify-center border border-white bg-transparent text-[10px] font-bold tracking-[1px] text-white uppercase transition-colors hover:bg-white hover:text-black"
                 title="Edit Details"
@@ -154,6 +158,7 @@ export function PlayerCard({
                 Edit Player
               </button>
               <button
+                type="button"
                 onClick={() => {
                   if (window.confirm("Are you sure you want to delete this player?")) {
                     onDelete?.(player.id);
@@ -171,6 +176,7 @@ export function PlayerCard({
           {variant === "strategyLobby" && player.status === "unsold" && (
             <div className="flex gap-2 border-t border-[#3c3c3c] pt-2">
               <button
+                type="button"
                 onClick={() => onMakeCaptain?.(player.id)}
                 className="flex h-[28px] flex-1 items-center justify-center border border-white bg-transparent text-[10px] font-bold tracking-[1px] text-white uppercase transition-colors hover:bg-white hover:text-black"
                 title="Select as Team Captain"

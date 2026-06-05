@@ -26,7 +26,7 @@ export const Route = createFileRoute("/_guest")({
 
 function RouteComponent() {
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-black p-6 text-white md:p-10">
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-neutral-950 p-6 text-white md:p-10">
       <div className="relative w-full max-w-md rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8">
         <Outlet />
       </div>

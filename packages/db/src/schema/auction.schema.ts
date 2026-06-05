@@ -63,14 +63,12 @@ export const players = pgTable("players", {
   name: text("name").notNull(),
   skills: text("skills").notNull(), // e.g. "Right-hand Batsman, Leg-spinner"
   imageUrl: text("image_url"),
-  status: text("status")
-    .$type<"unsold" | "bidding" | "sold" | "captain">()
-    .default("unsold")
-    .notNull(),
+  status: text("status").$type<"unsold" | "sold" | "captain">().default("unsold").notNull(),
   soldToTeamId: uuid("sold_to_team_id").references((): AnyPgColumn => teams.id, {
     onDelete: "set null",
   }),
   soldPoints: integer("sold_points"),
+  drawCount: integer("draw_count").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

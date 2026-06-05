@@ -11,10 +11,10 @@ import { toast } from "sonner";
 import { Logo } from "#/components/logo";
 
 export const Route = createFileRoute("/_guest/signup")({
-  component: SignupForm,
+  component: SignupPage,
 });
 
-function SignupForm() {
+function SignupPage() {
   const { redirectUrl } = Route.useRouteContext();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -35,10 +35,14 @@ function SignupForm() {
           },
           onSuccess: () => {
             queryClient.removeQueries({ queryKey: authQueryOptions().queryKey });
+            // react-doctor-disable-next-line react-doctor/tanstack-start-no-navigate-in-render
             navigate({ to: redirectUrl });
           },
         },
       );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: authQueryOptions().queryKey });
     },
   });
 
@@ -68,8 +72,8 @@ function SignupForm() {
         <div className="flex flex-col gap-6">
           <div className="flex flex-col items-center gap-4 text-center">
             <Link to="/" className="flex flex-col items-center gap-2 font-medium">
-              <div className="flex h-12 w-12 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-0.5">
-                <Logo className="h-6 w-6" />
+              <div className="flex size-12 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-0.5">
+                <Logo className="size-6" />
               </div>
             </Link>
             <div>
@@ -95,7 +99,7 @@ function SignupForm() {
                 type="text"
                 placeholder="John Doe"
                 readOnly={isPending}
-                className="h-12 rounded-none border-[#3c3c3c] bg-black text-white placeholder-[#7e7e7e] focus:border-white"
+                className="h-12 rounded-none border-[#3c3c3c] bg-neutral-950 text-white placeholder-[#7e7e7e] focus:border-white"
                 required
               />
             </div>
@@ -112,7 +116,7 @@ function SignupForm() {
                 type="text"
                 placeholder="username"
                 readOnly={isPending}
-                className="h-12 rounded-none border-[#3c3c3c] bg-black text-white placeholder-[#7e7e7e] focus:border-white"
+                className="h-12 rounded-none border-[#3c3c3c] bg-neutral-950 text-white placeholder-[#7e7e7e] focus:border-white"
                 required
               />
             </div>
@@ -129,7 +133,7 @@ function SignupForm() {
                 type="password"
                 placeholder="Password"
                 readOnly={isPending}
-                className="h-12 rounded-none border-[#3c3c3c] bg-black text-white placeholder-[#7e7e7e] focus:border-white"
+                className="h-12 rounded-none border-[#3c3c3c] bg-neutral-950 text-white placeholder-[#7e7e7e] focus:border-white"
                 required
               />
             </div>
@@ -146,17 +150,17 @@ function SignupForm() {
                 type="password"
                 placeholder="Confirm Password"
                 readOnly={isPending}
-                className="h-12 rounded-none border-[#3c3c3c] bg-black text-white placeholder-[#7e7e7e] focus:border-white"
+                className="h-12 rounded-none border-[#3c3c3c] bg-neutral-950 text-white placeholder-[#7e7e7e] focus:border-white"
                 required
               />
             </div>
             <Button
               type="submit"
-              className="mt-4 h-12 w-full rounded-none border border-white bg-white font-bold tracking-[1.5px] text-black uppercase transition-colors hover:bg-black hover:text-white"
+              className="mt-4 h-12 w-full rounded-none border border-white bg-white font-bold tracking-[1.5px] text-black uppercase transition-colors hover:bg-neutral-950 hover:text-white"
               disabled={isPending}
             >
-              {isPending && <LoaderCircleIcon className="mr-2 h-4 w-4 animate-spin" />}
-              {isPending ? "Signing up..." : "Sign up"}
+              {isPending && <LoaderCircleIcon className="mr-2 size-4 animate-spin" />}
+              {isPending ? "Signing up…" : "Sign up"}
             </Button>
           </div>
         </div>

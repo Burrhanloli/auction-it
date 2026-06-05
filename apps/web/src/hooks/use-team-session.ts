@@ -1,20 +1,39 @@
-import { useState, useEffect } from "react";
+import { useState, useSyncExternalStore } from "react";
 
-export function useTeamSession(auctionId: string, teamId?: string) {
-  const [verifiedTeamId, setVerifiedTeamId] = useState<string | null>(null);
-  const [sessionLoading, setSessionLoading] = useState(true);
+const emptySubscribe = () => () => {};
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem(`auction-session-${auctionId}`);
-      if (stored && (!teamId || stored === teamId)) {
-        setVerifiedTeamId(stored);
-      } else {
-        setVerifiedTeamId(null);
-      }
-      setSessionLoading(false);
+export function useTeamSession(auctionId: string, teamId: string | null | undefined) {
+  const isClient = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false,
+  );
+  const [localOverride, setLocalOverride] = useState<string | null | undefined>(undefined);
+  const [prevAuctionId, setPrevAuctionId] = useState(auctionId);
+  const [prevTeamId, setPrevTeamId] = useState(teamId);
+
+  // Adjust state inline during render to reset the local override on prop change
+  if (auctionId !== prevAuctionId || teamId !== prevTeamId) {
+    setPrevAuctionId(auctionId);
+    setPrevTeamId(teamId);
+    setLocalOverride(undefined);
+  }
+
+  let verifiedTeamId: string | null = null;
+  if (localOverride !== undefined) {
+    verifiedTeamId = localOverride;
+  } else if (isClient) {
+    const stored = localStorage.getItem(`auction-session-${auctionId}`);
+    if (stored && (!teamId || stored === teamId)) {
+      verifiedTeamId = stored;
     }
-  }, [auctionId, teamId]);
+  }
 
-  return { verifiedTeamId, setVerifiedTeamId, sessionLoading };
+  const sessionLoading = !isClient;
+
+  return {
+    verifiedTeamId,
+    setVerifiedTeamId: (val: string | null) => setLocalOverride(val),
+    sessionLoading,
+  };
 }
