@@ -72,7 +72,7 @@ function AdminDashboardPage() {
     <div className="relative min-h-screen overflow-hidden bg-neutral-950 font-sans text-white">
       <AdminHeader user={user} scrollDirection={scrollDirection} />
 
-      <main className="relative z-10 mx-auto max-w-7xl px-4 py-8 md:px-8 md:py-12">
+      <main className="relative mx-auto max-w-7xl px-4 py-8 md:px-8 md:py-12">
         <AdminWelcomeBanner
           userName={user?.name ?? ""}
           onCreateClick={() => setShowCreateModal(true)}

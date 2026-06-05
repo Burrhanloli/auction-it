@@ -166,9 +166,8 @@ function AdminLayout() {
         </div>
       </div>
 
-      {/* Main content render area */}
       <div className="relative flex-1 overflow-hidden bg-neutral-950">
-        <div className="relative z-10 mx-auto max-w-7xl px-4 py-8 md:px-8 md:py-12">
+        <div className="relative mx-auto max-w-7xl px-4 py-8 md:px-8 md:py-12">
           <Outlet />
         </div>
       </div>
