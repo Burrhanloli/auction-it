@@ -12,7 +12,7 @@ export function SoldState({ auction, activePlayer, categoryName, state }: any) {
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className="gap-y- flex w-full flex-col items-center text-center"
+      className="flex w-full flex-col items-center gap-y-4 text-center"
     >
       <div className="pointer-events-none absolute inset-0 z-50 overflow-hidden">
         <Confetti

@@ -39,6 +39,7 @@ export function BiddingFormPanel({
   useEffect(() => {
     if (state.currentBidPoints > pendingBidAmountRef.current) {
       pendingBidAmountRef.current = state.currentBidPoints;
+      // react-doctor-disable-next-line react-doctor/no-event-handler
       if (lastIncrement !== null) {
         // react-doctor-disable-next-line react-doctor/no-derived-state
         setCustomBidAmount(state.currentBidPoints + lastIncrement);
@@ -123,12 +124,11 @@ export function BiddingFormPanel({
   const incrementOptions = [100, 200, 500, 1000, 2000, 3000, 4000, 5000];
 
   return (
-    <div className="gap-y- border-t border-[#3c3c3c] pt-2">
-      <div className="gap-y-">
-        <bidForm.Field
-          name="biddingTeamId"
-          children={(field) => (
-            <div className="gap-y-">
+    <div className="gap-y-4 border-t border-[#3c3c3c] pt-2">
+      <div className="space-y-1.5">
+        <bidForm.Field name="biddingTeamId">
+          {(field) => (
+            <div className="space-y-1.5">
               <Label className="text-xs font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
                 Select Bidding Team
               </Label>
@@ -204,10 +204,10 @@ export function BiddingFormPanel({
               </div>
             </div>
           )}
-        />
+        </bidForm.Field>
 
         <div className="border-t border-[#3c3c3c] pt-4">
-          <div className="gap-y-">
+          <div className="space-y-1.5">
             <Label
               htmlFor="customBidAmountInput"
               className="text-xs font-bold tracking-[1.5px] text-[#bbbbbb] uppercase"

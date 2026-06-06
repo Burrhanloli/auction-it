@@ -33,7 +33,7 @@ export function ActiveBiddingArea({
   if (status === "completed") return <CompletedState />;
 
   return (
-    <div className="gap-y- mx-auto flex w-full max-w-6xl flex-1 flex-col">
+    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-y-4">
       <div className="relative flex min-h-[80vh] flex-1 flex-col items-center justify-center overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-4 md:p-6">
         {/* Background Watermark */}
         <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center opacity-10">

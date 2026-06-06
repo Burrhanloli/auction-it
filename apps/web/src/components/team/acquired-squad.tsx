@@ -21,7 +21,7 @@ export function AcquiredSquad({
         <span className="text-[10px] text-[#bbbbbb]">Active roster</span>
       </div>
 
-      <div className="gap-y- max-h-[30vh] overflow-y-auto pr-1">
+      <div className="max-h-[30vh] gap-y-4 overflow-y-auto pr-1">
         {soldToThisTeam.map((player: any) => {
           const categoryColor = "border-[#3c3c3c] text-[#bbbbbb] bg-neutral-950";
 

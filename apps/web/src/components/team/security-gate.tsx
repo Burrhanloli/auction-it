@@ -25,7 +25,7 @@ export function SecurityGate({
 }: SecurityGateProps) {
   const [passcode, setPasscode] = useState("");
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const currentTeamId = activeSelectedTeamId;
@@ -49,7 +49,7 @@ export function SecurityGate({
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-neutral-950 p-6 text-white">
       <div className="relative w-full max-w-3xl rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8">
         {/* Logo / Header */}
-        <div className="gap-y- mb-8 flex flex-col items-center text-center">
+        <div className="mb-8 flex flex-col items-center gap-y-4 text-center">
           <div className="flex size-12 items-center justify-center rounded-none border border-[#3c3c3c] bg-neutral-950 text-white">
             <LockIcon className="size-5 animate-pulse" />
           </div>
@@ -67,8 +67,8 @@ export function SecurityGate({
           </div>
         </div>
 
-        <form onSubmit={handleLoginSubmit} className="gap-y-">
-          <div className="gap-y-">
+        <form onSubmit={handleLoginSubmit} className="flex flex-col gap-y-4">
+          <div className="space-y-1.5">
             <Label className="text-xs font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
               Select Franchise Team
             </Label>
@@ -126,7 +126,7 @@ export function SecurityGate({
             )}
           </div>
 
-          <div className="gap-y-">
+          <div className="space-y-1.5">
             <Label htmlFor="passcodeInput" className="text-xs font-bold text-[#bbbbbb]">
               6-Digit Passcode
             </Label>

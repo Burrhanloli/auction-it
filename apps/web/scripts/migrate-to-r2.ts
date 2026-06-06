@@ -3,7 +3,6 @@ import { db } from "@repo/db";
 import { players, teams, auctions } from "@repo/db/schema";
 import { eq } from "drizzle-orm";
 import sharp from "sharp";
-import { v4 as uuidv4 } from "uuid";
 
 // Validate env vars
 const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID;

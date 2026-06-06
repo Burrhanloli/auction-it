@@ -26,7 +26,7 @@ export function LeftColumn({ team, auction, soldToThisTeam, spentPoints }: LeftC
         : "bg-red-500 animate-pulse";
 
   return (
-    <div className="gap-y- lg:col-span-1">
+    <div className="gap-y-4 lg:col-span-1">
       {/* Team Branding */}
       <div className="relative flex flex-col items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8 text-center">
         {team.logoUrl ? (
@@ -56,7 +56,7 @@ export function LeftColumn({ team, auction, soldToThisTeam, spentPoints }: LeftC
           Capital Budget Deck
         </h3>
 
-        <div className="gap-y-">
+        <div className="space-y-1.5">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="rounded-none border border-[#3c3c3c] bg-neutral-950 p-4">
               <span className="block text-[8px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
@@ -74,7 +74,7 @@ export function LeftColumn({ team, auction, soldToThisTeam, spentPoints }: LeftC
             </div>
           </div>
 
-          <div className="gap-y-">
+          <div className="space-y-1.5">
             <div className="flex items-center justify-between text-[10px] font-bold text-[#bbbbbb]">
               <span>BUDGET EXHAUSTION METER</span>
               <span>{Math.round(budgetRatio * 100)}% Available</span>
@@ -112,7 +112,7 @@ export function LeftColumn({ team, auction, soldToThisTeam, spentPoints }: LeftC
             Roster Constraints
           </h3>
 
-          <div className="gap-y-">
+          <div className="space-y-1.5">
             {(minSquadSize != null || maxSquadSize != null) && (
               <div>
                 <div className="mb-2 flex items-center justify-between text-[10px] font-bold text-[#bbbbbb] uppercase">
@@ -179,7 +179,7 @@ export function LeftColumn({ team, auction, soldToThisTeam, spentPoints }: LeftC
           Franchise Executives
         </h3>
 
-        <div className="gap-y-">
+        <div className="space-y-1.5">
           <div className="flex items-center justify-between rounded-none border border-[#3c3c3c] bg-neutral-950 p-3.5">
             <div className="flex items-center gap-x-2">
               {team.ownerImageUrl ? (

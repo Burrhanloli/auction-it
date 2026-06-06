@@ -46,7 +46,7 @@ export function MobileMenu({ setIsMobileMenuOpen }: { setIsMobileMenuOpen: (v: b
       </div>
       <div className="flex flex-1 flex-col p-6">
         {user ? (
-          <div className="gap-y- flex flex-col">
+          <div className="flex flex-col gap-y-4">
             <div className="flex items-center gap-x-2 rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-4">
               <UserIcon className="size-5 text-white" />
               <span className="text-base font-medium text-white">{user.name}</span>
@@ -58,7 +58,7 @@ export function MobileMenu({ setIsMobileMenuOpen }: { setIsMobileMenuOpen: (v: b
             </Link>
           </div>
         ) : (
-          <div className="gap-y- flex flex-col">
+          <div className="flex flex-col gap-y-4">
             <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>
               <Button
                 variant="outline"

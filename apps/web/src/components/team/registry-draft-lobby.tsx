@@ -105,7 +105,7 @@ export function RegistryDraftLobby({
         })}
 
         {filteredUnsoldPlayers.length === 0 && (
-          <div className="gap-y- col-span-2 flex flex-col items-center justify-center rounded-none border border-dashed border-[#3c3c3c] bg-neutral-950 py-16 text-center">
+          <div className="col-span-2 flex flex-col items-center justify-center gap-y-4 rounded-none border border-dashed border-[#3c3c3c] bg-neutral-950 py-16 text-center">
             <div className="flex size-12 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] text-lg text-[#bbbbbb]">
               ✨
             </div>

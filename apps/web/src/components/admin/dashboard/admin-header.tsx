@@ -12,7 +12,7 @@ export function AdminHeader({
   user,
   scrollDirection,
 }: {
-  user: { name: string } | any;
+  user: { name: string } | null;
   scrollDirection: string;
 }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -107,7 +107,7 @@ export function AdminHeader({
               <XIcon className="size-6" />
             </button>
           </div>
-          <div className="gap-y- flex flex-1 flex-col p-6">
+          <div className="flex flex-1 flex-col gap-y-4 p-6">
             <div className="flex items-center gap-x-3 rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-4">
               <div className="flex size-10 items-center justify-center rounded-none bg-white text-base font-bold tracking-[1.5px] text-black uppercase">
                 {user?.name?.slice(0, 1)}

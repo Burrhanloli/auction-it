@@ -197,35 +197,45 @@ export function SetupForm({ auction, auctionId }: SetupFormProps) {
         e.stopPropagation();
         form.handleSubmit();
       }}
-      className="gap-y- mx-auto max-w-6xl"
+      className="mx-auto max-w-6xl gap-y-4"
     >
-      <BasicSettingsCard form={form} auction={auction} />
-      <CategoryDecksCard form={form} handleRemoveCategory={handleRemoveCategory} />
-      {/* Save Settings Block */}
-      <div className="flex flex-col items-start justify-between gap-6 rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8 md:flex-row md:items-center md:gap-0">
-        <div className="flex items-center gap-x-2">
-          <ShieldAlertIcon className="size-4 text-white" />
-          <span className="text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
-            Review changes carefully. Categories with active roster assignments cannot be removed.
-          </span>
-        </div>
-
-        <form.Subscribe
-          selector={(state: any) => state.isSubmitting}
-          children={(isSubmitting) => (
-            <Button
-              type="submit"
-              disabled={isSubmitting || updateAuctionMutation.isPending}
-              className="flex cursor-pointer items-center gap-x-2 rounded-none border border-white bg-white px-8 py-3 font-black tracking-[1.5px] text-black uppercase hover:bg-neutral-950 hover:text-white"
-            >
-              <SaveIcon className="size-4" />
-              <span>
-                {isSubmitting || updateAuctionMutation.isPending ? "Saving…" : "Save Configuration"}
-              </span>
-            </Button>
-          )}
+      <fieldset disabled={auction.status === "completed"} className="contents gap-y-4">
+        <BasicSettingsCard form={form} auction={auction} />
+        <CategoryDecksCard
+          form={form}
+          handleRemoveCategory={handleRemoveCategory}
+          auction={auction}
         />
-      </div>
+      </fieldset>
+      {/* Save Settings Block */}
+      {auction?.status !== "completed" && (
+        <div className="flex flex-col items-start justify-between gap-6 rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8 md:flex-row md:items-center md:gap-0">
+          <div className="flex items-center gap-x-2">
+            <ShieldAlertIcon className="size-4 text-white" />
+            <span className="text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
+              Review changes carefully. Categories with active roster assignments cannot be removed.
+            </span>
+          </div>
+
+          <form.Subscribe
+            selector={(state: any) => state.isSubmitting}
+            children={(isSubmitting) => (
+              <Button
+                type="submit"
+                disabled={isSubmitting || updateAuctionMutation.isPending}
+                className="flex cursor-pointer items-center gap-x-2 rounded-none border border-white bg-white px-8 py-3 font-black tracking-[1.5px] text-black uppercase hover:bg-neutral-950 hover:text-white"
+              >
+                <SaveIcon className="size-4" />
+                <span>
+                  {isSubmitting || updateAuctionMutation.isPending
+                    ? "Saving…"
+                    : "Save Configuration"}
+                </span>
+              </Button>
+            )}
+          />
+        </div>
+      )}
     </form>
   );
 }
@@ -250,132 +260,140 @@ export function BasicSettingsCard({ form, auction }: { form: any; auction: any }
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-          <form.Field
-            name="name"
-            children={(field: any) => (
-              <div className="gap-y-">
-                <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
-                  Auction Tournament Name *
-                </Label>
-                <Input
-                  id={field.name}
-                  placeholder="e.g. Premier League Season 4"
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  className="rounded-none border border-[#3c3c3c] bg-neutral-950 text-xs text-white"
-                  required
-                />
-              </div>
-            )}
-          />
-
-          <form.Field
-            name="logoUrl"
-            children={(field: any) => (
-              <div className="gap-y- md:col-span-2">
-                <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
-                  Auction Logo (Auto-converts to WebP)
-                </Label>
-                <ImageUpload
-                  id={field.name}
-                  value={field.state.value}
-                  onChange={(url) => field.handleChange(url)}
-                  className="mt-2"
-                />
-              </div>
-            )}
-          />
-
-          <form.Field
-            name="budgetPerTeam"
-            children={(field: any) => (
-              <div className="gap-y-">
-                <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
-                  Default Points Budget Per Team *
-                </Label>
-                <div className="relative">
-                  <CoinsIcon className="absolute top-2.5 left-3 size-4 text-[#bbbbbb]" />
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+          {/* Main Details */}
+          <div className="flex flex-col gap-y-8 md:col-span-2">
+            <form.Field
+              name="name"
+              children={(field: any) => (
+                <div className="space-y-1.5">
+                  <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
+                    Auction Tournament Name *
+                  </Label>
                   <Input
                     id={field.name}
-                    type="number"
-                    placeholder="1000"
+                    placeholder="e.g. Premier League Season 4"
                     value={field.state.value}
-                    onChange={(e) => field.handleChange(Number(e.target.value))}
-                    className="rounded-none border border-[#3c3c3c] bg-neutral-950 pl-9 text-xs text-white"
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    className="rounded-none border border-[#3c3c3c] bg-neutral-950 text-xs text-white"
                     required
                   />
                 </div>
-              </div>
-            )}
-          />
+              )}
+            />
 
-          <form.Field
-            name="minPlayersPerSquad"
-            children={(field: any) => (
-              <div className="gap-y-">
-                <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
-                  Min Players Per Squad (Optional)
-                </Label>
-                <Input
-                  id={field.name}
-                  type="number"
-                  placeholder="e.g. 15"
-                  value={field.state.value as any}
-                  onChange={(e) => field.handleChange(e.target.value as any)}
-                  className="rounded-none border border-[#3c3c3c] bg-neutral-950 text-xs text-white"
-                />
-              </div>
-            )}
-          />
+            <form.Field
+              name="budgetPerTeam"
+              children={(field: any) => (
+                <div className="space-y-1.5">
+                  <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
+                    Default Points Budget Per Team *
+                  </Label>
+                  <div className="relative">
+                    <CoinsIcon className="absolute top-2.5 left-3 size-4 text-[#bbbbbb]" />
+                    <Input
+                      id={field.name}
+                      type="number"
+                      placeholder="1000"
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(Number(e.target.value))}
+                      className="rounded-none border border-[#3c3c3c] bg-neutral-950 pl-9 text-xs text-white"
+                      required
+                    />
+                  </div>
+                </div>
+              )}
+            />
 
-          <form.Field
-            name="maxPlayersPerSquad"
-            children={(field: any) => (
-              <div className="gap-y-">
-                <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
-                  Max Players Per Squad (Optional)
-                </Label>
-                <Input
-                  id={field.name}
-                  type="number"
-                  placeholder="e.g. 25"
-                  value={field.state.value as any}
-                  onChange={(e) => field.handleChange(e.target.value as any)}
-                  className="rounded-none border border-[#3c3c3c] bg-neutral-950 text-xs text-white"
-                />
-              </div>
-            )}
-          />
+            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
+              <form.Field
+                name="minPlayersPerSquad"
+                children={(field: any) => (
+                  <div className="space-y-1.5">
+                    <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
+                      Min Players Per Squad (Optional)
+                    </Label>
+                    <Input
+                      id={field.name}
+                      type="number"
+                      placeholder="e.g. 15"
+                      value={field.state.value as any}
+                      onChange={(e) => field.handleChange(e.target.value as any)}
+                      className="rounded-none border border-[#3c3c3c] bg-neutral-950 text-xs text-white"
+                    />
+                  </div>
+                )}
+              />
 
-          <form.Field
-            name="slug"
-            children={(field: any) => (
-              <div className="gap-y- md:col-span-2">
-                <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
-                  Auction URL Slug Prefix * (suffix is read-only)
-                </Label>
-                <div className="flex items-center gap-x-2">
-                  <Input
+              <form.Field
+                name="maxPlayersPerSquad"
+                children={(field: any) => (
+                  <div className="space-y-1.5">
+                    <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
+                      Max Players Per Squad (Optional)
+                    </Label>
+                    <Input
+                      id={field.name}
+                      type="number"
+                      placeholder="e.g. 25"
+                      value={field.state.value as any}
+                      onChange={(e) => field.handleChange(e.target.value as any)}
+                      className="rounded-none border border-[#3c3c3c] bg-neutral-950 text-xs text-white"
+                    />
+                  </div>
+                )}
+              />
+            </div>
+
+            <form.Field
+              name="slug"
+              children={(field: any) => (
+                <div className="space-y-1.5">
+                  <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
+                    Auction URL Slug Prefix * (suffix is read-only)
+                  </Label>
+                  <div className="flex items-center gap-x-2">
+                    <Input
+                      id={field.name}
+                      placeholder="e.g. premier-league"
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(slugify(e.target.value))}
+                      className="flex-1 rounded-none border border-[#3c3c3c] bg-neutral-950 text-xs text-white"
+                      required
+                    />
+                    <form.Subscribe
+                      selector={(state: any) => state.values.suffix}
+                      children={(suffixValue: any) => (
+                        <span className="rounded-none border border-[#3c3c3c] bg-neutral-950 px-3 py-2 font-mono text-xs text-[#bbbbbb] select-none">
+                          -{suffixValue || "yyyyy"}
+                        </span>
+                      )}
+                    />
+                  </div>
+                </div>
+              )}
+            />
+          </div>
+
+          {/* Media Sidebar */}
+          <div className="flex flex-col gap-y-8 md:col-span-1">
+            <form.Field
+              name="logoUrl"
+              children={(field: any) => (
+                <div className="space-y-1.5">
+                  <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
+                    Auction Logo (Auto-converts to WebP)
+                  </Label>
+                  <ImageUpload
                     id={field.name}
-                    placeholder="e.g. premier-league"
                     value={field.state.value}
-                    onChange={(e) => field.handleChange(slugify(e.target.value))}
-                    className="flex-1 rounded-none border border-[#3c3c3c] bg-neutral-950 text-xs text-white"
-                    required
-                  />
-                  <form.Subscribe
-                    selector={(state: any) => state.values.suffix}
-                    children={(suffixValue: any) => (
-                      <span className="rounded-none border border-[#3c3c3c] bg-neutral-950 px-3 py-2 font-mono text-xs text-[#bbbbbb] select-none">
-                        -{suffixValue || "xxxxx"}
-                      </span>
-                    )}
+                    onChange={(url) => field.handleChange(url)}
+                    className="mt-2"
                   />
                 </div>
-              </div>
-            )}
-          />
+              )}
+            />
+          </div>
         </div>
       </div>
     </>
@@ -385,9 +403,11 @@ export function BasicSettingsCard({ form, auction }: { form: any; auction: any }
 export function CategoryDecksCard({
   form,
   handleRemoveCategory,
+  auction,
 }: {
   form: any;
   handleRemoveCategory: any;
+  auction: any;
 }) {
   return (
     <>
@@ -413,25 +433,27 @@ export function CategoryDecksCard({
                 </div>
               </div>
 
-              <Button
-                type="button"
-                onClick={() => field.pushValue({ id: generateId(), name: "", basePoints: 100 })}
-                className="flex cursor-pointer items-center gap-x-1.5 rounded-none border border-[#3c3c3c] bg-neutral-950 px-3 py-1.5 text-xs font-bold tracking-[1.5px] text-[#bbbbbb] uppercase hover:bg-white hover:text-black"
-              >
-                <PlusIcon className="size-3.5 text-[currentcolor]" />
-                <span>Add Category</span>
-              </Button>
+              {auction?.status !== "completed" && (
+                <Button
+                  type="button"
+                  onClick={() => field.pushValue({ id: generateId(), name: "", basePoints: 100 })}
+                  className="flex cursor-pointer items-center gap-x-1.5 rounded-none border border-[#3c3c3c] bg-neutral-950 px-3 py-1.5 text-xs font-bold tracking-[1.5px] text-[#bbbbbb] uppercase hover:bg-white hover:text-black"
+                >
+                  <PlusIcon className="size-3.5 text-[currentcolor]" />
+                  <span>Add Category</span>
+                </Button>
+              )}
             </div>
 
             {/* Dynamic categories inputs table */}
-            <div className="gap-y-">
+            <div className="space-y-1.5">
               {field.state.value.map((cat: any, idx: any) => (
                 <div
                   key={cat.id}
                   className="flex items-center gap-x-4 rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-4"
                 >
                   <div className="grid flex-1 grid-cols-1 gap-4 md:grid-cols-4">
-                    <div className="gap-y- md:col-span-2">
+                    <div className="gap-y-4 md:col-span-2">
                       <Label className="text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
                         Category Name
                       </Label>
@@ -446,7 +468,7 @@ export function CategoryDecksCard({
                         )}
                       </form.Field>
                     </div>
-                    <div className="gap-y- md:col-span-2">
+                    <div className="gap-y-4 md:col-span-2">
                       <Label className="text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
                         Base points value
                       </Label>
@@ -465,7 +487,7 @@ export function CategoryDecksCard({
                         </form.Field>
                       </div>
                     </div>
-                    <div className="gap-y- md:col-span-2">
+                    <div className="gap-y-4 md:col-span-2">
                       <Label className="text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
                         Min Players (Opt)
                       </Label>
@@ -481,7 +503,7 @@ export function CategoryDecksCard({
                         )}
                       </form.Field>
                     </div>
-                    <div className="gap-y- md:col-span-2">
+                    <div className="gap-y-4 md:col-span-2">
                       <Label className="text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
                         Max Players (Opt)
                       </Label>
@@ -499,14 +521,16 @@ export function CategoryDecksCard({
                     </div>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveCategory(field, idx, cat.id)}
-                    className="mb-1 flex size-9 cursor-pointer items-center justify-center self-end rounded-none border border-[#3c3c3c] bg-neutral-950 text-[#bbbbbb] hover:bg-white hover:text-black"
-                    title="Remove Category"
-                  >
-                    <TrashIcon className="size-4" />
-                  </button>
+                  {auction?.status !== "completed" && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveCategory(field, idx, cat.id)}
+                      className="mb-1 flex size-9 cursor-pointer items-center justify-center self-end rounded-none border border-[#3c3c3c] bg-neutral-950 text-[#bbbbbb] hover:bg-white hover:text-black"
+                      title="Remove Category"
+                    >
+                      <TrashIcon className="size-4" />
+                    </button>
+                  )}
                 </div>
               ))}
 

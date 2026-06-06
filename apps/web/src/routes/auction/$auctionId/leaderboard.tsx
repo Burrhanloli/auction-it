@@ -120,7 +120,7 @@ function LeaderboardPage() {
           <AuctionHero auction={auction} subtitle="Live Arena Standings & Leaderboards" />
 
           {/* Main Container */}
-          <main className="gap-y- relative z-10 mx-auto w-full max-w-7xl flex-1 px-4 py-8 md:px-6 md:py-10">
+          <main className="relative z-10 mx-auto w-full max-w-7xl flex-1 gap-y-4 px-4 py-8 md:px-6 md:py-10">
             <TopValuedPlayers soldPlayers={soldPlayers} auction={auction} />
 
             <TeamStandings auction={auction} />
@@ -317,7 +317,7 @@ export function TeamStandings({ auction }: { auction: any }) {
                 </div>
 
                 {/* Content Section */}
-                <div className="gap-y- flex flex-1 flex-col p-6">
+                <div className="flex flex-1 flex-col gap-y-4 p-6">
                   <div className="flex flex-col">
                     <h4
                       className="line-clamp-2 text-[24px] leading-[1.1] font-bold text-white uppercase transition-colors"
@@ -382,7 +382,7 @@ export function TeamStandings({ auction }: { auction: any }) {
                   </div>
 
                   {/* Budget progress bar spent vs left */}
-                  <div className="gap-y-">
+                  <div className="space-y-1.5">
                     <div className="flex items-center justify-between text-xs">
                       <span className="font-bold text-[#bbbbbb]">Spent Budget</span>
                       <span className="font-black text-white">
@@ -403,11 +403,11 @@ export function TeamStandings({ auction }: { auction: any }) {
                   </div>
 
                   {/* Bought Players list mini-grid */}
-                  <div className="gap-y- border-t border-[#3c3c3c] pt-4">
+                  <div className="gap-y-4 border-t border-[#3c3c3c] pt-4">
                     <span className="block text-[9px] font-black tracking-[1.5px] text-[#bbbbbb] uppercase">
                       Roster Log
                     </span>
-                    <div className="gap-y- max-h-35 overflow-y-auto pr-1">
+                    <div className="max-h-35 gap-y-4 overflow-y-auto pr-1">
                       {teamPlayers.map((player: any) => {
                         const isCaptain = team.captainPlayer?.id === player.id;
 

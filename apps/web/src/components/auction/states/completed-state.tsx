@@ -4,7 +4,7 @@ import { Logo } from "#/components/logo";
 
 export function CompletedState() {
   return (
-    <div className="gap-y- mx-auto flex w-full max-w-6xl flex-col">
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-y-4">
       <div className="relative flex flex-1 flex-col items-center justify-center overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-12 text-center">
         <Logo className="mb-4 size-16" />
         <div className="inline-flex flex-col">

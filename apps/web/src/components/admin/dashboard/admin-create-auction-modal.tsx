@@ -8,7 +8,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { Loader2Icon, SparklesIcon, CoinsIcon } from "lucide-react";
 import { toast } from "sonner";
 
-import { ImageViewer } from "#/components/image-viewer";
+import { ImageUpload } from "#/components/image-upload";
 import { $createAuction } from "#/lib/auction-actions";
 
 const generateId = () => `new-${crypto.randomUUID()}`;
@@ -103,7 +103,7 @@ export function AdminCreateAuctionModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/90 p-4">
-      <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8">
+      <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8">
         <div className="mb-8 flex items-center justify-between">
           <div>
             <div className="flex items-center">
@@ -147,151 +147,151 @@ export function AdminCreateAuctionModal({
             e.stopPropagation();
             form.handleSubmit();
           }}
-          className="gap-y-"
+          className="flex flex-col gap-y-4"
         >
-          <form.Field
-            name="name"
-            children={(field) => (
-              <div className="gap-y-">
-                <Label htmlFor={field.name} className="text-sm font-medium text-white">
-                  Auction Name
-                </Label>
-                <Input
-                  id={field.name}
-                  placeholder="e.g. Premier League Cricket 2026"
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  className="rounded-none border-[#3c3c3c] bg-neutral-950 py-3 text-sm text-white placeholder-[#7e7e7e] focus:border-white"
-                  required
-                />
-              </div>
-            )}
-          />
-
-          <form.Field
-            name="logoUrl"
-            children={(field) => (
-              <div className="gap-y-">
-                <Label htmlFor={field.name} className="text-sm font-medium text-white">
-                  Auction Logo URL (Optional)
-                </Label>
-                <div className="flex items-center gap-3">
-                  {field.state.value && (
-                    <ImageViewer
-                      src={field.state.value}
-                      alt="Logo preview"
-                      className="size-12 rounded-none border border-[#3c3c3c] bg-neutral-950 object-contain"
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+            {/* Main Details */}
+            <div className="flex flex-col gap-y-4 md:col-span-2">
+              <form.Field
+                name="name"
+                children={(field) => (
+                  <div className="space-y-1.5">
+                    <Label htmlFor={field.name} className="text-sm font-medium text-white">
+                      Auction Name
+                    </Label>
+                    <Input
+                      id={field.name}
+                      placeholder="e.g. Premier League Cricket 2026"
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      className="rounded-none border-[#3c3c3c] bg-neutral-950 py-3 text-sm text-white placeholder-[#7e7e7e] focus:border-white"
+                      required
                     />
-                  )}
-                  <Input
-                    id={field.name}
-                    placeholder="https://example.com/logo.png"
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    className="flex-1 rounded-none border-[#3c3c3c] bg-neutral-950 py-3 text-sm text-white placeholder-[#7e7e7e] focus:border-white"
-                  />
-                </div>
-              </div>
-            )}
-          />
+                  </div>
+                )}
+              />
 
-          <form.Field
-            name="budgetPerTeam"
-            children={(field) => (
-              <div className="gap-y-">
-                <Label htmlFor={field.name} className="text-sm font-medium text-white">
-                  Starting Budget Points per Team
-                </Label>
-                <div className="relative">
-                  <CoinsIcon className="absolute top-3 left-3 size-4 text-[#bbbbbb]" />
-                  <Input
-                    id={field.name}
-                    type="number"
-                    placeholder="1000"
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(Number(e.target.value))}
-                    className="rounded-none border-[#3c3c3c] bg-neutral-950 py-3 pl-9 text-sm text-white"
-                    required
-                  />
-                </div>
-              </div>
-            )}
-          />
-
-          <form.Field
-            name="categories"
-            mode="array"
-            children={(field) => (
-              <div className="gap-y-">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm font-medium text-white">Categories & Base Points</Label>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      field.pushValue({
-                        id: generateId(),
-                        name: "",
-                        basePoints: 100,
-                      })
-                    }
-                    className="rounded-none border border-[#3c3c3c] bg-neutral-950 text-xs tracking-[1.5px] text-white uppercase hover:bg-white hover:text-black"
-                  >
-                    + Add Category
-                  </Button>
-                </div>
-
-                <div className="gap-y- max-h-[220px] overflow-y-auto pr-1">
-                  {field.state.value.map((cat, idx) => (
-                    <div
-                      key={cat.id || idx}
-                      className="flex items-center gap-x-3 rounded-none border border-[#3c3c3c] bg-neutral-950 p-3"
-                    >
-                      <div className="flex-1">
-                        <form.Field
-                          name={`categories[${idx}].name`}
-                          children={(subField) => (
-                            <Input
-                              placeholder="Category Name (e.g. Elite)"
-                              value={subField.state.value}
-                              onChange={(e) => subField.handleChange(e.target.value)}
-                              className="rounded-none border-[#3c3c3c] bg-[#1a1a1a] text-sm text-white"
-                              required
-                            />
-                          )}
-                        />
-                      </div>
-                      <div className="w-32">
-                        <form.Field
-                          name={`categories[${idx}].basePoints`}
-                          children={(subField) => (
-                            <Input
-                              type="number"
-                              placeholder="Base pts"
-                              value={subField.state.value}
-                              onChange={(e) => subField.handleChange(Number(e.target.value))}
-                              className="rounded-none border-[#3c3c3c] bg-[#1a1a1a] text-sm text-white"
-                              required
-                            />
-                          )}
-                        />
-                      </div>
-                      {field.state.value.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => field.removeValue(idx)}
-                          className="cursor-pointer px-2 text-red-400 hover:text-red-300"
-                        >
-                          ✕
-                        </button>
-                      )}
+              <form.Field
+                name="budgetPerTeam"
+                children={(field) => (
+                  <div className="space-y-1.5">
+                    <Label htmlFor={field.name} className="text-sm font-medium text-white">
+                      Starting Budget Points per Team
+                    </Label>
+                    <div className="relative">
+                      <CoinsIcon className="absolute top-3 left-3 size-4 text-[#bbbbbb]" />
+                      <Input
+                        id={field.name}
+                        type="number"
+                        placeholder="1000"
+                        value={field.state.value}
+                        onChange={(e) => field.handleChange(Number(e.target.value))}
+                        className="rounded-none border-[#3c3c3c] bg-neutral-950 py-3 pl-9 text-sm text-white"
+                        required
+                      />
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          />
+                  </div>
+                )}
+              />
+
+              <form.Field
+                name="categories"
+                mode="array"
+                children={(field) => (
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-medium text-white">
+                        Categories & Base Points
+                      </Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          field.pushValue({
+                            id: generateId(),
+                            name: "",
+                            basePoints: 100,
+                          })
+                        }
+                        className="rounded-none border border-[#3c3c3c] bg-neutral-950 text-xs tracking-[1.5px] text-white uppercase hover:bg-white hover:text-black"
+                      >
+                        + Add Category
+                      </Button>
+                    </div>
+
+                    <div className="max-h-[220px] gap-y-4 overflow-y-auto pr-1">
+                      {field.state.value.map((cat, idx) => (
+                        <div
+                          key={cat.id || idx}
+                          className="flex items-center gap-x-3 rounded-none border border-[#3c3c3c] bg-neutral-950 p-3"
+                        >
+                          <div className="flex-1">
+                            <form.Field
+                              name={`categories[${idx}].name`}
+                              children={(subField) => (
+                                <Input
+                                  placeholder="Category Name (e.g. Elite)"
+                                  value={subField.state.value}
+                                  onChange={(e) => subField.handleChange(e.target.value)}
+                                  className="rounded-none border-[#3c3c3c] bg-[#1a1a1a] text-sm text-white"
+                                  required
+                                />
+                              )}
+                            />
+                          </div>
+                          <div className="w-32">
+                            <form.Field
+                              name={`categories[${idx}].basePoints`}
+                              children={(subField) => (
+                                <Input
+                                  type="number"
+                                  placeholder="Base pts"
+                                  value={subField.state.value}
+                                  onChange={(e) => subField.handleChange(Number(e.target.value))}
+                                  className="rounded-none border-[#3c3c3c] bg-[#1a1a1a] text-sm text-white"
+                                  required
+                                />
+                              )}
+                            />
+                          </div>
+                          {field.state.value.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => field.removeValue(idx)}
+                              className="cursor-pointer px-2 text-red-400 hover:text-red-300"
+                            >
+                              ✕
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              />
+            </div>
+
+            {/* Media Sidebar */}
+            <div className="flex flex-col gap-y-4 md:col-span-1">
+              <form.Field
+                name="logoUrl"
+                children={(field) => (
+                  <div className="space-y-1.5">
+                    <Label htmlFor={field.name} className="text-sm font-medium text-white">
+                      Auction Logo (Auto-converts to WebP)
+                    </Label>
+                    <ImageUpload
+                      id={field.name}
+                      value={field.state.value}
+                      onChange={(url) => field.handleChange(url)}
+                      className="mt-2"
+                    />
+                  </div>
+                )}
+              />
+            </div>
+          </div>
 
           <div className="pt-2">
             <Button

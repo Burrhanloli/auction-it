@@ -39,6 +39,7 @@ const ConfettiComponent = (props: Props & { ref?: React.Ref<ConfettiRef> }) => {
     children,
     ref,
     ...rest
+    // react-doctor-disable-next-line react-doctor/no-event-handler
   } = props;
   const instanceRef = useRef<ConfettiInstance | null>(null);
 
@@ -80,6 +81,7 @@ const ConfettiComponent = (props: Props & { ref?: React.Ref<ConfettiRef> }) => {
 
   useImperativeHandle(ref, () => api, [api]);
 
+  // react-doctor-disable-next-line react-doctor/no-event-handler
   useEffect(() => {
     if (!manualstart) {
       (async () => {

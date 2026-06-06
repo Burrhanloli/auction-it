@@ -29,7 +29,7 @@ export function AdminAuctionsList({
   }
 
   return (
-    <div className="gap-y-">
+    <div className="space-y-1.5">
       {/* Live Auctions Section */}
       {liveAuctions.length > 0 && (
         <section>
@@ -76,7 +76,7 @@ export function AdminAuctionsList({
         </div>
 
         {draftAuctions.length === 0 ? (
-          <div className="gap-y- flex flex-col items-center justify-center rounded-none border border-dashed border-[#3c3c3c] bg-neutral-950 py-20 text-center">
+          <div className="flex flex-col items-center justify-center gap-y-4 rounded-none border border-dashed border-[#3c3c3c] bg-neutral-950 py-20 text-center">
             <div className="flex size-16 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] text-2xl">
               🏆
             </div>

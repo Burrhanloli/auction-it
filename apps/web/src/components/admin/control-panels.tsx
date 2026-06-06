@@ -139,8 +139,8 @@ export function DeckManager({
         </div>
       </div>
 
-      <div className="gap-y-">
-        <div className="gap-y-">
+      <div className="space-y-1.5">
+        <div className="space-y-1.5">
           <Label className="text-xs font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
             Select Category Deck
           </Label>
@@ -272,7 +272,7 @@ export function LogSidebar({ logs }: any) {
           </span>
         </div>
 
-        <div className="gap-y- max-h-[70vh] overflow-y-auto pr-1">
+        <div className="max-h-[70vh] gap-y-4 overflow-y-auto pr-1">
           {logs.map((log: any) => (
             <div
               key={log.id}
@@ -345,7 +345,7 @@ export function AcquiredSquads({
                   </span>
                 </div>
                 {squad.length > 0 ? (
-                  <div className="gap-y- max-h-[300px] overflow-y-auto pr-2">
+                  <div className="max-h-[300px] gap-y-4 overflow-y-auto pr-2">
                     {squad.map((player: any) => (
                       <div
                         key={player.id}
@@ -366,7 +366,7 @@ export function AcquiredSquads({
                             <ImageIcon className="mr-1 size-3" />
                             Post
                           </Button>
-                          {player.status !== "captain" && (
+                          {player.status !== "captain" && auction?.status !== "completed" && (
                             <Button
                               onClick={() => {
                                 if (
@@ -415,6 +415,28 @@ export function AcquiredSquads({
   );
 }
 
+function VariantSelector({ cardVariant, setCardVariant }: any) {
+  const variants = ["default", "minimal", "cyberpunk", "trading-card", "elegant"];
+  return (
+    <div className="mb-4 flex w-full flex-wrap gap-2">
+      {variants.map((v) => (
+        <Button
+          key={v}
+          onClick={() => setCardVariant(v)}
+          variant={cardVariant === v ? "default" : "outline"}
+          className={`h-8 rounded-none border ${
+            cardVariant === v
+              ? "border-white bg-white text-black"
+              : "border-[#3c3c3c] bg-transparent text-[#bbbbbb] hover:bg-[#1a1a1a] hover:text-white"
+          } px-3 text-[10px] font-bold tracking-[1px] uppercase`}
+        >
+          {v}
+        </Button>
+      ))}
+    </div>
+  );
+}
+
 export function PreviewModals({
   auction,
   activeRosterTeam,
@@ -427,6 +449,8 @@ export function PreviewModals({
   modalSoldCardRef,
   handleDownloadSoldCard,
   isDownloadingSoldCard,
+  cardVariant,
+  setCardVariant,
 }: any) {
   return (
     <>
@@ -446,6 +470,8 @@ export function PreviewModals({
               </button>
             </div>
 
+            <VariantSelector cardVariant={cardVariant} setCardVariant={setCardVariant} />
+
             <div className="relative flex aspect-square w-full max-w-[440px] items-center justify-center overflow-hidden border border-neutral-900 bg-neutral-950">
               <div className="absolute top-0 left-0 size-[1080px] origin-top-left scale-[0.407]">
                 <div ref={modalCardRef} className="size-[1080px]">
@@ -458,6 +484,7 @@ export function PreviewModals({
                     )}
                     categories={auction.categories ?? []}
                     auction={auction as any}
+                    variant={cardVariant}
                   />
                 </div>
               </div>
@@ -509,6 +536,8 @@ export function PreviewModals({
               </button>
             </div>
 
+            <VariantSelector cardVariant={cardVariant} setCardVariant={setCardVariant} />
+
             <div className="relative flex aspect-square w-full max-w-[440px] items-center justify-center overflow-hidden border border-neutral-900 bg-neutral-950">
               <div className="absolute top-0 left-0 size-[1080px] origin-top-left scale-[0.407]">
                 <div ref={modalSoldCardRef} className="size-[1080px]">
@@ -516,6 +545,7 @@ export function PreviewModals({
                     player={activeSoldPlayerPreview.player}
                     team={activeSoldPlayerPreview.team}
                     auction={auction as any}
+                    variant={cardVariant}
                   />
                 </div>
               </div>

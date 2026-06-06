@@ -26,7 +26,7 @@ export function BiddingFormConsole({
   categoryColor,
 }: BiddingFormConsoleProps) {
   return (
-    <div className="gap-y-">
+    <div className="space-y-1.5">
       <ActivePlayerProfile
         activePlayer={activePlayer}
         categoryColor={categoryColor}

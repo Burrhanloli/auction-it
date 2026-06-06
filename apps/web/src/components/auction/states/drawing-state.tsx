@@ -12,7 +12,7 @@ export function DrawingState({ auction, activePlayer, categoryName, state }: any
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className="gap-y- flex w-full flex-col items-center text-center"
+      className="flex w-full flex-col items-center gap-y-4 text-center"
     >
       <div className="relative flex size-32 items-center justify-center overflow-hidden rounded-none border border-[#3c3c3c] bg-neutral-950 text-5xl font-black text-[#bbbbbb]">
         <m.div
@@ -22,7 +22,7 @@ export function DrawingState({ auction, activePlayer, categoryName, state }: any
             duration: 0.5,
             ease: "linear",
           }}
-          className="gap-y- flex flex-col items-center"
+          className="flex flex-col items-center gap-y-4"
         >
           <span>?</span>
           <span>?</span>

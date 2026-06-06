@@ -119,7 +119,7 @@ export function WishlistDeck({
               <div className="flex items-center gap-x-2 text-right">
                 <div>
                   {isSoldToOthers ? (
-                    <div className="gap-y-">
+                    <div className="space-y-1.5">
                       <span className="block rounded-none border border-white bg-white px-1.5 py-0.5 text-[8px] font-black tracking-[1.5px] text-black uppercase">
                         {player.status === "captain" ? "CAPTAIN" : "SOLD OUT"}
                       </span>
@@ -132,7 +132,7 @@ export function WishlistDeck({
                       {player.status === "captain" ? "CAPTAIN" : "ACQUIRED"}
                     </span>
                   ) : (
-                    <div className="gap-y-">
+                    <div className="space-y-1.5">
                       <span className="block text-[8px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
                         Base price
                       </span>

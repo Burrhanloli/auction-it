@@ -141,7 +141,7 @@ function LiveTrackerPage() {
     <PublicAuctionGuard auction={auction}>
       <LazyMotion features={domAnimation}>
         <div
-          className="flex h-screen w-full flex-col overflow-hidden bg-neutral-950 font-sans text-white"
+          className="flex min-h-screen w-full flex-col overflow-x-hidden bg-neutral-950 font-sans text-white"
           data-drawing-player={drawingPlayerId || ""}
         >
           <LiveHeader scrollDirection={scrollDirection} auctionId={auctionId} />
@@ -149,7 +149,7 @@ function LiveTrackerPage() {
           <AuctionHero auction={auction} subtitle="Live Broadcast Feed" />
 
           {/* Main Broadcast Layout */}
-          <div className="gap-y- md:gap-y- relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 py-8 md:px-8 md:py-10">
+          <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col gap-y-4 px-4 py-8 md:gap-y-4 md:px-8 md:py-10">
             <ActiveBiddingArea
               status={biddingStatus}
               auction={auction}

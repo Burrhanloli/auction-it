@@ -38,7 +38,7 @@ export function BiddingState({ auction, activePlayer, categoryName, state }: any
       </div>
 
       {/* Right Column: Player Details */}
-      <div className="gap-y- flex w-full max-w-lg flex-col items-center text-center md:items-start md:text-left">
+      <div className="flex w-full max-w-lg flex-col items-center gap-y-4 text-center md:items-start md:text-left">
         {/* Glowing category badge */}
         <span className="inline-flex items-center rounded-none border border-white bg-white px-3 py-1 text-xs font-bold tracking-[1.5px] text-black uppercase">
           <FlameIcon className="mr-1 size-4 animate-pulse" />

@@ -45,7 +45,7 @@ export function LiveLogsViewer({
               exit={{ height: 0, opacity: 0 }}
               className="overflow-hidden"
             >
-              <div className="gap-y- mt-4 max-h-[70vh] overflow-y-auto scroll-smooth pr-1">
+              <div className="mt-4 max-h-[70vh] gap-y-4 overflow-y-auto scroll-smooth pr-1">
                 <AnimatePresence initial={false}>
                   {displayLogs.map((log: any) => {
                     const isSold = log.actionType === "sold";

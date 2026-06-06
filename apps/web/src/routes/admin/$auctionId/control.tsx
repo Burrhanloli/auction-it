@@ -8,19 +8,8 @@ import { useForm } from "@tanstack/react-form";
 import { useHotkeys, type UseHotkeyDefinition } from "@tanstack/react-hotkeys";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  PlayIcon,
-  GavelIcon,
-  XOctagonIcon,
-  TagIcon,
-  UsersIcon,
-  TrophyIcon,
-  XIcon,
-  DownloadIcon,
-  Loader2Icon,
-  ImageIcon,
-} from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { PlayIcon, GavelIcon } from "lucide-react";
+import { useState, useRef } from "react";
 import { toast } from "sonner";
 
 import { BiddingFormConsole } from "#/components/admin/bidding-console";
@@ -31,8 +20,7 @@ import {
   AcquiredSquads,
   PreviewModals,
 } from "#/components/admin/control-panels";
-import { PlayerSoldCard } from "#/components/player-sold-card";
-import { TeamRosterCard } from "#/components/team-roster-card";
+import { type CardVariant } from "#/components/player-sold-card";
 import {
   $getAuction,
   $getAuctionState,
@@ -139,6 +127,8 @@ function ControlConsolePage() {
   } | null>(null);
   const [isDownloadingSoldCard, setIsDownloadingSoldCard] = useState(false);
   const modalSoldCardRef = useRef<HTMLDivElement>(null);
+
+  const [cardVariant, setCardVariant] = useState<CardVariant>("default");
 
   const handleDownloadRoster = async () => {
     if (!activeRosterTeam || !modalCardRef.current) return;
@@ -284,84 +274,72 @@ function ControlConsolePage() {
   return (
     <div className="grid grid-cols-1 gap-10 lg:grid-cols-3">
       {/* Left Column: Action board (Category selection, Draw button, bid console) (2/3 width) */}
-      <div className="gap-y- lg:col-span-2">
+      <div className="gap-y-4 lg:col-span-2">
         <AuctionPrompts
           auction={auction}
           auctionId={auctionId}
           updateStatusMutation={updateStatusMutation}
         />
 
-        <DeckManager
-          auction={auction}
-          activeCategoryId={activeCategoryId}
-          setSelectedCategoryId={setSelectedCategoryId}
-          isBidding={isBidding}
-          handleDrawPlayer={handleDrawPlayer}
-          drawPlayerMutation={drawPlayerMutation}
-          isManualDraw={isManualDraw}
-          setIsManualDraw={setIsManualDraw}
-          selectedManualPlayerId={selectedManualPlayerId}
-          setSelectedManualPlayerId={setSelectedManualPlayerId}
-          unsoldPlayersInCategory={unsoldPlayersInCategory}
-        />
+        {auction?.status === "active" && (
+          <>
+            <DeckManager
+              auction={auction}
+              activeCategoryId={activeCategoryId}
+              setSelectedCategoryId={setSelectedCategoryId}
+              isBidding={isBidding}
+              handleDrawPlayer={handleDrawPlayer}
+              drawPlayerMutation={drawPlayerMutation}
+              isManualDraw={isManualDraw}
+              setIsManualDraw={setIsManualDraw}
+              selectedManualPlayerId={selectedManualPlayerId}
+              setSelectedManualPlayerId={setSelectedManualPlayerId}
+              unsoldPlayersInCategory={unsoldPlayersInCategory}
+            />
 
-        {/* Active Bidding Desk */}
-        <div className="relative overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8">
-          <div className="mb-8 flex items-center">
-            <GavelIcon className="mr-3 size-5 text-white" />
-            <div className="inline-flex flex-col">
-              <MStripeDivider className="mb-2 w-full" />
-              <h3 className="text-base font-bold tracking-[1.5px] text-white uppercase">
-                Live Bidding Arena
-              </h3>
-            </div>
-          </div>
-
-          {auction?.status === "active" ? (
-            isBidding ? (
-              <BiddingFormConsole
-                key={activePlayer.id}
-                state={state}
-                auction={auction}
-                auctionId={auctionId}
-                placeBidMutation={placeBidMutation}
-                markSoldMutation={markSoldMutation}
-                markUnsoldMutation={markUnsoldMutation}
-                activePlayer={activePlayer}
-                categoryColor={categoryColor}
-              />
-            ) : (
-              <div className="gap-y- flex flex-col items-center justify-center rounded-none border border-dashed border-[#3c3c3c] bg-neutral-950 py-12 text-center">
-                <div className="flex size-12 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] text-lg text-white">
-                  💤
-                </div>
-                <div>
-                  <h4 className="text-sm font-bold tracking-[1.5px] text-white uppercase">
-                    Bidding Stage Inactive
-                  </h4>
-                  <p className="mx-auto mt-1 max-w-xs text-xs leading-relaxed text-[#bbbbbb]">
-                    Draw a player from the Roster Deck above to initialize the active bidding
-                    viewport.
-                  </p>
+            {/* Active Bidding Desk */}
+            <div className="relative overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8">
+              <div className="mb-8 flex items-center">
+                <GavelIcon className="mr-3 size-5 text-white" />
+                <div className="inline-flex flex-col">
+                  <MStripeDivider className="mb-2 w-full" />
+                  <h3 className="text-base font-bold tracking-[1.5px] text-white uppercase">
+                    Live Bidding Arena
+                  </h3>
                 </div>
               </div>
-            )
-          ) : (
-            <div className="gap-y- flex flex-col items-center justify-center rounded-none border border-dashed border-[#3c3c3c] bg-neutral-950 py-12 text-center">
-              <div className="flex size-12 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] text-lg text-[#bbbbbb]">
-                🔒
-              </div>
-              <div>
-                <h4 className="text-sm font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
-                  Auction Inactive
-                </h4>
-                <p className="mx-auto mt-1 max-w-xs text-xs leading-relaxed text-[#7e7e7e]">
-                  Launch the auction from the control board above to enable live bidding.
-                </p>
-              </div>
+
+              {isBidding ? (
+                <BiddingFormConsole
+                  key={activePlayer.id}
+                  state={state}
+                  auction={auction}
+                  auctionId={auctionId}
+                  placeBidMutation={placeBidMutation}
+                  markSoldMutation={markSoldMutation}
+                  markUnsoldMutation={markUnsoldMutation}
+                  activePlayer={activePlayer}
+                  categoryColor={categoryColor}
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center gap-y-4 rounded-none border border-dashed border-[#3c3c3c] bg-neutral-950 py-12 text-center">
+                  <div className="flex size-12 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] text-lg text-white">
+                    💤
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold tracking-[1.5px] text-white uppercase">
+                      Bidding Stage Inactive
+                    </h4>
+                    <p className="mx-auto mt-1 max-w-xs text-xs leading-relaxed text-[#bbbbbb]">
+                      Draw a player from the Roster Deck above to initialize the active bidding
+                      viewport.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </>
+        )}
       </div>
 
       {/* Right Column: Historical logs tracker sidebar (1/3 width) */}
@@ -388,6 +366,8 @@ function ControlConsolePage() {
         modalSoldCardRef={modalSoldCardRef}
         handleDownloadSoldCard={handleDownloadSoldCard}
         isDownloadingSoldCard={isDownloadingSoldCard}
+        cardVariant={cardVariant}
+        setCardVariant={setCardVariant}
       />
     </div>
   );

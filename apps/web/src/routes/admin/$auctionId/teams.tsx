@@ -9,10 +9,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import {
   UsersIcon,
   PlusIcon,
-  CopyIcon,
-  CheckIcon,
   KeyIcon,
-  ShieldCheckIcon,
   CoinsIcon,
   RefreshCwIcon,
   PencilIcon,
@@ -71,13 +68,27 @@ function TeamsConsolePage() {
   return (
     <div className="grid grid-cols-1 gap-10 lg:grid-cols-3">
       {/* Form Area: 1/3 width */}
-      <div className="gap-y- lg:col-span-1">
-        <AddTeamForm auctionId={auctionId} auction={auction} />
-        <BulkUploadTeams auctionId={auctionId} auction={auction} />
-      </div>
+      {auction?.status !== "completed" ? (
+        <div className="gap-y-4 lg:col-span-1">
+          <AddTeamForm auctionId={auctionId} auction={auction} />
+          <BulkUploadTeams auctionId={auctionId} auction={auction} />
+        </div>
+      ) : (
+        <div className="gap-y-4 lg:col-span-1">
+          <div className="flex flex-col items-center justify-center rounded-none border border-dashed border-[#3c3c3c] bg-neutral-950 p-8 text-center">
+            <div className="mb-3 flex size-10 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] text-lg text-white">
+              🔒
+            </div>
+            <h4 className="text-xs font-bold tracking-[1.5px] text-white uppercase">
+              Auction Completed
+            </h4>
+            <p className="mt-1 text-[10px] text-[#bbbbbb]">Franchise registration is locked.</p>
+          </div>
+        </div>
+      )}
 
       {/* Roster Listing Area: 2/3 width */}
-      <div className="gap-y- lg:col-span-2">
+      <div className="gap-y-4 lg:col-span-2">
         <TeamList
           teams={teams}
           auction={auction}
@@ -99,6 +110,7 @@ function TeamsConsolePage() {
   );
 }
 
+// react-doctor-disable-next-line react-doctor/no-multi-comp
 function AddTeamForm({ auctionId, auction }: { auctionId: string; auction: any }) {
   const queryClient = useQueryClient();
 
@@ -192,141 +204,147 @@ function AddTeamForm({ auctionId, auction }: { auctionId: string; auction: any }
           e.stopPropagation();
           addTeamForm.handleSubmit();
         }}
-        className="gap-y-"
+        className="flex flex-col gap-y-4"
       >
-        <addTeamForm.Field
-          name="name"
-          children={(field) => (
-            <div className="gap-y-">
-              <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
-                Team Name *
-              </Label>
-              <Input
-                id={field.name}
-                placeholder="e.g. Knight Riders"
-                value={field.state.value}
-                onChange={(e) => field.handleChange(e.target.value)}
-                className="rounded-none border border-[#3c3c3c] bg-neutral-950 text-xs text-white"
-                required
-              />
-            </div>
-          )}
-        />
-
-        <addTeamForm.Field
-          name="logoUrl"
-          children={(field) => (
-            <div className="gap-y-">
-              <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
-                Logo Image (Auto-converts to WebP)
-              </Label>
-              <ImageUpload
-                id={field.name}
-                value={field.state.value}
-                onChange={(url) => field.handleChange(url)}
-                className="mt-2"
-              />
-            </div>
-          )}
-        />
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <addTeamForm.Field
-            name="ownerName"
-            children={(field) => (
-              <div className="gap-y-">
-                <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
-                  Owner Name *
-                </Label>
-                <Input
-                  id={field.name}
-                  placeholder="e.g. Mukesh Ambani"
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  className="rounded-none border border-[#3c3c3c] bg-neutral-950 text-xs text-white"
-                  required
-                />
-              </div>
-            )}
-          />
-
-          <addTeamForm.Field
-            name="ownerImageUrl"
-            children={(field) => (
-              <div className="gap-y-">
-                <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
-                  Owner Avatar (Auto-converts to WebP)
-                </Label>
-                <ImageUpload
-                  id={field.name}
-                  value={field.state.value}
-                  onChange={(url) => field.handleChange(url)}
-                  className="mt-2"
-                />
-              </div>
-            )}
-          />
-        </div>
-
-        <addTeamForm.Field
-          name="totalBudget"
-          children={(field) => (
-            <div className="gap-y-">
-              <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
-                Total Points Budget *
-              </Label>
-              <div className="relative">
-                <CoinsIcon className="absolute top-2.5 left-3 size-4 text-[#bbbbbb]" />
-                <Input
-                  id={field.name}
-                  type="number"
-                  placeholder={auction ? `${auction.budgetPerTeam} pts (default)` : "1000"}
-                  value={field.state.value}
-                  onChange={(e) =>
-                    field.handleChange(e.target.value === "" ? "" : Number(e.target.value))
-                  }
-                  onFocus={handleBudgetFocus}
-                  className="rounded-none border border-[#3c3c3c] bg-neutral-950 pl-9 text-xs text-white"
-                />
-              </div>
-            </div>
-          )}
-        />
-
-        <addTeamForm.Field
-          name="passcode"
-          children={(field) => (
-            <div className="gap-y-">
-              <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
-                6-Digit Passcode (Strategy Deck)
-              </Label>
-              <div className="flex gap-x-2">
-                <div className="relative flex-1">
-                  <KeyIcon className="absolute top-2.5 left-3 size-4 text-[#bbbbbb]" />
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+          {/* Main Details */}
+          <div className="flex flex-col gap-y-4 md:col-span-2">
+            <addTeamForm.Field
+              name="name"
+              children={(field) => (
+                <div className="space-y-1.5">
+                  <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
+                    Team Name *
+                  </Label>
                   <Input
                     id={field.name}
-                    type="text"
-                    maxLength={6}
-                    placeholder="Auto-generated if empty"
+                    placeholder="e.g. Knight Riders"
                     value={field.state.value}
-                    onChange={(e) =>
-                      field.handleChange(e.target.value.replace(/\D/g, "").slice(0, 6))
-                    }
-                    className="rounded-none border border-[#3c3c3c] bg-neutral-950 pl-9 text-center font-mono text-xs tracking-widest text-white"
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    className="rounded-none border border-[#3c3c3c] bg-neutral-950 text-xs text-white"
+                    required
                   />
                 </div>
-                <button
-                  type="button"
-                  onClick={generatePasscode}
-                  className="flex cursor-pointer items-center justify-center rounded-none border border-[#3c3c3c] bg-neutral-950 px-3 text-[#bbbbbb] hover:bg-white hover:text-black"
-                  title="Generate Random Passcode"
-                >
-                  <RefreshCwIcon className="size-4" />
-                </button>
-              </div>
-            </div>
-          )}
-        />
+              )}
+            />
+
+            <addTeamForm.Field
+              name="ownerName"
+              children={(field) => (
+                <div className="space-y-1.5">
+                  <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
+                    Owner Name *
+                  </Label>
+                  <Input
+                    id={field.name}
+                    placeholder="e.g. Mukesh Ambani"
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    className="rounded-none border border-[#3c3c3c] bg-neutral-950 text-xs text-white"
+                    required
+                  />
+                </div>
+              )}
+            />
+
+            <addTeamForm.Field
+              name="totalBudget"
+              children={(field) => (
+                <div className="space-y-1.5">
+                  <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
+                    Total Points Budget *
+                  </Label>
+                  <div className="relative">
+                    <CoinsIcon className="absolute top-2.5 left-3 size-4 text-[#bbbbbb]" />
+                    <Input
+                      id={field.name}
+                      type="number"
+                      placeholder={auction ? `${auction.budgetPerTeam} pts (default)` : "1000"}
+                      value={field.state.value}
+                      onChange={(e) =>
+                        field.handleChange(e.target.value === "" ? "" : Number(e.target.value))
+                      }
+                      onFocus={handleBudgetFocus}
+                      className="rounded-none border border-[#3c3c3c] bg-neutral-950 pl-9 text-xs text-white"
+                    />
+                  </div>
+                </div>
+              )}
+            />
+
+            <addTeamForm.Field
+              name="passcode"
+              children={(field) => (
+                <div className="space-y-1.5">
+                  <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
+                    6-Digit Passcode (Strategy Deck)
+                  </Label>
+                  <div className="flex gap-x-2">
+                    <div className="relative flex-1">
+                      <KeyIcon className="absolute top-2.5 left-3 size-4 text-[#bbbbbb]" />
+                      <Input
+                        id={field.name}
+                        type="text"
+                        maxLength={6}
+                        placeholder="Auto-generated if empty"
+                        value={field.state.value}
+                        onChange={(e) =>
+                          field.handleChange(e.target.value.replace(/\D/g, "").slice(0, 6))
+                        }
+                        className="rounded-none border border-[#3c3c3c] bg-neutral-950 pl-9 text-center font-mono text-xs tracking-widest text-white"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={generatePasscode}
+                      className="flex cursor-pointer items-center justify-center rounded-none border border-[#3c3c3c] bg-neutral-950 px-3 text-[#bbbbbb] hover:bg-white hover:text-black"
+                      title="Generate Random Passcode"
+                    >
+                      <RefreshCwIcon className="size-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            />
+          </div>
+
+          {/* Media Sidebar */}
+          <div className="flex flex-col gap-y-4 md:col-span-1">
+            <addTeamForm.Field
+              name="logoUrl"
+              children={(field) => (
+                <div className="space-y-1.5">
+                  <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
+                    Logo Image (Auto-converts to WebP)
+                  </Label>
+                  <ImageUpload
+                    id={field.name}
+                    value={field.state.value}
+                    onChange={(url) => field.handleChange(url)}
+                    className="mt-2"
+                  />
+                </div>
+              )}
+            />
+
+            <addTeamForm.Field
+              name="ownerImageUrl"
+              children={(field) => (
+                <div className="space-y-1.5">
+                  <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
+                    Owner Avatar (Auto-converts to WebP)
+                  </Label>
+                  <ImageUpload
+                    id={field.name}
+                    value={field.state.value}
+                    onChange={(url) => field.handleChange(url)}
+                    className="mt-2"
+                  />
+                </div>
+              )}
+            />
+          </div>
+        </div>
 
         <addTeamForm.Subscribe
           selector={(state) => state.isSubmitting}
@@ -334,7 +352,7 @@ function AddTeamForm({ auctionId, auction }: { auctionId: string; auction: any }
             <Button
               type="submit"
               disabled={isSubmitting || addTeamMutation.isPending}
-              className="mt-2 w-full cursor-pointer rounded-none border border-white bg-white py-3 font-bold tracking-[1.5px] text-black uppercase hover:bg-neutral-950 hover:text-white disabled:border-[#3c3c3c] disabled:bg-[#1a1a1a] disabled:text-[#7e7e7e] disabled:hover:bg-[#1a1a1a] disabled:hover:text-[#7e7e7e]"
+              className="mt-4 w-full cursor-pointer rounded-none border border-white bg-white py-3 font-bold tracking-[1.5px] text-black uppercase hover:bg-neutral-950 hover:text-white disabled:border-[#3c3c3c] disabled:bg-[#1a1a1a] disabled:text-[#7e7e7e] disabled:hover:bg-[#1a1a1a] disabled:hover:text-[#7e7e7e]"
             >
               {isSubmitting || addTeamMutation.isPending ? "Registering…" : "Add Franchise Team"}
             </Button>
@@ -345,6 +363,7 @@ function AddTeamForm({ auctionId, auction }: { auctionId: string; auction: any }
   );
 }
 
+// react-doctor-disable-next-line react-doctor/no-multi-comp
 function BulkUploadTeams({ auctionId, auction }: { auctionId: string; auction: any }) {
   const queryClient = useQueryClient();
 
@@ -415,8 +434,8 @@ function BulkUploadTeams({ auctionId, auction }: { auctionId: string; auction: a
           </h3>
         </div>
       </div>
-      <div className="gap-y-">
-        <div className="gap-y-">
+      <div className="space-y-1.5">
+        <div className="space-y-1.5">
           <Label htmlFor="team-csv-upload" className="text-xs text-[#bbbbbb]">
             Upload CSV File
           </Label>
@@ -441,6 +460,7 @@ function BulkUploadTeams({ auctionId, auction }: { auctionId: string; auction: a
   );
 }
 
+// react-doctor-disable-next-line react-doctor/no-multi-comp
 function TeamList({
   teams,
   auction,
@@ -615,7 +635,7 @@ function TeamList({
         ))}
 
         {teams.length === 0 && (
-          <div className="gap-y- col-span-2 flex flex-col items-center justify-center rounded-none border border-dashed border-[#3c3c3c] bg-neutral-950 py-16 text-center">
+          <div className="col-span-2 flex flex-col items-center justify-center gap-y-4 rounded-none border border-dashed border-[#3c3c3c] bg-neutral-950 py-16 text-center">
             <div className="flex size-12 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] text-lg text-white">
               📋
             </div>
@@ -635,6 +655,7 @@ function TeamList({
   );
 }
 
+// react-doctor-disable-next-line react-doctor/no-multi-comp
 function EditTeamDialog({
   editingTeam,
   setEditingTeam,
@@ -743,159 +764,163 @@ function EditTeamDialog({
             e.stopPropagation();
             editTeamForm.handleSubmit();
           }}
-          className="gap-y-"
+          className="flex flex-col gap-y-4"
         >
-          <editTeamForm.Field
-            name="name"
-            children={(field) => (
-              <div className="gap-y-">
-                <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
-                  Team Name *
-                </Label>
-                <Input
-                  id={field.name}
-                  placeholder="e.g. Knight Riders"
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  className="rounded-none border border-[#3c3c3c] bg-neutral-950 text-xs text-white"
-                  required
-                />
-              </div>
-            )}
-          />
-
-          <editTeamForm.Field
-            name="slug"
-            children={(field) => (
-              <div className="gap-y-">
-                <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
-                  Team URL Slug Prefix * (suffix is read-only)
-                </Label>
-                <div className="flex items-center gap-x-2">
-                  <Input
-                    id={field.name}
-                    placeholder="e.g. knight-riders"
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(slugify(e.target.value))}
-                    className="flex-1 rounded-none border border-[#3c3c3c] bg-neutral-950 text-xs text-white"
-                    required
-                  />
-                  <editTeamForm.Subscribe
-                    selector={(state) => state.values.suffix}
-                    children={(suffixVal) => (
-                      <span className="rounded-none border border-[#3c3c3c] bg-neutral-950 px-3 py-2 font-mono text-xs text-[#bbbbbb] select-none">
-                        -{suffixVal || "yyyyy"}
-                      </span>
-                    )}
-                  />
-                </div>
-              </div>
-            )}
-          />
-
-          <editTeamForm.Field
-            name="logoUrl"
-            children={(field) => (
-              <div className="gap-y-">
-                <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
-                  Logo Image (Auto-converts to WebP)
-                </Label>
-                <ImageUpload
-                  id={field.name}
-                  value={field.state.value}
-                  onChange={(url) => field.handleChange(url)}
-                  className="mt-2"
-                />
-              </div>
-            )}
-          />
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <editTeamForm.Field
-              name="ownerName"
-              children={(field) => (
-                <div className="gap-y-">
-                  <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
-                    Owner Name *
-                  </Label>
-                  <Input
-                    id={field.name}
-                    placeholder="e.g. Mukesh Ambani"
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    className="rounded-none border border-[#3c3c3c] bg-neutral-950 text-xs text-white"
-                    required
-                  />
-                </div>
-              )}
-            />
-
-            <editTeamForm.Field
-              name="ownerImageUrl"
-              children={(field) => (
-                <div className="gap-y-">
-                  <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
-                    Owner Avatar (Auto-converts to WebP)
-                  </Label>
-                  <ImageUpload
-                    id={field.name}
-                    value={field.state.value}
-                    onChange={(url) => field.handleChange(url)}
-                    className="mt-2"
-                  />
-                </div>
-              )}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <editTeamForm.Field
-              name="totalBudget"
-              children={(field) => (
-                <div className="gap-y-">
-                  <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
-                    Total Points Budget *
-                  </Label>
-                  <div className="relative">
-                    <CoinsIcon className="absolute top-2.5 left-3 size-4 text-[#bbbbbb]" />
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+            {/* Main Details */}
+            <div className="flex flex-col gap-y-4 md:col-span-2">
+              <editTeamForm.Field
+                name="name"
+                children={(field) => (
+                  <div className="space-y-1.5">
+                    <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
+                      Team Name *
+                    </Label>
                     <Input
                       id={field.name}
-                      type="number"
-                      placeholder="1000"
+                      placeholder="e.g. Knight Riders"
                       value={field.state.value}
-                      onChange={(e) =>
-                        field.handleChange(e.target.value === "" ? "" : Number(e.target.value))
-                      }
-                      className="rounded-none border border-[#3c3c3c] bg-neutral-950 pl-9 text-xs text-white"
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      className="rounded-none border border-[#3c3c3c] bg-neutral-950 text-xs text-white"
                       required
                     />
                   </div>
-                </div>
-              )}
-            />
+                )}
+              />
 
-            <editTeamForm.Field
-              name="passcode"
-              children={(field) => (
-                <div className="gap-y-">
-                  <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
-                    6-Digit Strategy Passcode *
-                  </Label>
-                  <Input
-                    id={field.name}
-                    type="text"
-                    maxLength={6}
-                    placeholder="6-digit numeric"
-                    value={field.state.value}
-                    onChange={(e) =>
-                      field.handleChange(e.target.value.replace(/\D/g, "").slice(0, 6))
-                    }
-                    className="rounded-none border border-[#3c3c3c] bg-neutral-950 text-center font-mono text-xs tracking-widest text-white"
-                    required
-                  />
-                </div>
-              )}
-            />
+              <editTeamForm.Field
+                name="slug"
+                children={(field) => (
+                  <div className="space-y-1.5">
+                    <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
+                      Team URL Slug Prefix * (suffix is read-only)
+                    </Label>
+                    <div className="flex items-center gap-x-2">
+                      <Input
+                        id={field.name}
+                        placeholder="e.g. knight-riders"
+                        value={field.state.value}
+                        onChange={(e) => field.handleChange(slugify(e.target.value))}
+                        className="flex-1 rounded-none border border-[#3c3c3c] bg-neutral-950 text-xs text-white"
+                        required
+                      />
+                      <editTeamForm.Subscribe
+                        selector={(state) => state.values.suffix}
+                        children={(suffixVal) => (
+                          <span className="rounded-none border border-[#3c3c3c] bg-neutral-950 px-3 py-2 font-mono text-xs text-[#bbbbbb] select-none">
+                            -{suffixVal || "yyyyy"}
+                          </span>
+                        )}
+                      />
+                    </div>
+                  </div>
+                )}
+              />
+
+              <editTeamForm.Field
+                name="ownerName"
+                children={(field) => (
+                  <div className="space-y-1.5">
+                    <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
+                      Owner Name *
+                    </Label>
+                    <Input
+                      id={field.name}
+                      placeholder="e.g. Mukesh Ambani"
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      className="rounded-none border border-[#3c3c3c] bg-neutral-950 text-xs text-white"
+                      required
+                    />
+                  </div>
+                )}
+              />
+
+              <editTeamForm.Field
+                name="totalBudget"
+                children={(field) => (
+                  <div className="space-y-1.5">
+                    <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
+                      Total Points Budget *
+                    </Label>
+                    <div className="relative">
+                      <CoinsIcon className="absolute top-2.5 left-3 size-4 text-[#bbbbbb]" />
+                      <Input
+                        id={field.name}
+                        type="number"
+                        placeholder="1000"
+                        value={field.state.value}
+                        onChange={(e) =>
+                          field.handleChange(e.target.value === "" ? "" : Number(e.target.value))
+                        }
+                        className="rounded-none border border-[#3c3c3c] bg-neutral-950 pl-9 text-xs text-white"
+                        required
+                      />
+                    </div>
+                  </div>
+                )}
+              />
+
+              <editTeamForm.Field
+                name="passcode"
+                children={(field) => (
+                  <div className="space-y-1.5">
+                    <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
+                      6-Digit Strategy Passcode *
+                    </Label>
+                    <Input
+                      id={field.name}
+                      type="text"
+                      maxLength={6}
+                      placeholder="6-digit numeric"
+                      value={field.state.value}
+                      onChange={(e) =>
+                        field.handleChange(e.target.value.replace(/\D/g, "").slice(0, 6))
+                      }
+                      className="rounded-none border border-[#3c3c3c] bg-neutral-950 text-center font-mono text-xs tracking-widest text-white"
+                      required
+                    />
+                  </div>
+                )}
+              />
+            </div>
+
+            {/* Media Sidebar */}
+            <div className="flex flex-col gap-y-4 md:col-span-1">
+              <editTeamForm.Field
+                name="logoUrl"
+                children={(field) => (
+                  <div className="space-y-1.5">
+                    <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
+                      Logo Image (Auto-converts to WebP)
+                    </Label>
+                    <ImageUpload
+                      id={field.name}
+                      value={field.state.value}
+                      onChange={(url) => field.handleChange(url)}
+                      className="mt-2"
+                    />
+                  </div>
+                )}
+              />
+
+              <editTeamForm.Field
+                name="ownerImageUrl"
+                children={(field) => (
+                  <div className="space-y-1.5">
+                    <Label htmlFor={field.name} className="text-xs text-[#bbbbbb]">
+                      Owner Avatar (Auto-converts to WebP)
+                    </Label>
+                    <ImageUpload
+                      id={field.name}
+                      value={field.state.value}
+                      onChange={(url) => field.handleChange(url)}
+                      className="mt-2"
+                    />
+                  </div>
+                )}
+              />
+            </div>
           </div>
 
           <div className="flex gap-x-2 pt-2">

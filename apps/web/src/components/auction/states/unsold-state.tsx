@@ -12,7 +12,7 @@ export function UnsoldState({ auction, activePlayer, categoryName, state }: any)
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className="gap-y- flex w-full flex-col items-center text-center"
+      className="flex w-full flex-col items-center gap-y-4 text-center"
     >
       <span className="inline-flex items-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] px-4 py-1.5 text-xs font-black tracking-[1.5px] text-[#bbbbbb] uppercase">
         💨 UNSOLD 💨
