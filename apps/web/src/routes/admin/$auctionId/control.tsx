@@ -272,17 +272,21 @@ function ControlConsolePage() {
         : "border-[#3c3c3c] text-[#bbbbbb] bg-[#1a1a1a]";
 
   return (
-    <div className="grid grid-cols-1 gap-10 lg:grid-cols-3">
-      {/* Left Column: Action board (Category selection, Draw button, bid console) (2/3 width) */}
-      <div className="flex flex-col gap-y-4 lg:col-span-2">
+    <div className="flex flex-col gap-y-8">
+      {/* Top Global Status Banner */}
+      <div className="w-full">
         <AuctionPrompts
           auction={auction}
           auctionId={auctionId}
           updateStatusMutation={updateStatusMutation}
         />
+      </div>
 
-        {auction?.status === "active" && (
-          <>
+      {/* Main Command Center Layout */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+        {/* Left Column: Roster Deck (25%) */}
+        <div className="flex h-full flex-col lg:col-span-3">
+          {auction?.status === "active" ? (
             <DeckManager
               auction={auction}
               activeCategoryId={activeCategoryId}
@@ -296,63 +300,77 @@ function ControlConsolePage() {
               setSelectedManualPlayerId={setSelectedManualPlayerId}
               unsoldPlayersInCategory={unsoldPlayersInCategory}
             />
+          ) : (
+            <div className="flex h-full min-h-[300px] flex-col items-center justify-center rounded-none border border-dashed border-[#3c3c3c] bg-[#1a1a1a] p-8 text-center text-xs text-[#bbbbbb]">
+              <PlayIcon className="mb-3 size-6 text-[#3c3c3c]" />
+              <p>
+                Deck Manager locked.
+                <br />
+                Launch auction to access.
+              </p>
+            </div>
+          )}
+        </div>
 
-            {/* Active Bidding Desk */}
-            <div className="relative overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8">
-              <div className="mb-8 flex items-center">
-                <GavelIcon className="mr-3 size-5 text-white" />
-                <div className="inline-flex flex-col">
-                  <MStripeDivider className="mb-2 w-full" />
-                  <h3 className="text-base font-bold tracking-[1.5px] text-white uppercase">
-                    Live Bidding Arena
-                  </h3>
+        {/* Center Column: Live Bidding Arena (50%) */}
+        <div className="flex h-full flex-col lg:col-span-6">
+          <div className="relative flex h-full flex-col overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8">
+            <div className="mb-8 flex items-center">
+              <GavelIcon className="mr-3 size-5 text-white" />
+              <div className="inline-flex flex-col">
+                <MStripeDivider className="mb-2 w-full" />
+                <h3 className="text-base font-bold tracking-[1.5px] text-white uppercase">
+                  Live Bidding Arena
+                </h3>
+              </div>
+            </div>
+
+            {isBidding ? (
+              <BiddingFormConsole
+                key={activePlayer.id}
+                state={state}
+                auction={auction}
+                auctionId={auctionId}
+                placeBidMutation={placeBidMutation}
+                markSoldMutation={markSoldMutation}
+                markUnsoldMutation={markUnsoldMutation}
+                activePlayer={activePlayer}
+                categoryColor={categoryColor}
+              />
+            ) : (
+              <div className="flex flex-1 flex-col items-center justify-center gap-y-4 rounded-none border border-dashed border-[#3c3c3c] bg-neutral-950 py-12 text-center">
+                <div className="flex size-12 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] text-lg text-white">
+                  💤
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold tracking-[1.5px] text-white uppercase">
+                    Bidding Stage Inactive
+                  </h4>
+                  <p className="mx-auto mt-1 max-w-xs text-xs leading-relaxed text-[#bbbbbb]">
+                    Draw a player from the Roster Deck to initialize the active bidding viewport.
+                  </p>
                 </div>
               </div>
+            )}
+          </div>
+        </div>
 
-              {isBidding ? (
-                <BiddingFormConsole
-                  key={activePlayer.id}
-                  state={state}
-                  auction={auction}
-                  auctionId={auctionId}
-                  placeBidMutation={placeBidMutation}
-                  markSoldMutation={markSoldMutation}
-                  markUnsoldMutation={markUnsoldMutation}
-                  activePlayer={activePlayer}
-                  categoryColor={categoryColor}
-                />
-              ) : (
-                <div className="flex flex-col items-center justify-center gap-y-4 rounded-none border border-dashed border-[#3c3c3c] bg-neutral-950 py-12 text-center">
-                  <div className="flex size-12 items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] text-lg text-white">
-                    💤
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-bold tracking-[1.5px] text-white uppercase">
-                      Bidding Stage Inactive
-                    </h4>
-                    <p className="mx-auto mt-1 max-w-xs text-xs leading-relaxed text-[#bbbbbb]">
-                      Draw a player from the Roster Deck above to initialize the active bidding
-                      viewport.
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </>
-        )}
+        {/* Right Column: Historical Logs (25%) */}
+        <div className="flex h-full flex-col lg:col-span-3">
+          <LogSidebar logs={logs} />
+        </div>
       </div>
 
-      {/* Right Column: Historical logs tracker sidebar (1/3 width) */}
-      <LogSidebar logs={logs} />
-
-      {/* Acquired Squads Section */}
-      <AcquiredSquads
-        auction={auction}
-        auctionId={auctionId}
-        revertPlayerMutation={revertPlayerMutation}
-        setActiveSoldPlayerPreview={setActiveSoldPlayerPreview}
-        setActiveRosterTeam={setActiveRosterTeam}
-      />
+      {/* Bottom Full Width: Acquired Squads */}
+      <div className="w-full">
+        <AcquiredSquads
+          auction={auction}
+          auctionId={auctionId}
+          revertPlayerMutation={revertPlayerMutation}
+          setActiveSoldPlayerPreview={setActiveSoldPlayerPreview}
+          setActiveRosterTeam={setActiveRosterTeam}
+        />
+      </div>
 
       <PreviewModals
         auction={auction}
