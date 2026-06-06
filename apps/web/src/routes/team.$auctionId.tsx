@@ -303,7 +303,7 @@ function TeamDashboardPage() {
         />
 
         {/* Center/Right Column: Interactive player checklist & private wishlists (2/3 width) */}
-        <div className="gap-y-4 lg:col-span-2">
+        <div className="flex flex-col gap-y-4 lg:col-span-2">
           {/* Roster list acquired */}
           <AcquiredSquad
             soldToThisTeam={soldToThisTeam}

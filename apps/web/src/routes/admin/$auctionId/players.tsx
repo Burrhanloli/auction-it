@@ -228,7 +228,7 @@ function PlayersConsolePage() {
       <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-3">
         {/* Left Column: Register Player Form & Stats */}
         <div
-          className={`lg:block ${showMobileForm ? "block" : "hidden"} w-full gap-y-4 lg:col-span-1`}
+          className={`lg:flex lg:flex-col ${showMobileForm ? "flex flex-col" : "hidden"} w-full gap-y-4 lg:col-span-1`}
         >
           <StatsGrid totalCount={totalCount} soldCount={soldCount} unsoldCount={unsoldCount} />
 

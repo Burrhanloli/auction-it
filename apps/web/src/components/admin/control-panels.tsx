@@ -272,7 +272,7 @@ export function LogSidebar({ logs }: any) {
           </span>
         </div>
 
-        <div className="max-h-[70vh] gap-y-4 overflow-y-auto pr-1">
+        <div className="flex max-h-[70vh] flex-col gap-y-4 overflow-y-auto pr-1">
           {logs.map((log: any) => (
             <div
               key={log.id}

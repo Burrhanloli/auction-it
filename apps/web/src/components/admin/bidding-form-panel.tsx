@@ -124,7 +124,7 @@ export function BiddingFormPanel({
   const incrementOptions = [100, 200, 500, 1000, 2000, 3000, 4000, 5000];
 
   return (
-    <div className="gap-y-4 border-t border-[#3c3c3c] pt-2">
+    <div className="flex flex-col gap-y-4 border-t border-[#3c3c3c] pt-2">
       <div className="space-y-1.5">
         <bidForm.Field name="biddingTeamId">
           {(field) => (

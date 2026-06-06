@@ -120,7 +120,7 @@ function LeaderboardPage() {
           <AuctionHero auction={auction} subtitle="Live Arena Standings & Leaderboards" />
 
           {/* Main Container */}
-          <main className="relative z-10 mx-auto w-full max-w-7xl flex-1 gap-y-4 px-4 py-8 md:px-6 md:py-10">
+          <main className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col gap-y-4 px-4 py-8 md:px-6 md:py-10">
             <TopValuedPlayers soldPlayers={soldPlayers} auction={auction} />
 
             <TeamStandings auction={auction} />

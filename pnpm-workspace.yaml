@@ -16,8 +16,6 @@ allowBuilds:
 blockExoticSubdeps: false
 
 catalog:
-  "@aws-sdk/client-s3": ^3.722.0
-  "@aws-sdk/s3-request-presigner": ^3.722.0
   "@babel/core": ^7.29.0
   "@base-ui/react": ^1.5.0
   "@better-auth/drizzle-adapter": https://pkg.pr.new/@better-auth/drizzle-adapter@9489
@@ -89,8 +87,30 @@ catalog:
   react-doctor: ^0.2.10
   html-to-image: ^1.11.11
   tsx: ^4.22.4
+  aws4fetch: ^1.0.20
 
 catalogMode: prefer
+
+minimumReleaseAgeExclude:
+  - "@aws-sdk/checksums@3.1000.2"
+  - "@aws-sdk/client-s3@3.1063.0"
+  - "@aws-sdk/core@3.974.18"
+  - "@aws-sdk/credential-provider-env@3.972.44"
+  - "@aws-sdk/credential-provider-http@3.972.46"
+  - "@aws-sdk/credential-provider-ini@3.972.50"
+  - "@aws-sdk/credential-provider-login@3.972.49"
+  - "@aws-sdk/credential-provider-node@3.972.52"
+  - "@aws-sdk/credential-provider-process@3.972.44"
+  - "@aws-sdk/credential-provider-sso@3.972.49"
+  - "@aws-sdk/credential-provider-web-identity@3.972.49"
+  - "@aws-sdk/middleware-flexible-checksums@3.974.27"
+  - "@aws-sdk/middleware-sdk-s3@3.972.48"
+  - "@aws-sdk/nested-clients@3.997.17"
+  - "@aws-sdk/s3-request-presigner@3.1063.0"
+  - "@aws-sdk/signature-v4-multi-region@3.996.32"
+  - "@aws-sdk/token-providers@3.1063.0"
+  - "@aws-sdk/types@3.973.11"
+  - "@aws-sdk/xml-builder@3.972.28"
 
 overrides:
   "@better-auth/drizzle-adapter": "catalog:"

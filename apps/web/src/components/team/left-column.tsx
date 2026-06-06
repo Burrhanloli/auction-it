@@ -26,7 +26,7 @@ export function LeftColumn({ team, auction, soldToThisTeam, spentPoints }: LeftC
         : "bg-red-500 animate-pulse";
 
   return (
-    <div className="gap-y-4 lg:col-span-1">
+    <div className="flex flex-col gap-y-4 lg:col-span-1">
       {/* Team Branding */}
       <div className="relative flex flex-col items-center justify-center rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8 text-center">
         {team.logoUrl ? (

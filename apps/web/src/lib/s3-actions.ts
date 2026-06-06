@@ -1,7 +1,6 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { authMiddleware } from "@repo/auth/tanstack/middleware";
 import { createServerFn } from "@tanstack/react-start";
+import { AwsClient } from "aws4fetch";
 
 export const $getPresignedUrl = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
@@ -25,26 +24,29 @@ export const $getPresignedUrl = createServerFn({ method: "POST" })
       throw new Error("Missing R2 configuration in server environment variables.");
     }
 
-    const s3Client = new S3Client({
+    // Initialize the lightweight edge-native AWS client
+    const aws = new AwsClient({
+      accessKeyId,
+      secretAccessKey,
+      service: "s3",
       region: "auto",
-      endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
-      credentials: {
-        accessKeyId,
-        secretAccessKey,
-      },
     });
 
     // Always use .webp extension since we convert on the client side
-    const fileName = `${process.env.R2_FOLDER_NAME}/${crypto.randomUUID()}.webp`;
+    const fileName = `${folderName}/${crypto.randomUUID()}.webp`;
 
-    const command = new PutObjectCommand({
-      Bucket: bucketName,
-      Key: fileName,
-      ContentType: data.contentType || "image/webp",
+    // Construct the target S3 URL
+    const s3Url = `https://${accountId}.r2.cloudflarestorage.com/${bucketName}/${fileName}`;
+
+    // Generate a presigned PUT request url valid for 1 hour (3600s)
+    const signedRequest = await aws.sign(s3Url, {
+      method: "PUT",
+      headers: { "Content-Type": data.contentType || "image/webp" },
+      aws: { signQuery: true, allHeaders: true },
     });
 
-    const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
     const finalUrl = `${publicUrl}/${fileName}`;
 
-    return { uploadUrl, finalUrl };
+    // Extract the fully signed URL containing the credentials query parameters
+    return { uploadUrl: signedRequest.url, finalUrl };
   });

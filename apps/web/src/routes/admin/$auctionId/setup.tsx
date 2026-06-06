@@ -197,9 +197,9 @@ export function SetupForm({ auction, auctionId }: SetupFormProps) {
         e.stopPropagation();
         form.handleSubmit();
       }}
-      className="mx-auto max-w-6xl gap-y-4"
+      className="mx-auto flex max-w-6xl flex-col gap-y-4"
     >
-      <fieldset disabled={auction.status === "completed"} className="contents gap-y-4">
+      <fieldset disabled={auction.status === "completed"} className="flex flex-col gap-y-4">
         <BasicSettingsCard form={form} auction={auction} />
         <CategoryDecksCard
           form={form}
@@ -453,7 +453,7 @@ export function CategoryDecksCard({
                   className="flex items-center gap-x-4 rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-4"
                 >
                   <div className="grid flex-1 grid-cols-1 gap-4 md:grid-cols-4">
-                    <div className="gap-y-4 md:col-span-2">
+                    <div className="flex flex-col gap-y-4 md:col-span-2">
                       <Label className="text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
                         Category Name
                       </Label>
@@ -468,7 +468,7 @@ export function CategoryDecksCard({
                         )}
                       </form.Field>
                     </div>
-                    <div className="gap-y-4 md:col-span-2">
+                    <div className="flex flex-col gap-y-4 md:col-span-2">
                       <Label className="text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
                         Base points value
                       </Label>
@@ -487,7 +487,7 @@ export function CategoryDecksCard({
                         </form.Field>
                       </div>
                     </div>
-                    <div className="gap-y-4 md:col-span-2">
+                    <div className="flex flex-col gap-y-4 md:col-span-2">
                       <Label className="text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
                         Min Players (Opt)
                       </Label>
@@ -503,7 +503,7 @@ export function CategoryDecksCard({
                         )}
                       </form.Field>
                     </div>
-                    <div className="gap-y-4 md:col-span-2">
+                    <div className="flex flex-col gap-y-4 md:col-span-2">
                       <Label className="text-[10px] font-bold tracking-[1.5px] text-[#bbbbbb] uppercase">
                         Max Players (Opt)
                       </Label>

@@ -274,7 +274,7 @@ function ControlConsolePage() {
   return (
     <div className="grid grid-cols-1 gap-10 lg:grid-cols-3">
       {/* Left Column: Action board (Category selection, Draw button, bid console) (2/3 width) */}
-      <div className="gap-y-4 lg:col-span-2">
+      <div className="flex flex-col gap-y-4 lg:col-span-2">
         <AuctionPrompts
           auction={auction}
           auctionId={auctionId}
