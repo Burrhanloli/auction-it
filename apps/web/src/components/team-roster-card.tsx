@@ -2263,6 +2263,299 @@ function TeamRosterCardNewspaper({ team, players, categories, auction, ref }: Te
 }
 
 // 10. DOSSIER VARIANT — Classified dossier/ID badge
+// Sub-components for Dossier variant to resolve no-giant-component warning
+interface DossierHeaderProps {
+  team: Team;
+  auction: Auction;
+}
+
+function DossierHeader({ team, auction }: DossierHeaderProps) {
+  return (
+    <div
+      className="relative z-10 flex shrink-0 items-center justify-between px-10 py-6"
+      style={{ borderBottom: "2px solid #A89878" }}
+    >
+      <div>
+        <span
+          className="text-[10px] font-bold tracking-[0.4em] uppercase"
+          style={{ color: "#B91C1C" }}
+        >
+          ■ CLASSIFIED — PERSONNEL FILE
+        </span>
+        <h1
+          className="mt-1 text-[32px] leading-none font-black tracking-wider uppercase"
+          style={{ color: "#3D3D2C" }}
+        >
+          {team.name}
+        </h1>
+      </div>
+      <div className="flex items-center gap-4">
+        {team.logoUrl && (
+          <LazyImage
+            src={team.logoUrl}
+            alt={team.name}
+            priority
+            className="size-12 object-contain opacity-50"
+            style={{ filter: "sepia(0.5)" }}
+          />
+        )}
+        <div className="flex flex-col items-end">
+          <span
+            className="text-[9px] font-bold tracking-wider uppercase"
+            style={{ color: "#8B7355" }}
+          >
+            OPERATION
+          </span>
+          <span className="text-[13px] font-bold uppercase" style={{ color: "#3D3D2C" }}>
+            {auction.name}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface DossierCaptainProps {
+  captain: Player | null | undefined;
+  team: Team;
+  auction: Auction;
+}
+
+function DossierCaptain({ captain, team, auction }: DossierCaptainProps) {
+  return (
+    <div
+      className="relative z-10 flex shrink-0 items-start gap-6 px-10 py-6"
+      style={{ borderBottom: "1px dashed #A89878" }}
+    >
+      {/* Passport-style photo */}
+      <div
+        className="shrink-0 overflow-hidden"
+        style={{
+          width: "120px",
+          height: "150px",
+          border: "3px solid #3D3D2C",
+          background: "#EDE4CE",
+        }}
+      >
+        {captain?.imageUrl ? (
+          <LazyImage
+            src={captain.imageUrl}
+            alt={captain.name}
+            priority
+            className="size-full object-contain"
+            style={{ filter: "sepia(0.15) contrast(1.05)" }}
+          />
+        ) : (
+          <div
+            className="flex size-full items-center justify-center"
+            style={{ color: "#3D3D2C", opacity: 0.15 }}
+          >
+            <ShieldIcon className="size-14" />
+          </div>
+        )}
+      </div>
+      <div className="flex flex-1 flex-col gap-2 pt-1">
+        <span
+          className="text-[9px] font-bold tracking-[0.3em] uppercase"
+          style={{ color: "#B91C1C" }}
+        >
+          COMMANDING OFFICER
+        </span>
+        <h2
+          className="text-[26px] font-black tracking-wider uppercase"
+          style={{ color: "#3D3D2C" }}
+        >
+          {captain?.name ?? "[ UNASSIGNED ]"}
+        </h2>
+        {captain && (
+          <>
+            <div className="flex items-center gap-6">
+              <div className="flex flex-col">
+                <span
+                  className="text-[8px] font-bold tracking-wider uppercase"
+                  style={{ color: "#8B7355" }}
+                >
+                  DESIGNATION
+                </span>
+                <span className="text-[13px] font-bold uppercase">{captain.skills}</span>
+              </div>
+              <div className="flex flex-col">
+                <span
+                  className="text-[8px] font-bold tracking-wider uppercase"
+                  style={{ color: "#8B7355" }}
+                >
+                  STATUS
+                </span>
+                <span className="text-[13px] font-bold uppercase" style={{ color: "#B91C1C" }}>
+                  ACTIVE
+                </span>
+              </div>
+            </div>
+            {/* Simulated barcode */}
+            <div className="mt-1 flex items-end gap-[2px]">
+              {Array.from({ length: 40 }).map((_, i) => (
+                <div
+                  key={i}
+                  style={{
+                    width: i % 3 === 0 ? "3px" : "2px",
+                    height: `${12 + (i % 5) * 3}px`,
+                    background: "#3D3D2C",
+                    opacity: 0.6,
+                  }}
+                />
+              ))}
+            </div>
+          </>
+        )}
+        <div className="mt-1 flex flex-col">
+          <span
+            className="text-[8px] font-bold tracking-wider uppercase"
+            style={{ color: "#8B7355" }}
+          >
+            HANDLER
+          </span>
+          <span className="text-[13px] font-bold uppercase">{team.ownerName || "UNKNOWN"}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface DossierRosterProps {
+  categories: Array<{ id: string; name: string }>;
+  categoryMap: Map<string, Player[]>;
+  players: Player[];
+}
+
+function DossierRoster({ categories, categoryMap, players }: DossierRosterProps) {
+  return (
+    <div className="relative z-10 flex flex-1 flex-col overflow-hidden px-10 py-4">
+      <span
+        className="mb-3 text-[10px] font-bold tracking-[0.3em] uppercase"
+        style={{ color: "#B91C1C" }}
+      >
+        ■ OPERATIVE ROSTER — {players.length} PERSONNEL
+      </span>
+      <div className="flex flex-1 flex-col gap-3 overflow-hidden">
+        {categories.map((cat) => {
+          const catPlayers = categoryMap.get(cat.id) || [];
+          if (!catPlayers.length) return null;
+          return (
+            <div key={cat.id}>
+              <h4
+                className="mb-2 text-[10px] font-bold tracking-[0.2em] uppercase"
+                style={{
+                  color: "#8B7355",
+                  borderBottom: "1px solid #A89878",
+                  paddingBottom: "3px",
+                }}
+              >
+                DIVISION: {cat.name}
+              </h4>
+              <div className="flex flex-col gap-1">
+                {catPlayers.map((p) => (
+                  <div
+                    key={p.id}
+                    className="flex items-center gap-3 py-1"
+                    style={{ borderBottom: "1px dotted #C4B494" }}
+                  >
+                    {/* Tiny avatar */}
+                    <div
+                      className="size-7 shrink-0 overflow-hidden"
+                      style={{ border: "1px solid #3D3D2C", background: "#EDE4CE" }}
+                    >
+                      {p.imageUrl ? (
+                        <LazyImage
+                          src={p.imageUrl}
+                          alt={p.name}
+                          priority
+                          className="size-full object-contain"
+                          style={{ filter: "sepia(0.2)" }}
+                        />
+                      ) : (
+                        <div
+                          className="flex size-full items-center justify-center text-[8px] font-bold"
+                          style={{ color: "#3D3D2C" }}
+                        >
+                          {p.name.slice(0, 2).toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                    <span className="min-w-0 flex-1 truncate text-[13px] font-bold uppercase">
+                      {p.name}
+                    </span>
+                    <span
+                      className="shrink-0 text-[10px] font-normal uppercase"
+                      style={{ color: "#8B7355" }}
+                    >
+                      {p.skills}
+                    </span>
+                    {/* Mini barcode */}
+                    <div className="flex shrink-0 items-end gap-[1px]">
+                      {Array.from({ length: 15 }).map((_, i) => (
+                        <div
+                          key={i}
+                          style={{
+                            width: "1.5px",
+                            height: `${6 + (i % 4) * 2}px`,
+                            background: "#3D3D2C",
+                            opacity: 0.35,
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+
+        {players.length === 0 && (
+          <div className="flex flex-1 items-center justify-center">
+            <span className="text-[14px] font-bold uppercase" style={{ color: "#8B7355" }}>
+              [ NO PERSONNEL ON FILE ]
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+interface DossierFooterProps {
+  teamName: string;
+}
+
+function DossierFooter({ teamName }: DossierFooterProps) {
+  return (
+    <div
+      className="relative z-10 flex shrink-0 items-center justify-between px-10 py-5"
+      style={{ borderTop: "2px solid #A89878" }}
+    >
+      <div
+        className="flex items-center gap-2 px-5 py-2"
+        style={{
+          border: "3px solid #B91C1C",
+          borderRadius: "4px",
+          transform: "rotate(-3deg)",
+        }}
+      >
+        <span
+          className="text-[14px] font-black tracking-[0.3em] uppercase"
+          style={{ color: "#B91C1C" }}
+        >
+          ✓ AUTHORIZED
+        </span>
+      </div>
+      <span className="text-[9px] font-bold tracking-wider uppercase" style={{ color: "#8B7355" }}>
+        {teamName} — Personnel Dossier
+      </span>
+    </div>
+  );
+}
+
+// 10. DOSSIER VARIANT — Classified dossier/ID badge
 function TeamRosterCardDossier({ team, players, categories, auction, ref }: TeamRosterCardProps) {
   const { captain, categoryMap } = useRosterData(team, players);
 
@@ -2320,266 +2613,13 @@ function TeamRosterCardDossier({ team, players, categories, auction, ref }: Team
         </span>
       </div>
 
-      {/* Header: PERSONNEL FILE */}
-      <div
-        className="relative z-10 flex shrink-0 items-center justify-between px-10 py-6"
-        style={{ borderBottom: "2px solid #A89878" }}
-      >
-        <div>
-          <span
-            className="text-[10px] font-bold tracking-[0.4em] uppercase"
-            style={{ color: "#B91C1C" }}
-          >
-            ■ CLASSIFIED — PERSONNEL FILE
-          </span>
-          <h1
-            className="mt-1 text-[32px] leading-none font-black tracking-wider uppercase"
-            style={{ color: "#3D3D2C" }}
-          >
-            {team.name}
-          </h1>
-        </div>
-        <div className="flex items-center gap-4">
-          {team.logoUrl && (
-            <LazyImage
-              src={team.logoUrl}
-              alt={team.name}
-              priority
-              className="size-12 object-contain opacity-50"
-              style={{ filter: "sepia(0.5)" }}
-            />
-          )}
-          <div className="flex flex-col items-end">
-            <span
-              className="text-[9px] font-bold tracking-wider uppercase"
-              style={{ color: "#8B7355" }}
-            >
-              OPERATION
-            </span>
-            <span className="text-[13px] font-bold uppercase" style={{ color: "#3D3D2C" }}>
-              {auction.name}
-            </span>
-          </div>
-        </div>
-      </div>
+      <DossierHeader team={team} auction={auction} />
 
-      {/* Captain section — ID badge style */}
-      <div
-        className="relative z-10 flex shrink-0 items-start gap-6 px-10 py-6"
-        style={{ borderBottom: "1px dashed #A89878" }}
-      >
-        {/* Passport-style photo */}
-        <div
-          className="shrink-0 overflow-hidden"
-          style={{
-            width: "120px",
-            height: "150px",
-            border: "3px solid #3D3D2C",
-            background: "#EDE4CE",
-          }}
-        >
-          {captain?.imageUrl ? (
-            <LazyImage
-              src={captain.imageUrl}
-              alt={captain.name}
-              priority
-              className="size-full object-contain"
-              style={{ filter: "sepia(0.15) contrast(1.05)" }}
-            />
-          ) : (
-            <div
-              className="flex size-full items-center justify-center"
-              style={{ color: "#3D3D2C", opacity: 0.15 }}
-            >
-              <ShieldIcon className="size-14" />
-            </div>
-          )}
-        </div>
-        <div className="flex flex-1 flex-col gap-2 pt-1">
-          <span
-            className="text-[9px] font-bold tracking-[0.3em] uppercase"
-            style={{ color: "#B91C1C" }}
-          >
-            COMMANDING OFFICER
-          </span>
-          <h2
-            className="text-[26px] font-black tracking-wider uppercase"
-            style={{ color: "#3D3D2C" }}
-          >
-            {captain?.name ?? "[ UNASSIGNED ]"}
-          </h2>
-          {captain && (
-            <>
-              <div className="flex items-center gap-6">
-                <div className="flex flex-col">
-                  <span
-                    className="text-[8px] font-bold tracking-wider uppercase"
-                    style={{ color: "#8B7355" }}
-                  >
-                    DESIGNATION
-                  </span>
-                  <span className="text-[13px] font-bold uppercase">{captain.skills}</span>
-                </div>
-                <div className="flex flex-col">
-                  <span
-                    className="text-[8px] font-bold tracking-wider uppercase"
-                    style={{ color: "#8B7355" }}
-                  >
-                    STATUS
-                  </span>
-                  <span className="text-[13px] font-bold uppercase" style={{ color: "#B91C1C" }}>
-                    ACTIVE
-                  </span>
-                </div>
-              </div>
-              {/* Simulated barcode */}
-              <div className="mt-1 flex items-end gap-[2px]">
-                {Array.from({ length: 40 }).map((_, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      width: i % 3 === 0 ? "3px" : "2px",
-                      height: `${12 + (i % 5) * 3}px`,
-                      background: "#3D3D2C",
-                      opacity: 0.6,
-                    }}
-                  />
-                ))}
-              </div>
-            </>
-          )}
-          <div className="mt-1 flex flex-col">
-            <span
-              className="text-[8px] font-bold tracking-wider uppercase"
-              style={{ color: "#8B7355" }}
-            >
-              HANDLER
-            </span>
-            <span className="text-[13px] font-bold uppercase">{team.ownerName || "UNKNOWN"}</span>
-          </div>
-        </div>
-      </div>
+      <DossierCaptain captain={captain} team={team} auction={auction} />
 
-      {/* Operative roster — compact ID-rows */}
-      <div className="relative z-10 flex flex-1 flex-col overflow-hidden px-10 py-4">
-        <span
-          className="mb-3 text-[10px] font-bold tracking-[0.3em] uppercase"
-          style={{ color: "#B91C1C" }}
-        >
-          ■ OPERATIVE ROSTER — {players.length} PERSONNEL
-        </span>
-        <div className="flex flex-1 flex-col gap-3 overflow-hidden">
-          {categories.map((cat) => {
-            const catPlayers = categoryMap.get(cat.id) || [];
-            if (!catPlayers.length) return null;
-            return (
-              <div key={cat.id}>
-                <h4
-                  className="mb-2 text-[10px] font-bold tracking-[0.2em] uppercase"
-                  style={{
-                    color: "#8B7355",
-                    borderBottom: "1px solid #A89878",
-                    paddingBottom: "3px",
-                  }}
-                >
-                  DIVISION: {cat.name}
-                </h4>
-                <div className="flex flex-col gap-1">
-                  {catPlayers.map((p) => (
-                    <div
-                      key={p.id}
-                      className="flex items-center gap-3 py-1"
-                      style={{ borderBottom: "1px dotted #C4B494" }}
-                    >
-                      {/* Tiny avatar */}
-                      <div
-                        className="size-7 shrink-0 overflow-hidden"
-                        style={{ border: "1px solid #3D3D2C", background: "#EDE4CE" }}
-                      >
-                        {p.imageUrl ? (
-                          <LazyImage
-                            src={p.imageUrl}
-                            alt={p.name}
-                            priority
-                            className="size-full object-contain"
-                            style={{ filter: "sepia(0.2)" }}
-                          />
-                        ) : (
-                          <div
-                            className="flex size-full items-center justify-center text-[8px] font-bold"
-                            style={{ color: "#3D3D2C" }}
-                          >
-                            {p.name.slice(0, 2).toUpperCase()}
-                          </div>
-                        )}
-                      </div>
-                      <span className="min-w-0 flex-1 truncate text-[13px] font-bold uppercase">
-                        {p.name}
-                      </span>
-                      <span
-                        className="shrink-0 text-[10px] font-normal uppercase"
-                        style={{ color: "#8B7355" }}
-                      >
-                        {p.skills}
-                      </span>
-                      {/* Mini barcode */}
-                      <div className="flex shrink-0 items-end gap-[1px]">
-                        {Array.from({ length: 15 }).map((_, i) => (
-                          <div
-                            key={i}
-                            style={{
-                              width: "1.5px",
-                              height: `${6 + (i % 4) * 2}px`,
-                              background: "#3D3D2C",
-                              opacity: 0.35,
-                            }}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
+      <DossierRoster categories={categories} categoryMap={categoryMap} players={players} />
 
-          {players.length === 0 && (
-            <div className="flex flex-1 items-center justify-center">
-              <span className="text-[14px] font-bold uppercase" style={{ color: "#8B7355" }}>
-                [ NO PERSONNEL ON FILE ]
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* AUTHORIZED stamp + footer */}
-      <div
-        className="relative z-10 flex shrink-0 items-center justify-between px-10 py-5"
-        style={{ borderTop: "2px solid #A89878" }}
-      >
-        <div
-          className="flex items-center gap-2 px-5 py-2"
-          style={{
-            border: "3px solid #B91C1C",
-            borderRadius: "4px",
-            transform: "rotate(-3deg)",
-          }}
-        >
-          <span
-            className="text-[14px] font-black tracking-[0.3em] uppercase"
-            style={{ color: "#B91C1C" }}
-          >
-            ✓ AUTHORIZED
-          </span>
-        </div>
-        <span
-          className="text-[9px] font-bold tracking-wider uppercase"
-          style={{ color: "#8B7355" }}
-        >
-          {team.name} — Personnel Dossier
-        </span>
-      </div>
+      <DossierFooter teamName={team.name} />
     </div>
   );
 }

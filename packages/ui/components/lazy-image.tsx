@@ -9,19 +9,20 @@ export interface LazyImageProps extends React.ImgHTMLAttributes<HTMLImageElement
   rootMargin?: string;
 }
 
-type State = { loaded: boolean; error: boolean; hasIntersected: boolean };
-type Action = { type: "RESET" } | { type: "INTERSECT" } | { type: "LOAD" } | { type: "ERROR" };
+type State = { loadedSrc: string | null; errorSrc: string | null; hasIntersected: boolean };
+type Action =
+  | { type: "INTERSECT" }
+  | { type: "LOAD"; src: string }
+  | { type: "ERROR"; src: string };
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
-    case "RESET":
-      return { loaded: false, error: false, hasIntersected: false };
     case "INTERSECT":
       return { ...state, hasIntersected: true };
     case "LOAD":
-      return { ...state, loaded: true };
+      return { ...state, loadedSrc: action.src };
     case "ERROR":
-      return { ...state, error: true };
+      return { ...state, errorSrc: action.src };
     default:
       return state;
   }
@@ -39,18 +40,14 @@ export function LazyImage({
   ...props
 }: LazyImageProps) {
   const [state, dispatch] = useReducer(reducer, {
-    loaded: false,
-    error: false,
+    loadedSrc: null,
+    errorSrc: null,
     hasIntersected: false,
   });
-  const prevSrcRef = useRef(src);
   const imgRef = useRef<HTMLImageElement | null>(null);
 
-  if (src !== prevSrcRef.current) {
-    prevSrcRef.current = src;
-    dispatch({ type: "RESET" });
-  }
-
+  const isLoaded = state.loadedSrc === src;
+  const isError = state.errorSrc === src;
   const currentInView = priority || state.hasIntersected;
 
   useEffect(() => {
@@ -85,12 +82,15 @@ export function LazyImage({
     };
   }, [src, priority, threshold, rootMargin]);
 
-  const setImgRef = React.useCallback((node: HTMLImageElement | null) => {
-    imgRef.current = node;
-    if (node?.complete && !node.src.startsWith("data:image/gif")) {
-      dispatch({ type: "LOAD" });
-    }
-  }, []);
+  const setImgRef = React.useCallback(
+    (node: HTMLImageElement | null) => {
+      imgRef.current = node;
+      if (node?.complete && !node.src.startsWith("data:image/gif")) {
+        dispatch({ type: "LOAD", src });
+      }
+    },
+    [src],
+  );
 
   // Handle fallback initials
   const initials = React.useMemo(() => {
@@ -105,20 +105,20 @@ export function LazyImage({
 
   const handleLoad = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     if (e.currentTarget.src.startsWith("data:image/gif")) return;
-    dispatch({ type: "LOAD" });
+    dispatch({ type: "LOAD", src });
     if (props.onLoad) {
       props.onLoad(e);
     }
   };
 
   const handleError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    dispatch({ type: "ERROR" });
+    dispatch({ type: "ERROR", src });
     if (props.onError) {
       props.onError(e);
     }
   };
 
-  if (!src || state.error) {
+  if (!src || isError) {
     return (
       <div
         className={`relative flex items-center justify-center border border-[#3c3c3c] bg-linear-to-b from-neutral-900 to-black select-none ${className}`}
@@ -139,7 +139,7 @@ export function LazyImage({
   const currentSrc = currentInView ? src : placeholderSrc;
 
   // Pulse skeleton background when not loaded yet
-  const loadingClasses = !state.loaded
+  const loadingClasses = !isLoaded
     ? "animate-pulse bg-neutral-900 border border-[#3c3c3c]"
     : "transition-opacity duration-300 opacity-100";
 
