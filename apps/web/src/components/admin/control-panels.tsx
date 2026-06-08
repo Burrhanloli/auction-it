@@ -415,16 +415,45 @@ export function AcquiredSquads({
   );
 }
 
-function VariantSelector({ cardVariant, setCardVariant }: any) {
-  const variants = ["default", "minimal", "cyberpunk", "trading-card", "elegant"];
+const TALL_ROSTER_VARIANTS = new Set(["trading-card", "newspaper"]);
+const TALL_SOLD_VARIANTS = new Set(["trading-card", "movie-poster", "social-story"]);
+
+function VariantSelector({ cardVariant, setCardVariant, isSold }: any) {
+  const variants = isSold
+    ? [
+        "default",
+        "minimal",
+        "cyberpunk",
+        "trading-card",
+        "elegant",
+        "breaking-news",
+        "receipt",
+        "movie-poster",
+        "social-story",
+        "stats-card",
+        "polaroid",
+      ]
+    : [
+        "default",
+        "minimal",
+        "cyberpunk",
+        "trading-card",
+        "elegant",
+        "formation",
+        "yearbook",
+        "org-chart",
+        "newspaper",
+        "dossier",
+        "jersey-wall",
+      ];
   return (
-    <div className="mb-4 flex w-full flex-wrap gap-2">
+    <div className="flex flex-1 flex-col gap-1.5 overflow-y-auto pr-2">
       {variants.map((v) => (
         <Button
           key={v}
           onClick={() => setCardVariant(v)}
           variant={cardVariant === v ? "default" : "outline"}
-          className={`h-8 rounded-none border ${
+          className={`h-8 w-full justify-start rounded-none border ${
             cardVariant === v
               ? "border-white bg-white text-black"
               : "border-[#3c3c3c] bg-transparent text-[#bbbbbb] hover:bg-[#1a1a1a] hover:text-white"
@@ -437,44 +466,91 @@ function VariantSelector({ cardVariant, setCardVariant }: any) {
   );
 }
 
-export function PreviewModals({
+export function RosterPreviewModal({
   auction,
   activeRosterTeam,
   setActiveRosterTeam,
   modalCardRef,
   handleDownloadRoster,
   isDownloading,
-  activeSoldPlayerPreview,
-  setActiveSoldPlayerPreview,
-  modalSoldCardRef,
-  handleDownloadSoldCard,
-  isDownloadingSoldCard,
   cardVariant,
   setCardVariant,
 }: any) {
+  if (!auction || !activeRosterTeam) return null;
+
   return (
-    <>
-      {auction && activeRosterTeam && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/90 p-4 backdrop-blur-sm">
-          <div className="relative flex max-h-[95vh] w-full max-w-2xl flex-col items-center overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-6 shadow-2xl">
-            <div className="mb-6 flex w-full items-center justify-between border-b border-[#3c3c3c] pb-4">
-              <h3 className="text-sm font-bold tracking-[1.5px] text-white uppercase">
-                FRANCHISE ROSTER PREVIEW
-              </h3>
-              <button
-                type="button"
-                onClick={() => setActiveRosterTeam(null)}
-                className="cursor-pointer text-[#bbbbbb] hover:text-white"
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/90 p-4 backdrop-blur-sm">
+      <div className="relative flex max-h-[95vh] w-full max-w-4xl flex-col overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-6 shadow-2xl">
+        <div className="mb-6 flex w-full shrink-0 items-center justify-between border-b border-[#3c3c3c] pb-4">
+          <h3 className="text-sm font-bold tracking-[1.5px] text-white uppercase">
+            FRANCHISE ROSTER PREVIEW
+          </h3>
+          <button
+            type="button"
+            onClick={() => setActiveRosterTeam(null)}
+            className="cursor-pointer text-[#bbbbbb] hover:text-white"
+          >
+            <XIcon className="size-5" />
+          </button>
+        </div>
+
+        <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto lg:flex-row lg:gap-8 lg:overflow-hidden">
+          {/* Left Column: Selector & Actions */}
+          <div className="flex w-full shrink-0 flex-col border-b border-[#3c3c3c] pb-6 lg:w-64 lg:border-r lg:border-b-0 lg:pr-6 lg:pb-0">
+            <span className="mb-3 text-[10px] font-bold tracking-[2px] text-[#7e7e7e] uppercase">
+              Select Layout Variant
+            </span>
+            <VariantSelector
+              cardVariant={cardVariant}
+              setCardVariant={setCardVariant}
+              isSold={false}
+            />
+
+            <div className="mt-6 flex shrink-0 flex-col gap-3 border-t border-[#3c3c3c] pt-6">
+              <Button
+                onClick={handleDownloadRoster}
+                disabled={isDownloading}
+                className="w-full rounded-none border border-white bg-white text-xs font-black tracking-[1px] text-black uppercase hover:bg-neutral-950 hover:text-white"
               >
-                <XIcon className="size-5" />
-              </button>
+                {isDownloading ? (
+                  <>
+                    <Loader2Icon className="mr-2 size-4 animate-spin" />
+                    Generating…
+                  </>
+                ) : (
+                  <>
+                    <DownloadIcon className="mr-2 size-4" />
+                    Download Image
+                  </>
+                )}
+              </Button>
             </div>
+          </div>
 
-            <VariantSelector cardVariant={cardVariant} setCardVariant={setCardVariant} />
-
-            <div className="relative flex aspect-square w-full max-w-[440px] items-center justify-center overflow-hidden border border-neutral-900 bg-neutral-950">
-              <div className="absolute top-0 left-0 size-[1080px] origin-top-left scale-[0.407]">
-                <div ref={modalCardRef} className="size-[1080px]">
+          {/* Right Column: Preview */}
+          <div className="flex min-h-[350px] flex-1 items-center justify-center rounded-none border border-[#3c3c3c] bg-neutral-900 p-4 lg:min-h-0 lg:p-8">
+            <div
+              className="relative flex w-full max-w-[440px] items-center justify-center overflow-hidden border border-neutral-900 bg-neutral-950 shadow-2xl"
+              style={{
+                containerType: "inline-size",
+                aspectRatio: TALL_ROSTER_VARIANTS.has(cardVariant) ? "1080 / 1350" : "1 / 1",
+              }}
+            >
+              <div
+                className="absolute top-0 left-0 origin-top-left"
+                style={{
+                  width: "1080px",
+                  height: TALL_ROSTER_VARIANTS.has(cardVariant) ? "1350px" : "1080px",
+                  transform: "scale(calc(100cqw / 1080))",
+                }}
+              >
+                <div
+                  ref={modalCardRef}
+                  style={{
+                    width: "1080px",
+                    height: TALL_ROSTER_VARIANTS.has(cardVariant) ? "1350px" : "1080px",
+                  }}
+                >
                   <TeamRosterCard
                     team={activeRosterTeam}
                     players={(auction.players ?? []).filter(
@@ -489,24 +565,63 @@ export function PreviewModals({
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-            <div className="mt-6 flex w-full gap-4 border-t border-[#3c3c3c] pt-4">
+export function SoldPlayerPreviewModal({
+  auction,
+  activeSoldPlayerPreview,
+  setActiveSoldPlayerPreview,
+  modalSoldCardRef,
+  handleDownloadSoldCard,
+  isDownloadingSoldCard,
+  cardVariant,
+  setCardVariant,
+}: any) {
+  if (!auction || !activeSoldPlayerPreview) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/90 p-4 backdrop-blur-sm">
+      <div className="relative flex max-h-[95vh] w-full max-w-4xl flex-col overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-6 shadow-2xl">
+        <div className="mb-6 flex w-full shrink-0 items-center justify-between border-b border-[#3c3c3c] pb-4">
+          <h3 className="text-sm font-bold tracking-[1.5px] text-white uppercase">
+            PLAYER SOLD PREVIEW
+          </h3>
+          <button
+            type="button"
+            onClick={() => setActiveSoldPlayerPreview(null)}
+            className="cursor-pointer text-[#bbbbbb] hover:text-white"
+          >
+            <XIcon className="size-5" />
+          </button>
+        </div>
+
+        <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto lg:flex-row lg:gap-8 lg:overflow-hidden">
+          {/* Left Column: Selector & Actions */}
+          <div className="flex w-full shrink-0 flex-col border-b border-[#3c3c3c] pb-6 lg:w-64 lg:border-r lg:border-b-0 lg:pr-6 lg:pb-0">
+            <span className="mb-3 text-[10px] font-bold tracking-[2px] text-[#7e7e7e] uppercase">
+              Select Layout Variant
+            </span>
+            <VariantSelector
+              cardVariant={cardVariant}
+              setCardVariant={setCardVariant}
+              isSold={true}
+            />
+
+            <div className="mt-6 flex shrink-0 flex-col gap-3 border-t border-[#3c3c3c] pt-6">
               <Button
-                onClick={() => setActiveRosterTeam(null)}
-                variant="outline"
-                className="flex-1 rounded-none border-[#3c3c3c] bg-transparent text-xs font-bold tracking-[1px] text-[#bbbbbb] uppercase hover:bg-[#1a1a1a] hover:text-white"
+                onClick={handleDownloadSoldCard}
+                disabled={isDownloadingSoldCard}
+                className="w-full rounded-none border border-white bg-white text-xs font-black tracking-[1px] text-black uppercase hover:bg-neutral-950 hover:text-white"
               >
-                Close Preview
-              </Button>
-              <Button
-                onClick={handleDownloadRoster}
-                disabled={isDownloading}
-                className="flex-1 rounded-none border border-white bg-white text-xs font-black tracking-[1px] text-black uppercase hover:bg-neutral-950 hover:text-white"
-              >
-                {isDownloading ? (
+                {isDownloadingSoldCard ? (
                   <>
                     <Loader2Icon className="mr-2 size-4 animate-spin" />
-                    Generating PNG…
+                    Generating…
                   </>
                 ) : (
                   <>
@@ -517,30 +632,31 @@ export function PreviewModals({
               </Button>
             </div>
           </div>
-        </div>
-      )}
 
-      {auction && activeSoldPlayerPreview && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/90 p-4 backdrop-blur-sm">
-          <div className="relative flex max-h-[95vh] w-full max-w-2xl flex-col items-center overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-6 shadow-2xl">
-            <div className="mb-6 flex w-full items-center justify-between border-b border-[#3c3c3c] pb-4">
-              <h3 className="text-sm font-bold tracking-[1.5px] text-white uppercase">
-                PLAYER SOLD PREVIEW
-              </h3>
-              <button
-                type="button"
-                onClick={() => setActiveSoldPlayerPreview(null)}
-                className="cursor-pointer text-[#bbbbbb] hover:text-white"
+          {/* Right Column: Preview */}
+          <div className="flex min-h-[350px] flex-1 items-center justify-center rounded-none border border-[#3c3c3c] bg-neutral-900 p-4 lg:min-h-0 lg:p-8">
+            <div
+              className="relative flex w-full max-w-[440px] items-center justify-center overflow-hidden border border-neutral-900 bg-neutral-950 shadow-2xl"
+              style={{
+                containerType: "inline-size",
+                aspectRatio: TALL_SOLD_VARIANTS.has(cardVariant) ? "1080 / 1350" : "1 / 1",
+              }}
+            >
+              <div
+                className="absolute top-0 left-0 origin-top-left"
+                style={{
+                  width: "1080px",
+                  height: TALL_SOLD_VARIANTS.has(cardVariant) ? "1350px" : "1080px",
+                  transform: "scale(calc(100cqw / 1080))",
+                }}
               >
-                <XIcon className="size-5" />
-              </button>
-            </div>
-
-            <VariantSelector cardVariant={cardVariant} setCardVariant={setCardVariant} />
-
-            <div className="relative flex aspect-square w-full max-w-[440px] items-center justify-center overflow-hidden border border-neutral-900 bg-neutral-950">
-              <div className="absolute top-0 left-0 size-[1080px] origin-top-left scale-[0.407]">
-                <div ref={modalSoldCardRef} className="size-[1080px]">
+                <div
+                  ref={modalSoldCardRef}
+                  style={{
+                    width: "1080px",
+                    height: TALL_SOLD_VARIANTS.has(cardVariant) ? "1350px" : "1080px",
+                  }}
+                >
                   <PlayerSoldCard
                     player={activeSoldPlayerPreview.player}
                     team={activeSoldPlayerPreview.team}
@@ -550,36 +666,9 @@ export function PreviewModals({
                 </div>
               </div>
             </div>
-
-            <div className="mt-6 flex w-full gap-4 border-t border-[#3c3c3c] pt-4">
-              <Button
-                onClick={() => setActiveSoldPlayerPreview(null)}
-                variant="outline"
-                className="flex-1 rounded-none border-[#3c3c3c] bg-transparent text-xs font-bold tracking-[1px] text-[#bbbbbb] uppercase hover:bg-[#1a1a1a] hover:text-white"
-              >
-                Close Preview
-              </Button>
-              <Button
-                onClick={handleDownloadSoldCard}
-                disabled={isDownloadingSoldCard}
-                className="flex-1 rounded-none border border-white bg-white text-xs font-black tracking-[1px] text-black uppercase hover:bg-neutral-950 hover:text-white"
-              >
-                {isDownloadingSoldCard ? (
-                  <>
-                    <Loader2Icon className="mr-2 size-4 animate-spin" />
-                    Generating PNG…
-                  </>
-                ) : (
-                  <>
-                    <DownloadIcon className="mr-2 size-4" />
-                    Download Image
-                  </>
-                )}
-              </Button>
-            </div>
           </div>
         </div>
-      )}
-    </>
+      </div>
+    </div>
   );
 }

@@ -18,7 +18,8 @@ import {
   DeckManager,
   LogSidebar,
   AcquiredSquads,
-  PreviewModals,
+  RosterPreviewModal,
+  SoldPlayerPreviewModal,
 } from "#/components/admin/control-panels";
 import { type CardVariant } from "#/components/player-sold-card";
 import {
@@ -36,24 +37,42 @@ export const Route = createFileRoute("/admin/$auctionId/control")({
   component: ControlConsolePage,
 });
 
+const TALL_ROSTER_VARIANTS = new Set(["trading-card", "newspaper"]);
+const TALL_SOLD_VARIANTS = new Set(["trading-card", "movie-poster", "social-story"]);
+
 async function exportRosterCard(
   teamName: string,
   element: HTMLElement,
   setIsDownloading: (val: boolean) => void,
+  variant: string,
 ) {
   setIsDownloading(true);
   toast.info(`Preparing roster image for ${teamName}...`);
+
+  const parent = element.parentElement;
+  let originalTransform = "";
+  if (parent) {
+    originalTransform = parent.style.transform;
+    parent.style.transform = "none";
+  }
+
+  // Allow browser a moment to layout and rasterize the card at native resolution
+  await new Promise((resolve) => setTimeout(resolve, 100));
+
   try {
     const [{ toPng }] = await Promise.all([
       import("html-to-image"),
-      new Promise((resolve) => setTimeout(resolve, 300)),
+      new Promise((resolve) => setTimeout(resolve, 200)),
     ]);
+
+    const isTall = TALL_ROSTER_VARIANTS.has(variant);
+    const height = isTall ? 1350 : 1080;
 
     const dataUrl = await toPng(element, {
       cacheBust: true,
-      pixelRatio: 2,
+      pixelRatio: 3, // Crisp HD resolution
       width: 1080,
-      height: 1080,
+      height: height,
       imagePlaceholder:
         "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
     });
@@ -66,10 +85,13 @@ async function exportRosterCard(
     document.body.removeChild(link);
 
     toast.success(`Successfully exported ${teamName}!`);
-    setIsDownloading(false);
   } catch (err) {
     console.error("Roster export failed:", err);
     toast.error(`Failed to export roster.`);
+  } finally {
+    if (parent) {
+      parent.style.transform = originalTransform;
+    }
     setIsDownloading(false);
   }
 }
@@ -78,20 +100,35 @@ async function exportSoldCard(
   playerName: string,
   element: HTMLElement,
   setIsDownloadingSoldCard: (val: boolean) => void,
+  variant: string,
 ) {
   setIsDownloadingSoldCard(true);
   toast.info(`Preparing sold card for ${playerName}...`);
+
+  const parent = element.parentElement;
+  let originalTransform = "";
+  if (parent) {
+    originalTransform = parent.style.transform;
+    parent.style.transform = "none";
+  }
+
+  // Allow browser a moment to layout and rasterize the card at native resolution
+  await new Promise((resolve) => setTimeout(resolve, 100));
+
   try {
     const [{ toPng }] = await Promise.all([
       import("html-to-image"),
-      new Promise((resolve) => setTimeout(resolve, 300)),
+      new Promise((resolve) => setTimeout(resolve, 200)),
     ]);
+
+    const isTall = TALL_SOLD_VARIANTS.has(variant);
+    const height = isTall ? 1350 : 1080;
 
     const dataUrl = await toPng(element, {
       cacheBust: true,
-      pixelRatio: 2,
+      pixelRatio: 3, // Crisp HD resolution
       width: 1080,
-      height: 1080,
+      height: height,
       imagePlaceholder:
         "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
     });
@@ -104,10 +141,13 @@ async function exportSoldCard(
     document.body.removeChild(link);
 
     toast.success(`Successfully exported ${playerName}!`);
-    setIsDownloadingSoldCard(false);
   } catch (err) {
     console.error("Sold card export failed:", err);
     toast.error(`Failed to export sold card.`);
+  } finally {
+    if (parent) {
+      parent.style.transform = originalTransform;
+    }
     setIsDownloadingSoldCard(false);
   }
 }
@@ -132,7 +172,12 @@ function ControlConsolePage() {
 
   const handleDownloadRoster = async () => {
     if (!activeRosterTeam || !modalCardRef.current) return;
-    await exportRosterCard(activeRosterTeam.name, modalCardRef.current, setIsDownloading);
+    await exportRosterCard(
+      activeRosterTeam.name,
+      modalCardRef.current,
+      setIsDownloading,
+      cardVariant,
+    );
   };
 
   const handleDownloadSoldCard = async () => {
@@ -141,6 +186,7 @@ function ControlConsolePage() {
       activeSoldPlayerPreview.player.name,
       modalSoldCardRef.current,
       setIsDownloadingSoldCard,
+      cardVariant,
     );
   };
 
@@ -301,7 +347,7 @@ function ControlConsolePage() {
               unsoldPlayersInCategory={unsoldPlayersInCategory}
             />
           ) : (
-            <div className="flex h-full min-h-[300px] flex-col items-center justify-center rounded-none border border-dashed border-[#3c3c3c] bg-[#1a1a1a] p-8 text-center text-xs text-[#bbbbbb]">
+            <div className="flex h-full min-h-[300px] flex-col items-center justify-center rounded-none border border-dashed border-[#3c3c3c] bg-[#1a1a1a] p-4 text-center text-xs text-[#bbbbbb] md:p-8">
               <PlayIcon className="mb-3 size-6 text-[#3c3c3c]" />
               <p>
                 Deck Manager locked.
@@ -314,7 +360,7 @@ function ControlConsolePage() {
 
         {/* Center Column: Live Bidding Arena (50%) */}
         <div className="flex h-full flex-col lg:col-span-6">
-          <div className="relative flex h-full flex-col overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-8">
+          <div className="relative flex h-full flex-col overflow-hidden rounded-none border border-[#3c3c3c] bg-[#1a1a1a] p-4 md:p-8">
             <div className="mb-8 flex items-center">
               <GavelIcon className="mr-3 size-5 text-white" />
               <div className="inline-flex flex-col">
@@ -372,13 +418,19 @@ function ControlConsolePage() {
         />
       </div>
 
-      <PreviewModals
+      <RosterPreviewModal
         auction={auction}
         activeRosterTeam={activeRosterTeam}
         setActiveRosterTeam={setActiveRosterTeam}
         modalCardRef={modalCardRef}
         handleDownloadRoster={handleDownloadRoster}
         isDownloading={isDownloading}
+        cardVariant={cardVariant}
+        setCardVariant={setCardVariant}
+      />
+
+      <SoldPlayerPreviewModal
+        auction={auction}
         activeSoldPlayerPreview={activeSoldPlayerPreview}
         setActiveSoldPlayerPreview={setActiveSoldPlayerPreview}
         modalSoldCardRef={modalSoldCardRef}
